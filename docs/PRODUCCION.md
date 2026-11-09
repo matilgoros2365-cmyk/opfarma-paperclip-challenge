@@ -70,7 +70,14 @@ cuenta, y también corresponde por la ley de protección de datos personales.
 
 ### 5. Suscribir el webhook
 
-En la app, **WhatsApp → Configuración → Webhook**:
+Con el script, que registra la URL, la hace verificar por Meta y suscribe la app
+a la cuenta de WhatsApp Business en un solo paso:
+
+```bash
+cd platform && META_APP_ID=... META_APP_SECRET=... META_WEBHOOK_VERIFY_TOKEN=... META_WABA_ID=... META_WHATSAPP_TOKEN=... WEBHOOK_URL=https://<dominio-de-la-plataforma>/api/whatsapp/webhook node scripts/subscribe-webhook.mjs
+```
+
+O desde la interfaz, en la app, **WhatsApp → Configuración → Webhook**:
 
 - URL de devolución: `https://<dominio-de-la-plataforma>/api/whatsapp/webhook`
 - Token de verificación: el valor de `META_WEBHOOK_VERIFY_TOKEN`
