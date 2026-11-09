@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { assertRecipientAllowed, describeChannel, loadChannelConfig } from "@/lib/channel";
+import {
+  assertRecipientAllowed,
+  describeChannel,
+  endpointFor,
+  loadChannelConfig,
+  readDraftConfig,
+} from "@/lib/channel";
 import { ChannelError } from "@/lib/whatsapp";
 
 const baseEnv = {
@@ -134,5 +140,45 @@ describe("describeChannel", () => {
     );
 
     expect(description.constraints.some((c) => c.includes("24h"))).toBe(true);
+  });
+});
+
+describe("readDraftConfig: un borrador no necesita credenciales de Meta", () => {
+  it("no falla cuando faltan todas las credenciales", () => {
+    expect(() => readDraftConfig({})).not.toThrow();
+  });
+
+  it("reporta que no está configurado y qué falta, en vez de reventar", () => {
+    const config = readDraftConfig({});
+    expect(config.configured).toBe(false);
+    expect(config.missing).toEqual(["META_PHONE_NUMBER_ID", "META_WHATSAPP_TOKEN"]);
+    expect(config.phoneNumberId).toBeNull();
+  });
+
+  it("queda configurado recién con las dos credenciales", () => {
+    expect(readDraftConfig({ META_PHONE_NUMBER_ID: "123" }).configured).toBe(false);
+    expect(readDraftConfig(baseEnv).configured).toBe(true);
+  });
+
+  it("conserva el modo y el allowlist aunque no haya credenciales", () => {
+    const config = readDraftConfig({ META_ALLOWED_RECIPIENTS: "5491122223333" });
+    expect(config.mode).toBe("test_number");
+    expect(config.allowedRecipients).toEqual(["5491122223333"]);
+  });
+
+  it("deja el envío apagado por defecto", () => {
+    expect(readDraftConfig({}).sendingEnabled).toBe(false);
+  });
+});
+
+describe("endpointFor", () => {
+  it("arma el endpoint real cuando hay número", () => {
+    expect(endpointFor({ graphVersion: "v27.0", phoneNumberId: "123" })).toBe(
+      "POST https://graph.facebook.com/v27.0/123/messages",
+    );
+  });
+
+  it("deja un marcador visible cuando falta, en vez de imprimir null", () => {
+    expect(endpointFor({ graphVersion: "v27.0", phoneNumberId: null })).toContain("{META_PHONE_NUMBER_ID}");
   });
 });

@@ -16,7 +16,13 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
-import { assertRecipientAllowed, describeChannel, loadChannelConfig } from "@/lib/channel";
+import {
+  assertRecipientAllowed,
+  describeChannel,
+  endpointFor,
+  loadChannelConfig,
+  readDraftConfig,
+} from "@/lib/channel";
 import { assertDraftMatches, DraftMismatchError, draftId } from "@/lib/drafts";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
@@ -82,8 +88,28 @@ const handler = createMcpHandler((server) => {
     },
     async (): Promise<ToolResult> => {
       try {
-        const config = loadChannelConfig();
-        const description = await describeChannel(config);
+        const draft = readDraftConfig();
+
+        // Sin credenciales el canal no está roto: está en dry-run. Es un
+        // estado válido y se informa como tal, no como error.
+        if (!draft.configured) {
+          return ok(
+            "Channel has no Meta credentials, so it works in dry-run only: drafts are built and validated, nothing can be delivered.",
+            {
+              configured: false,
+              missing: draft.missing,
+              mode: draft.mode,
+              graphVersion: draft.graphVersion,
+              sendingEnabled: draft.sendingEnabled,
+              constraints: [
+                `Missing ${draft.missing.join(", ")}. Once they are set, the same draft can be delivered without changing anything else.`,
+                "Free-form text only reaches a recipient within 24h of their last inbound message. Outside that window Meta requires a pre-approved template.",
+              ],
+            },
+          );
+        }
+
+        const description = await describeChannel(loadChannelConfig());
         return ok(
           description.declared.sendingEnabled
             ? "Channel is configured and sending is ENABLED."
@@ -106,12 +132,17 @@ const handler = createMcpHandler((server) => {
     },
     async (args): Promise<ToolResult> => {
       try {
-        const config = loadChannelConfig();
+        const config = readDraftConfig();
         const message = coerceMessage(args);
         const payload = buildPayload(args.to, message);
         const id = draftId(payload);
 
         const blockers: string[] = [];
+        if (!config.configured) {
+          blockers.push(
+            `No Meta credentials (${config.missing.join(", ")}): this is a dry-run and the payload cannot be delivered yet.`,
+          );
+        }
         try {
           assertRecipientAllowed(args.to, config);
         } catch (error) {
@@ -131,7 +162,7 @@ const handler = createMcpHandler((server) => {
             recipient: payload.to,
             preview: renderPreview(message),
             payload,
-            endpoint: `POST https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId}/messages`,
+            endpoint: endpointFor(config),
             blockers,
             next_step:
               "A human approves the send. To deliver, call whatsapp_send_message with this draft_id, the same arguments, and confirm: true. Any change to the arguments invalidates the draft_id.",
@@ -159,7 +190,7 @@ const handler = createMcpHandler((server) => {
     },
     async (args): Promise<ToolResult> => {
       try {
-        const config = loadChannelConfig();
+        const draft = readDraftConfig();
         const message = coerceMessage(args);
         const payload = buildPayload(args.to, message);
 
@@ -171,21 +202,27 @@ const handler = createMcpHandler((server) => {
           return refuse("confirm must be true to deliver a real message. The draft is valid; nothing was sent.");
         }
 
-        // 3. The deployment must allow sending at all.
-        if (!config.sendingEnabled) {
+        // 3. The deployment must be able to send, and allowed to. Either way,
+        //    the exact payload comes back as an explicit dry-run.
+        if (!draft.configured || !draft.sendingEnabled) {
           return ok(
-            "Refused: sending is disabled in this deployment. This is the payload that would have been delivered.",
+            !draft.configured
+              ? "Not delivered: there are no Meta credentials, so this stays a dry-run. This is the exact payload that would have been delivered."
+              : "Not delivered: sending is disabled in this deployment. This is the exact payload that would have been delivered.",
             {
               dry_run: true,
               draft_id: args.draft_id,
               payload,
-              endpoint: `POST https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId}/messages`,
-              how_to_enable: "Set WHATSAPP_ALLOW_SEND=true in the deployment environment.",
+              endpoint: endpointFor(draft),
+              how_to_enable: !draft.configured
+                ? `Set ${draft.missing.join(", ")} and WHATSAPP_ALLOW_SEND=true.`
+                : "Set WHATSAPP_ALLOW_SEND=true in the deployment environment.",
             },
           );
         }
 
         // 4. Don't call Meta when we already know it will refuse.
+        const config = loadChannelConfig();
         assertRecipientAllowed(args.to, config);
 
         const receipt = await deliver(payload, config);

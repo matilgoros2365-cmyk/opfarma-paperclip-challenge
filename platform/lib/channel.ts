@@ -62,11 +62,61 @@ export function loadChannelConfig(env: Record<string, string | undefined> = proc
 }
 
 /**
+ * Lo que necesita un borrador, que es mucho menos que lo que necesita un envío.
+ *
+ * Armar el payload exacto de la Graph API no requiere ni el token ni el número
+ * de Meta: sólo el destinatario y el mensaje. Así que esta lectura nunca falla
+ * por credenciales faltantes, y reporta en `configured` si se podría entregar.
+ *
+ * Esto importa porque el dry-run es el mínimo aceptable del enunciado, y
+ * exigir credenciales de Meta para producirlo dejaba sin canal a cualquiera que
+ * no las tuviera cargadas.
+ */
+export interface DraftConfig {
+  configured: boolean;
+  missing: string[];
+  phoneNumberId: string | null;
+  graphVersion: string;
+  mode: ChannelMode;
+  allowedRecipients: string[];
+  sendingEnabled: boolean;
+}
+
+export function readDraftConfig(env: Record<string, string | undefined> = process.env): DraftConfig {
+  const phoneNumberId = env.META_PHONE_NUMBER_ID?.trim() || null;
+  const token = env.META_WHATSAPP_TOKEN?.trim() || null;
+
+  const missing: string[] = [];
+  if (!phoneNumberId) missing.push("META_PHONE_NUMBER_ID");
+  if (!token) missing.push("META_WHATSAPP_TOKEN");
+
+  const declaredMode = env.META_CHANNEL_MODE?.trim();
+
+  return {
+    configured: missing.length === 0,
+    missing,
+    phoneNumberId,
+    graphVersion: env.META_GRAPH_VERSION?.trim() || DEFAULT_GRAPH_VERSION,
+    mode: declaredMode === "own_number" ? "own_number" : "test_number",
+    allowedRecipients: parseRecipients(env.META_ALLOWED_RECIPIENTS),
+    sendingEnabled: env.WHATSAPP_ALLOW_SEND?.trim() === "true",
+  };
+}
+
+/** El endpoint que se llamaría, con un marcador visible si falta el número. */
+export function endpointFor(config: Pick<DraftConfig, "graphVersion" | "phoneNumberId">): string {
+  return `POST https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId ?? "{META_PHONE_NUMBER_ID}"}/messages`;
+}
+
+/**
  * Fails before the network call when we already know Meta will refuse. The
  * allowlist is only authoritative for a test number; for a registered number
  * an empty list means "no local restriction", not "nobody allowed".
  */
-export function assertRecipientAllowed(recipient: string, config: ChannelConfig): void {
+export function assertRecipientAllowed(
+  recipient: string,
+  config: Pick<ChannelConfig, "mode" | "allowedRecipients">,
+): void {
   if (config.mode !== "test_number") return;
   if (config.allowedRecipients.length === 0) return;
 
