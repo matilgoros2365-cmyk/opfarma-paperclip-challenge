@@ -135,7 +135,9 @@ const RUNNER = process.env.PAPERCLIP_RUNNER?.trim() || null;
 const adapterConfig = (maxTurns) => ({
   cwd: AGENT_WORKSPACE,
   model: "claude-opus-5",
-  timeoutSec: 300,
+  // Con 300 s se cortaron dos corridas reales en la Mac (OPF-1 y OPF-5): escanear
+  // los 8 lotes y colocar cada uno lleva más que eso. 600 deja margen.
+  timeoutSec: 600,
   ...(RUNNER === "legacy" ? { maxTurnsPerRun: maxTurns } : {}),
 });
 
