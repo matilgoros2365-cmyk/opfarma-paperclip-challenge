@@ -266,8 +266,30 @@ async function ensureConnection(name, mcpPath) {
   return created;
 }
 
-await ensureConnection("OpFarma Inventario", "inventory");
+// Una conexión creada por API queda disponible para la organización, pero no
+// instalada para nadie: los agentes no ven sus herramientas hasta que se instala.
+// Desde la interfaz se hace con un clic; acá se instala para toda la compañía, y
+// las políticas de abajo deciden qué puede hacer cada agente.
+async function ensureInstalled(connection, name) {
+  const current = await api("GET", `/tool-connections/${connection.id}/installs`);
+  const installs = current?.installs ?? [];
+  if (installs.some((i) => i.targetType === "company" && i.targetId === CID)) {
+    log.reuse(`${name}: instalada para la compañía`);
+    return;
+  }
+  await api("PUT", `/tool-connections/${connection.id}/installs`, {
+    installs: [
+      ...installs.map((i) => ({ targetType: i.targetType, targetId: i.targetId })),
+      { targetType: "company", targetId: CID },
+    ],
+  });
+  log.ok(`${name}: instalada para la compañía`);
+}
+
+const inventory = await ensureConnection("OpFarma Inventario", "inventory");
 const whatsapp = await ensureConnection("OpFarma WhatsApp", "whatsapp");
+await ensureInstalled(inventory, "OpFarma Inventario");
+await ensureInstalled(whatsapp, "OpFarma WhatsApp");
 
 /* -------------------------------------------------------------------------- */
 
