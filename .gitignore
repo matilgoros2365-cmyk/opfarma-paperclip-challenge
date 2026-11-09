@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env
+.env.local
+*.log
+.paperclip-data/
+.vercel
+.paperclip-env
+agent-workspace/
+*.tsbuildinfo
+NOTES-decisions.md
