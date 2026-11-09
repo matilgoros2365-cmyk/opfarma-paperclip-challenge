@@ -1,105 +1,68 @@
 /**
- * Dashboard de sólo lectura.
+ * La plataforma de OpFarma: una vista de sólo lectura.
  *
- * No es un segundo plano de control: no modifica nada. Responde tres preguntas
- * que se va a hacer cualquiera que revise el desafío: qué lotes están en riesgo
- * y adónde los manda el motor, qué puede hacer hoy el canal de WhatsApp, y cómo
- * está la compañía en Paperclip. Cuando no puede responder algo, dice por qué
- * en vez de mostrar un estado vacío que parezca "no hay nada que hacer".
+ * No es un segundo plano de control: no modifica nada. Le cuenta a alguien que
+ * llega sin contexto qué se vence, qué hace OpFarma con cada lote y quién firma
+ * cada paso. El inventario lo calcula en vivo el mismo motor que usan los
+ * agentes; lo que vive en Paperclip, que corre local, se muestra en vivo sólo
+ * si la función lo alcanza, y si no, se dice por qué.
  */
 import { describeChannel, loadChannelConfig, readDraftConfig } from "@/lib/channel";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { scanInventory, type Placement, type Tier } from "@/lib/expiry/engine";
-import { listAgents, listIssues, loadPaperclipConfig, STATUS_ORDER, type Issue } from "@/lib/paperclip";
+import { listAgents, listIssues, loadPaperclipConfig, STATUS_ORDER } from "@/lib/paperclip";
 
 export const dynamic = "force-dynamic";
 
 const REPO = "https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge";
-
-/* -------------------------------------------------------------------------- */
-/* estilos                                                                    */
-/* -------------------------------------------------------------------------- */
-
-const muted = "#8b94a3";
-const soft = "#b6bdc8";
-
-const card: React.CSSProperties = {
-  border: "1px solid #232830",
-  borderRadius: 12,
-  padding: "20px 22px",
-  background: "#11141a",
-  marginBottom: 20,
-};
-
-const label: React.CSSProperties = {
-  fontSize: 12,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: muted,
-  marginBottom: 10,
-};
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  fontWeight: 500,
-  fontSize: 12,
-  color: muted,
-  padding: "0 12px 8px 0",
-  borderBottom: "1px solid #232830",
-  whiteSpace: "nowrap",
-};
-
-const td: React.CSSProperties = {
-  padding: "10px 12px 10px 0",
-  borderBottom: "1px solid #1a1e25",
-  fontSize: 14,
-  verticalAlign: "top",
-};
-
-const num: React.CSSProperties = { ...td, textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" };
-
-const link: React.CSSProperties = { color: "#9fc1e0" };
-
-function Notice({ tone, children }: { tone: "warn" | "info"; children: React.ReactNode }) {
-  return (
-    <p
-      style={{
-        margin: "8px 0 0",
-        padding: "10px 12px",
-        borderRadius: 8,
-        fontSize: 14,
-        background: tone === "warn" ? "#2a1f12" : "#121a24",
-        border: `1px solid ${tone === "warn" ? "#4a3317" : "#1d2b3a"}`,
-        color: tone === "warn" ? "#e9c182" : "#9fc1e0",
-      }}
-    >
-      {children}
-    </p>
-  );
-}
+const DOC = (path: string) => `${REPO}/blob/main/${path}`;
 
 /* -------------------------------------------------------------------------- */
 /* formato                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+const pesosFmt = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+// En Argentina se escribe $3.004.000, sin el espacio que mete Intl.
+const pesos = { format: (n: number) => pesosFmt.format(n).replace(/^\$\s/, "$") };
 const decimal = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
-function fecha(iso: string): string {
-  const [year, month, day] = iso.split("-");
-  return `${day}/${month}/${year}`;
+function parts(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return { y: y!, m: m!, d: d! };
 }
 
-const TIER: Record<Tier, { nombre: string; color: string }> = {
-  healthy: { nombre: "Sano", color: "#7fb98a" },
-  place: { nombre: "Colocar", color: "#9fc1e0" },
-  discount: { nombre: "Descuento", color: "#e9c182" },
-  salvage: { nombre: "Rescate", color: "#e8a07a" },
-  retire: { nombre: "Baja", color: "#e07a7a" },
+function fechaLarga(iso: string): string {
+  const { y, m, d } = parts(iso);
+  return `${d} de ${MESES[m - 1]} de ${y}`;
+}
+
+function fechaCorta(iso: string): string {
+  const { y, m, d } = parts(iso);
+  return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
+}
+
+function sumarDias(iso: string, dias: number): string {
+  const { y, m, d } = parts(iso);
+  const date = new Date(Date.UTC(y, m - 1, d + dias));
+  return date.toISOString().slice(0, 10);
+}
+
+function unidad(sku: string): string {
+  return dataset.products.find((product) => product.sku === sku)?.unit ?? "unidad";
+}
+
+const TIER: Record<Tier, { nombre: string; clase: string; color: string }> = {
+  healthy: { nombre: "Sano", clase: "", color: "var(--muted)" },
+  place: { nombre: "Colocar", clase: "tier-place", color: "var(--tier-place)" },
+  discount: { nombre: "Descuento", clase: "tier-discount", color: "var(--tier-discount)" },
+  salvage: { nombre: "Rescate", clase: "tier-salvage", color: "var(--tier-salvage)" },
+  retire: { nombre: "Baja", clase: "tier-retire", color: "var(--tier-retire)" },
 };
 
 /* -------------------------------------------------------------------------- */
-/* inventario                                                                 */
+/* qué hace OpFarma con cada lote                                             */
 /* -------------------------------------------------------------------------- */
 
 type Destino =
@@ -117,190 +80,259 @@ function destinoDe(placement: Placement): Destino {
   return { kind: "nadie" };
 }
 
+/* -------------------------------------------------------------------------- */
+/* la línea de vencimientos                                                   */
+/* -------------------------------------------------------------------------- */
+
+const HORIZON = 270;
+const BANDS: { tier: Tier; desde: number; hasta: number }[] = [
+  { tier: "retire", desde: 0, hasta: 30 },
+  { tier: "salvage", desde: 30, hasta: 90 },
+  { tier: "discount", desde: 90, hasta: 180 },
+  { tier: "place", desde: 180, hasta: HORIZON },
+];
+
+function Timeline({ placements, asOf }: { placements: Placement[]; asOf: string }) {
+  const W = 1000;
+  const left = 24;
+  const right = 976;
+  const x = (dias: number) => left + (Math.min(dias, HORIZON) / HORIZON) * (right - left);
+
+  const top = 44;
+  const laneGap = 54;
+  const axisY = 236;
+
+  const maxValue = Math.max(...placements.map((p) => p.valueAtRisk));
+  const radius = (value: number) => 7 + Math.sqrt(value / maxValue) * 13;
+
+  // Cada lote va en el primer carril donde su etiqueta no pisa a la anterior.
+  const laneEnds: number[] = [];
+  const marks = [...placements]
+    .sort((a, b) => a.daysToExpiry - b.daysToExpiry)
+    .map((p) => {
+      const cx = x(p.daysToExpiry);
+      const r = radius(p.valueAtRisk);
+      let lane = laneEnds.findIndex((end) => end < cx - r - 6);
+      if (lane === -1) lane = laneEnds.length;
+      laneEnds[lane] = cx + r + 92;
+      return { p, cx, r, cy: top + 34 + lane * laneGap, destino: destinoDe(p) };
+    });
+
+  const ticks = [0, 30, 90, 180, HORIZON];
+
+  return (
+    <figure className="timeline" style={{ margin: 0 }}>
+      <div className="timeline-scroll">
+        <svg viewBox={`0 0 ${W} 280`} role="img" aria-labelledby="timeline-title timeline-desc">
+          <title id="timeline-title">Cuándo vence cada lote</title>
+          <desc id="timeline-desc">
+            Los siete lotes ubicados según los días que faltan para su vencimiento, sobre los cuatro tramos que usa el motor
+            para decidir qué hacer con cada uno.
+          </desc>
+
+          {BANDS.map((band) => (
+            <g key={band.tier}>
+              <rect
+                x={x(band.desde)}
+                y={top}
+                width={x(band.hasta) - x(band.desde)}
+                height={axisY - top}
+                style={{ fill: TIER[band.tier].color, opacity: 0.07 }}
+              />
+              <text
+                x={x(band.desde) + 8}
+                y={top - 14}
+                style={{ fill: TIER[band.tier].color, fontSize: 15, fontWeight: 700 }}
+              >
+                {TIER[band.tier].nombre}
+              </text>
+            </g>
+          ))}
+
+          <line x1={left} x2={right} y1={axisY} y2={axisY} style={{ stroke: "var(--ink)", strokeWidth: 1.5 }} />
+          {ticks.map((dias) => (
+            <g key={dias}>
+              <line x1={x(dias)} x2={x(dias)} y1={top} y2={axisY + 6} style={{ stroke: "var(--rule)", strokeWidth: 1 }} />
+              <text
+                x={x(dias)}
+                y={axisY + 24}
+                textAnchor={dias === 0 ? "start" : dias === HORIZON ? "end" : "middle"}
+                style={{ fill: "var(--ink-soft)", fontSize: 14 }}
+              >
+                {dias === 0 ? "Hoy" : `${dias} días`}
+              </text>
+              <text
+                x={x(dias)}
+                y={axisY + 42}
+                textAnchor={dias === 0 ? "start" : dias === HORIZON ? "end" : "middle"}
+                style={{ fill: "var(--muted)", fontSize: 13 }}
+              >
+                {(() => {
+                  const { d, m } = parts(sumarDias(asOf, dias));
+                  return `${d} ${MESES_CORTOS[m - 1]}`;
+                })()}
+              </text>
+            </g>
+          ))}
+
+          {marks.map(({ p, cx, cy, r, destino }) => {
+            const color = TIER[p.tier].color;
+            const hollow = destino.kind === "nadie";
+            return (
+              <g key={p.lotId}>
+                <line x1={cx} x2={cx} y1={cy + r} y2={axisY} style={{ stroke: color, strokeWidth: 1, opacity: 0.5 }} />
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  style={{
+                    fill: hollow ? "var(--surface)" : color,
+                    stroke: color,
+                    strokeWidth: hollow ? 2.5 : 0,
+                    opacity: hollow ? 1 : 0.9,
+                  }}
+                />
+                <text x={cx + r + 6} y={cy - 2} style={{ fill: "var(--ink)", fontSize: 15, fontWeight: 700 }}>
+                  {p.lotId}
+                </text>
+                <text x={cx + r + 6} y={cy + 15} style={{ fill: "var(--muted)", fontSize: 13 }}>
+                  {pesos.format(p.valueAtRisk)}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <figcaption>
+        <ul className="timeline-legend">
+          <li>
+            <span className="dot solid" /> Hay una cuenta que lo consume antes de que venza
+          </li>
+          <li>
+            <span className="dot hollow" /> Ninguna cuenta lo consume entero a tiempo
+          </li>
+          <li>El tamaño es la plata que se pierde si se vence en depósito</li>
+        </ul>
+      </figcaption>
+    </figure>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* lote por lote                                                              */
+/* -------------------------------------------------------------------------- */
+
 function DestinoCell({ destino }: { destino: Destino }) {
   switch (destino.kind) {
     case "cuenta":
       return (
         <>
           {destino.nombre}
-          <div style={{ fontSize: 12, color: muted }}>cobertura {decimal.format(destino.cobertura)}</div>
+          <span className="sub">consume {decimal.format(destino.cobertura)} veces el lote antes del vencimiento</span>
         </>
       );
     case "revision":
       return (
         <>
           {destino.nombre}
-          <div style={{ fontSize: 12, color: "#e9c182" }}>
-            cobertura {decimal.format(destino.cobertura)} · tiene deuda, decide una persona
-          </div>
+          <span className="sub flag">tiene deuda: lo decide una persona</span>
         </>
       );
     case "nadie":
-      return <span style={{ color: "#e9c182" }}>Ninguna cuenta lo consume entero antes de que venza</span>;
+      return <span className="flag">Ninguna cuenta lo consume entero a tiempo</span>;
     case "baja":
-      return <span style={{ color: "#e07a7a" }}>Demasiado cerca del vencimiento para ofrecerlo</span>;
+      return <span className="loss">Ya no se puede ofrecer: se da de baja</span>;
   }
 }
 
-function InventoryPanel() {
-  const asOf = asOfDate();
-  const placements = scanInventory(dataset, asOf);
-
-  const enRiesgo = placements.reduce((total, p) => total + p.valueAtRisk, 0);
-  const colocables = placements.filter((p) => destinoDe(p).kind === "cuenta");
-  const colocableValor = colocables.reduce((total, p) => total + p.valueAtRisk, 0);
-  const bajas = placements.filter((p) => p.tier === "retire");
-
-  const kpis = [
-    { valor: String(placements.length), texto: "lotes necesitan una decisión" },
-    { valor: pesos.format(enRiesgo), texto: "en riesgo si se vencen en depósito" },
-    { valor: `${colocables.length} · ${pesos.format(colocableValor)}`, texto: "tienen una cuenta que los consume a tiempo" },
-    { valor: String(bajas.length), texto: bajas.length === 1 ? "hay que darlo de baja" : "hay que darlos de baja" },
-  ];
-
+function LotTable({ placements }: { placements: Placement[] }) {
   return (
-    <section style={card}>
-      <div style={label}>Inventario al {fecha(asOf)}</div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-          gap: 12,
-          marginBottom: 22,
-        }}
-      >
-        {kpis.map((kpi) => (
-          <div key={kpi.texto} style={{ background: "#0d1015", border: "1px solid #1a1e25", borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 20, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{kpi.valor}</div>
-            <div style={{ fontSize: 13, color: muted }}>{kpi.texto}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
-          <thead>
-            <tr>
-              <th style={th}>Lote</th>
-              <th style={th}>Producto</th>
-              <th style={{ ...th, textAlign: "right" }}>Vence</th>
-              <th style={th}>Tramo</th>
-              <th style={{ ...th, textAlign: "right" }}>En riesgo</th>
-              <th style={th}>Destino que propone el motor</th>
-              <th style={{ ...th, textAlign: "right" }}>Precio de oferta</th>
-            </tr>
-          </thead>
-          <tbody>
-            {placements.map((p) => {
-              const tier = TIER[p.tier];
-              const destino = destinoDe(p);
-              return (
-                <tr key={p.lotId}>
-                  <td style={{ ...td, whiteSpace: "nowrap" }}>
-                    <code>{p.lotId}</code>
-                  </td>
-                  <td style={td}>
-                    {p.productName}
-                    <div style={{ fontSize: 12, color: muted }}>
-                      {p.quantity} × {dataset.products.find((product) => product.sku === p.sku)?.unit ?? "unidad"}
-                    </div>
-                  </td>
-                  <td style={num}>
-                    {fecha(p.expiry)}
-                    <div style={{ fontSize: 12, color: muted }}>{p.daysToExpiry} días</div>
-                  </td>
-                  <td style={{ ...td, color: tier.color, whiteSpace: "nowrap" }}>{tier.nombre}</td>
-                  <td style={num}>{pesos.format(p.valueAtRisk)}</td>
-                  <td style={td}>
-                    <DestinoCell destino={destino} />
-                  </td>
-                  <td style={num}>
-                    {p.pricing && destino.kind !== "baja" ? (
-                      <>
-                        {pesos.format(p.pricing.offerPrice)}
-                        <div style={{ fontSize: 12, color: muted }}>
-                          −{Math.round(p.pricing.discountPct * 100)}%{p.pricing.floorBinding ? " · topeado en el piso" : ""}
-                        </div>
-                      </>
-                    ) : (
-                      <span style={{ color: muted }}>—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <p style={{ margin: "16px 0 0", fontSize: 13, color: muted }}>
-        Lo calcula en vivo el mismo motor que usan los agentes, sobre un dataset sembrado (no un ERP real). La cobertura es
-        cuánto del lote consume la cuenta antes del vencimiento según su rotación de los últimos 180 días: arriba de 1 lo
-        absorbe entero. El precio sale del tramo de vencimiento y nunca baja del piso de margen; no lo decide el modelo.
-      </p>
-    </section>
+    <div className="table-scroll">
+      <table className="lots">
+        <thead>
+          <tr>
+            <th scope="col">Lote</th>
+            <th scope="col">Producto</th>
+            <th scope="col" className="num">
+              Vence
+            </th>
+            <th scope="col">Tramo</th>
+            <th scope="col" className="num">
+              En riesgo
+            </th>
+            <th scope="col">A quién se le ofrece</th>
+            <th scope="col" className="num">
+              Precio de oferta
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {placements.map((p) => {
+            const tier = TIER[p.tier];
+            const destino = destinoDe(p);
+            return (
+              <tr key={p.lotId}>
+                <td className="lot">
+                  <code>{p.lotId}</code>
+                </td>
+                <td>
+                  {p.productName}
+                  <span className="sub">
+                    {p.quantity} × {unidad(p.sku)}
+                  </span>
+                </td>
+                <td className="num">
+                  {fechaCorta(p.expiry)}
+                  <span className="sub">en {p.daysToExpiry} días</span>
+                </td>
+                <td>
+                  <span className={`tier ${tier.clase}`}>{tier.nombre}</span>
+                </td>
+                <td className="num">{pesos.format(p.valueAtRisk)}</td>
+                <td>
+                  <DestinoCell destino={destino} />
+                </td>
+                <td className="num">
+                  {p.pricing && destino.kind !== "baja" ? (
+                    <>
+                      {pesos.format(p.pricing.offerPrice)}
+                      <span className="sub">
+                        {Math.round(p.pricing.discountPct * 100)}% menos
+                        {p.pricing.floorBinding ? ", frenado en el piso" : ""}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="sub">no aplica</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* controles                                                                  */
+/* canal y compañía                                                           */
 /* -------------------------------------------------------------------------- */
 
-function ControlsPanel() {
-  const controles = [
-    {
-      quien: "MarginReviewer, agente revisor",
-      que: "Valida que la cuenta consuma el lote a tiempo, que el precio respete el piso y que la cuenta no tenga deuda ni bloqueo.",
-    },
-    {
-      quien: "Una persona",
-      que: "Aprueba el margen. Es una etapa de la política de ejecución de la tarea: el agente no puede cerrarla sin esa firma.",
-    },
-    {
-      quien: "Una persona, otra vez",
-      que: "Aprueba cada envío por WhatsApp. Paperclip frena la llamada y pone una tarjeta en la tarea; el revisor tiene el envío bloqueado.",
-    },
-  ];
-
-  return (
-    <section style={card}>
-      <div style={label}>Quién firma qué</div>
-      <ol style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: soft }}>
-        {controles.map((control) => (
-          <li key={control.quien} style={{ marginBottom: 8 }}>
-            <strong style={{ color: "#e8eaed", fontWeight: 600 }}>{control.quien}.</strong> {control.que}
-          </li>
-        ))}
-      </ol>
-      <p style={{ margin: "12px 0 0", fontSize: 13, color: muted }}>
-        Y abajo de todo, el servidor: el envío sólo acepta el payload exacto que se aprobó, porque recalcula su hash y lo
-        compara con el <code>draft_id</code>.
-      </p>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* canal                                                                      */
-/* -------------------------------------------------------------------------- */
-
-async function ChannelPanel() {
+async function Channel() {
   const draft = readDraftConfig();
 
   if (!draft.configured) {
     return (
-      <section style={card}>
-        <div style={label}>Canal de WhatsApp</div>
-        <p style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 600 }}>
-          Sólo dry-run
-          <span style={{ color: muted, fontWeight: 400, fontSize: 15 }}> · sin credenciales de Meta · Graph {draft.graphVersion}</span>
+      <section className="section" aria-labelledby="canal">
+        <h2 id="canal">WhatsApp, hoy</h2>
+        <p className="status">
+          Sólo borradores <span>sin credenciales de Meta</span>
         </p>
-        <p style={{ margin: 0, fontSize: 14, color: soft }}>
-          Los borradores se arman y se validan igual, con su <code>draft_id</code>. Un envío aprobado devuelve el payload
-          exacto que habría salido, sin entregar nada. Con las credenciales cargadas, el mismo borrador sale sin cambiar
-          nada más.
+        <p>
+          Los mensajes se arman y se validan igual, cada uno con su <code>draft_id</code>. Si una persona aprueba el envío,
+          el servidor devuelve el mensaje exacto que habría salido y no entrega nada.
         </p>
+        <p>Con las credenciales cargadas, el mismo borrador sale sin tocar nada más.</p>
       </section>
     );
   }
@@ -308,69 +340,53 @@ async function ChannelPanel() {
   const { declared, observed } = await describeChannel(loadChannelConfig());
 
   return (
-    <section style={card}>
-      <div style={label}>Canal de WhatsApp</div>
-      <p style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 600 }}>
-        {declared.sendingEnabled ? "Envío habilitado" : "Sólo dry-run"}
-        <span style={{ color: muted, fontWeight: 400, fontSize: 15 }}>
-          {" · "}
-          {declared.mode === "test_number" ? "número de prueba de Meta" : "número propio"}
-          {" · Graph "}
-          {declared.graphVersion}
-        </span>
+    <section className="section" aria-labelledby="canal">
+      <h2 id="canal">WhatsApp, hoy</h2>
+      <p className="status">
+        {declared.sendingEnabled ? "Envío habilitado" : "Sólo borradores"}{" "}
+        <span>{declared.mode === "test_number" ? "con el número de prueba de Meta" : "con número propio"}</span>
       </p>
       {observed.reachable ? (
-        <p style={{ margin: 0, fontSize: 14, color: soft }}>
-          Meta informa: {observed.displayPhoneNumber ?? "número oculto"}
-          {observed.verifiedName ? ` · ${observed.verifiedName}` : ""}
-          {observed.qualityRating ? ` · calidad ${observed.qualityRating}` : ""}
+        <p>
+          Meta informa el número {observed.displayPhoneNumber ?? "(oculto)"}
+          {observed.verifiedName ? `, a nombre de ${observed.verifiedName}` : ""}
+          {observed.qualityRating ? `, con calidad ${observed.qualityRating}` : ""}.
         </p>
       ) : (
-        <Notice tone="warn">No se pudo consultar la Graph API: {observed.reason}</Notice>
+        <p className="notice">No se pudo consultar a Meta: {observed.reason}</p>
       )}
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* compañía                                                                   */
-/* -------------------------------------------------------------------------- */
+const ESTADOS: Record<string, string> = {
+  backlog: "en espera",
+  todo: "por hacer",
+  in_progress: "en curso",
+  in_review: "en revisión",
+  blocked: "trabada",
+  done: "hecha",
+  cancelled: "cancelada",
+};
 
-function IssueRow({ issue }: { issue: Issue }) {
-  const gated = issue.executionPolicy != null;
-  return (
-    <li style={{ display: "flex", gap: 10, alignItems: "baseline", marginBottom: 8, fontSize: 14 }}>
-      <code style={{ color: muted, fontSize: 12 }}>{issue.status}</code>
-      <span>{issue.title}</span>
-      {gated ? (
-        <span style={{ fontSize: 11, color: "#e9c182", border: "1px solid #4a3317", borderRadius: 999, padding: "1px 8px" }}>
-          aprobación humana
-        </span>
-      ) : null}
-    </li>
-  );
-}
-
-async function CompanyPanel() {
+async function Company() {
   const result = loadPaperclipConfig();
 
   if (!result.configured) {
     return (
-      <section style={card}>
-        <div style={label}>La compañía en Paperclip</div>
-        <p style={{ margin: "0 0 10px", fontSize: 14, color: soft }}>
-          Dos agentes: <strong style={{ color: "#e8eaed" }}>StockScout</strong>, que escanea, coloca y redacta, y reporta
-          a <strong style={{ color: "#e8eaed" }}>MarginReviewer</strong>, que revisa y nunca envía. Tres tareas: detectar
-          los lotes, validar y aprobar el margen de una oferta, y enviarla por WhatsApp.
+      <section className="section" aria-labelledby="compania">
+        <h2 id="compania">La compañía en Paperclip</h2>
+        <p>
+          Dos agentes. StockScout escanea el inventario, coloca cada lote y redacta las ofertas. MarginReviewer revisa sus
+          números y no puede enviar mensajes.
         </p>
-        <Notice tone="info">
-          Paperclip corre local y una función deployada no lo alcanza, así que acá no se ve en vivo. Las corridas, las
-          aprobaciones y la auditoría del envío están contadas en{" "}
-          <a href={`${REPO}/blob/main/DECISIONS.md`} style={link}>
-            DECISIONS.md
-          </a>
-          .
-        </Notice>
+        <p>
+          Tres tareas: detectar los lotes en riesgo, validar y aprobar el margen de una oferta, y mandarla por WhatsApp.
+        </p>
+        <p className="notice">
+          Paperclip corre en una computadora y esta página no lo alcanza, así que acá no se ve en vivo. Las corridas, las
+          aprobaciones y la auditoría del envío están en <a href={DOC("DECISIONS.md")}>las decisiones del proyecto</a>.
+        </p>
       </section>
     );
   }
@@ -378,28 +394,26 @@ async function CompanyPanel() {
   const [issues, agents] = await Promise.all([listIssues(result.config), listAgents(result.config)]);
 
   return (
-    <section style={card}>
-      <div style={label}>La compañía en Paperclip</div>
-
+    <section className="section" aria-labelledby="compania">
+      <h2 id="compania">La compañía en Paperclip</h2>
       {agents.ok ? (
-        <p style={{ margin: "0 0 16px", fontSize: 14, color: soft }}>
-          {agents.data.length} agente{agents.data.length === 1 ? "" : "s"}:{" "}
-          {agents.data.map((agent) => `${agent.name} (${agent.role ?? "sin rol"})`).join(" · ")}
-        </p>
+        <p>{agents.data.map((agent) => agent.name).join(" y ")}.</p>
       ) : (
-        <Notice tone="warn">{agents.reason}</Notice>
+        <p className="notice">{agents.reason}</p>
       )}
-
       {issues.ok ? (
-        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+        <ul className="issues">
           {[...issues.data]
             .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))
             .map((issue) => (
-              <IssueRow key={issue.id} issue={issue} />
+              <li key={issue.id}>
+                <span className="state">{ESTADOS[issue.status] ?? issue.status}</span>
+                <span>{issue.title}</span>
+              </li>
             ))}
         </ul>
       ) : (
-        <Notice tone="warn">{issues.reason}</Notice>
+        <p className="notice">{issues.reason}</p>
       )}
     </section>
   );
@@ -408,34 +422,121 @@ async function CompanyPanel() {
 /* -------------------------------------------------------------------------- */
 
 export default function Page() {
+  const asOf = asOfDate();
+  const placements = scanInventory(dataset, asOf);
+
+  const enRiesgo = placements.reduce((total, p) => total + p.valueAtRisk, 0);
+  const colocables = placements.filter((p) => destinoDe(p).kind === "cuenta");
+  const colocableValor = colocables.reduce((total, p) => total + p.valueAtRisk, 0);
+  const bajas = placements.filter((p) => p.tier === "retire");
+  const sinDestino = placements.filter((p) => destinoDe(p).kind === "nadie");
+
   return (
-    <>
-      <header style={{ marginBottom: 32 }}>
-        <p style={{ ...label, marginBottom: 6 }}>OpFarma · desafío técnico de Paperclip</p>
-        <h1 style={{ margin: 0, fontSize: 30, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
-          Lotes por vencer, y a quién vendérselos antes de la fecha
-        </h1>
-        <p style={{ margin: "10px 0 0", color: muted, fontSize: 15, maxWidth: 680 }}>
-          Una distribuidora de insumos médicos armada como compañía de agentes en Paperclip. Los agentes escanean el
-          inventario, buscan qué cuenta consume cada lote antes de que venza y redactan la oferta; las personas aprueban el
-          margen y cada envío. Esta página es de sólo lectura.
-        </p>
+    <div className="page">
+      <header className="masthead">
+        <span className="wordmark">
+          Op<span>Farma</span>
+        </span>
+        <span className="masthead-date">Inventario al {fechaLarga(asOf)}</span>
       </header>
 
-      <InventoryPanel />
-      <ControlsPanel />
-      <ChannelPanel />
-      <CompanyPanel />
+      <section className="hero">
+        <h1>
+          {placements.length} lotes de insumos médicos se vencen en el depósito si nadie los mueve.
+        </h1>
+        <p>
+          Valen {pesos.format(enRiesgo)} al costo. Saber qué se vence es fácil; lo difícil es encontrar a quién vendérselo a
+          tiempo. {colocables.length} de estos lotes tienen una cuenta que los consume antes de la fecha, por{" "}
+          {pesos.format(colocableValor)}. {sinDestino.length === 1 ? "Uno es demasiado grande" : `${sinDestino.length} son demasiado grandes`} para
+          cualquier cuenta, y {bajas.length === 1 ? "otro ya no tiene arreglo" : `${bajas.length} ya no tienen arreglo`}.
+        </p>
+      </section>
 
-      <footer style={{ marginTop: 40, fontSize: 13, color: "#6f7885" }}>
-        Servidores MCP: <code>/api/mcp/inventory</code> (escanear, colocar, armar la oferta) y{" "}
-        <code>/api/mcp/whatsapp</code> (estado del canal, borrador, envío), protegidos con <code>MCP_API_KEY</code>. Código y
-        decisiones en{" "}
-        <a href={REPO} style={link}>
-          GitHub
-        </a>
-        .
+      <Timeline placements={placements} asOf={asOf} />
+
+      <section className="section" aria-labelledby="lotes">
+        <h2 id="lotes">Lote por lote</h2>
+        <p className="lede">
+          Para cada lote, el motor mira cuánto compró cada cuenta de ese producto en los últimos 180 días y calcula cuánto
+          puede consumir antes del vencimiento, dejando un mes de margen. El precio sale del tramo y nunca baja del piso:
+          el costo más un 5%, o lo que pagaría un liquidador si es más.
+        </p>
+        <LotTable placements={placements} />
+        <p className="fine">
+          Datos de ejemplo: el inventario y las compras son un dataset armado para la demo, no un sistema de gestión real.
+          El cálculo es el mismo que usan los agentes cuando trabajan en Paperclip.
+        </p>
+      </section>
+
+      <section className="section" aria-labelledby="quien">
+        <h2 id="quien">Quién hace qué</h2>
+        <p className="lede">
+          Los agentes hacen lo que a mano no da el tiempo. Las personas firman donde un error lo paga otro.
+        </p>
+        <ol className="steps">
+          <li>
+            <h3>Encuentra a quién colocar cada lote</h3>
+            <p>Escanea el inventario y cruza cada lote con la rotación de cada cuenta. Con cientos de cuentas, a mano no se hace.</p>
+            <span className="who">StockScout, agente</span>
+          </li>
+          <li>
+            <h3>Pone el precio</h3>
+            <p>Lo calcula el motor según el tramo de vencimiento. El agente no lo puede cambiar ni ofrecer por debajo del piso.</p>
+            <span className="who">Código, con tests</span>
+          </li>
+          <li>
+            <h3>Revisa la colocación</h3>
+            <p>Valida que la cuenta lo consuma a tiempo, que el precio respete el piso y que no tenga deuda ni bloqueo.</p>
+            <span className="who">MarginReviewer, agente</span>
+          </li>
+          <li className="human">
+            <h3>Aprueba el margen</h3>
+            <p>La tarea no se puede cerrar sin esta firma. Colocar mal un lote no borra la pérdida: se la pasa a una clínica.</p>
+            <span className="who">Una persona</span>
+          </li>
+          <li className="human">
+            <h3>Aprueba cada mensaje</h3>
+            <p>Paperclip frena el envío y pide aprobación en la tarea. Sale sólo el texto exacto que se aprobó.</p>
+            <span className="who">Una persona, otra vez</span>
+          </li>
+        </ol>
+      </section>
+
+      <div className="split">
+        <Channel />
+        <Company />
+      </div>
+
+      <aside className="note" aria-labelledby="nota">
+        <h2 id="nota">Por qué está armado así</h2>
+        <p>
+          Armé OpFarma para el desafío técnico de Paperclip. Elegí este problema porque en insumos médicos un lote vencido es
+          plata perdida, y porque decidir a quién ofrecérselo a tiempo es justo el trabajo que una persona no llega a hacer con
+          cientos de cuentas.
+        </p>
+        <p>
+          Dejé el precio en código y no en el modelo, y puse a una persona en los dos lugares donde un error le cuesta a un
+          tercero: el margen y el mensaje al cliente. El segundo control no venía configurado en Paperclip; lo detectó el
+          propio agente cuando el envío pasó sin pedir permiso.
+        </p>
+        <ul>
+          <li>
+            <a href={DOC("DECISIONS.md")}>Qué decidí y con qué me choqué</a>
+          </li>
+          <li>
+            <a href={DOC("research/RESEARCH.md")}>Qué es Paperclip, en una página</a>
+          </li>
+          <li>
+            <a href={REPO}>El código</a>
+          </li>
+        </ul>
+      </aside>
+
+      <footer className="colophon">
+        Los agentes usan dos servidores MCP de esta misma aplicación: <code>/api/mcp/inventory</code> para escanear, colocar
+        y armar ofertas, y <code>/api/mcp/whatsapp</code> para el estado del canal, los borradores y el envío. Los dos piden
+        clave.
       </footer>
-    </>
+    </div>
   );
 }

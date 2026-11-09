@@ -1,0 +1,481 @@
+/*
+ * OpFarma. Paleta fría de hospital: pared verde grisácea, tinta pizarra y un
+ * verde quirófano de acento. Los cuatro colores de tramo son los únicos que
+ * cargan significado, así que no se usan para decorar nada más.
+ */
+:root {
+  color-scheme: light;
+
+  --paper: #f1f4f2;
+  --surface: #fbfcfb;
+  --ink: #16262a;
+  --ink-soft: #3d4f53;
+  --muted: #637275;
+  --rule: #cdd6d3;
+  --rule-soft: #dfe5e3;
+  --accent: #1e6a57;
+
+  --tier-place: #2f6690;
+  --tier-discount: #a3761a;
+  --tier-salvage: #b4552b;
+  --tier-retire: #9b2c35;
+
+  --measure: 68ch;
+  --wide: 1040px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-atkinson), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  font-feature-settings: "tnum" 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code {
+  font-family: inherit;
+  font-feature-settings: "tnum" 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.page {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 28px 24px 96px;
+}
+
+/* -------------------------------------------------------------- cabecera */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--ink);
+  font-size: 15px;
+}
+
+.wordmark {
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.wordmark span {
+  color: var(--accent);
+}
+
+.masthead-date {
+  color: var(--muted);
+}
+
+.hero {
+  padding: 56px 0 8px;
+  max-width: 820px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(34px, 5.4vw, 58px);
+  line-height: 1.04;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.hero p {
+  margin: 22px 0 0;
+  max-width: var(--measure);
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* -------------------------------------------------------------- secciones */
+
+.section {
+  margin-top: 64px;
+}
+
+.section > h2 {
+  margin: 0 0 6px;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+.section > .lede {
+  margin: 0 0 22px;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.fine {
+  margin: 14px 0 0;
+  max-width: var(--measure);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------- línea de vencimientos */
+
+.timeline {
+  margin-top: 40px;
+  padding: 26px 0 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.timeline-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.timeline svg {
+  display: block;
+  width: 100%;
+  min-width: 720px;
+  height: auto;
+}
+
+.timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.timeline-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dot.hollow {
+  background: var(--surface);
+  border: 2px solid var(--ink-soft);
+}
+
+.dot.solid {
+  background: var(--ink-soft);
+}
+
+/* ---------------------------------------------------------------- tabla */
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.lots {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: 15.5px;
+}
+
+.lots th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.lots td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+}
+
+.lots tr:last-child td {
+  border-bottom: 0;
+}
+
+.lots .lot {
+  white-space: nowrap;
+}
+
+.lots .num {
+  text-align: right;
+  font-feature-settings: "tnum" 1;
+  white-space: nowrap;
+}
+
+.lots .sub {
+  display: block;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.tier::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tier-place {
+  color: var(--tier-place);
+}
+.tier-discount {
+  color: var(--tier-discount);
+}
+.tier-salvage {
+  color: var(--tier-salvage);
+}
+.tier-retire {
+  color: var(--tier-retire);
+}
+
+.flag {
+  color: var(--tier-discount);
+}
+
+.loss {
+  color: var(--tier-retire);
+}
+
+/* ---------------------------------------------------------- quién firma */
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 28px 24px;
+}
+
+.steps li {
+  counter-increment: step;
+  padding-top: 14px;
+  border-top: 2px solid var(--rule);
+}
+
+.steps li.human {
+  border-top-color: var(--accent);
+}
+
+.steps li::before {
+  content: counter(step);
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.steps h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.steps p {
+  margin: 0;
+  font-size: 15.5px;
+  color: var(--ink-soft);
+}
+
+.who {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.steps li.human .who {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------- canal y compañía */
+
+.split {
+  margin-top: 64px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 48px;
+}
+
+.split .section {
+  margin-top: 0;
+}
+
+.status {
+  margin: 4px 0 10px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.status span {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.split p {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.notice {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--tier-discount);
+  background: var(--surface);
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.issues {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15.5px;
+}
+
+.issues li {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.issues .state {
+  flex: none;
+  width: 88px;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- nota */
+
+.note {
+  margin-top: 72px;
+  padding: 30px 32px 30px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  max-width: 820px;
+}
+
+.note h2 {
+  margin: 0 0 12px;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.note p {
+  margin: 0 0 14px;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.note ul {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  font-weight: 600;
+}
+
+.colophon {
+  margin-top: 56px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--muted);
+  max-width: var(--measure);
+}
+
+@media (max-width: 960px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  body {
+    font-size: 16px;
+  }
+  .page {
+    padding: 20px 16px 72px;
+  }
+  .hero {
+    padding-top: 36px;
+  }
+  .hero p {
+    font-size: 17px;
+  }
+  .section {
+    margin-top: 48px;
+  }
+  .note {
+    padding: 22px 18px;
+  }
+}

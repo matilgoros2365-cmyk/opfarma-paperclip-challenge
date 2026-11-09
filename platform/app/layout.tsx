@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
+import { Atkinson_Hyperlegible_Next } from "next/font/google";
 import type { ReactNode } from "react";
 
+import "./globals.css";
+
+// Atkinson Hyperlegible la diseñó el Braille Institute para que se lea bien con
+// baja visión: distingue la l de la I y el 0 de la O, que en códigos de lote y
+// en montos importa.
+const atkinson = Atkinson_Hyperlegible_Next({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-atkinson",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "OpFarma · lotes por vencer",
+  title: "OpFarma: lotes por vencer",
   description:
-    "Vista de sólo lectura de una compañía de agentes en Paperclip que coloca lotes de insumos médicos antes de que venzan.",
+    "Qué lotes de insumos médicos se vencen en depósito, a qué cuenta se le pueden colocar a tiempo y quién aprueba cada paso.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
-      <body
-        style={{
-          margin: 0,
-          background: "#0b0d10",
-          color: "#e8eaed",
-          fontFamily:
-            "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-          lineHeight: 1.55,
-        }}
-      >
-        <main style={{ maxWidth: 960, margin: "0 auto", padding: "48px 16px 96px" }}>{children}</main>
-      </body>
+    <html lang="es-AR" className={atkinson.variable}>
+      <body>{children}</body>
     </html>
   );
 }
