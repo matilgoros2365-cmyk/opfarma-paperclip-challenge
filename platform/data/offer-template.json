@@ -1,0 +1,8 @@
+{
+  "name": "oferta_lote_por_vencer",
+  "language": "es_AR",
+  "category": "MARKETING",
+  "body": "Hola, {{1}}. Les escribimos de OpFarma por un lote de {{2}} que vence el {{3}}.\n\nTenemos {{4}} disponibles a {{5}} por unidad, {{6}} en total, con un {{7}} de descuento sobre el precio de lista.\n\nSe lo ofrecemos porque, por su consumo habitual, lo usarían antes de esa fecha. Si les interesa, respondan este mensaje y coordinamos la entrega.",
+  "footer": "Si no les sirve, avísennos y no insistimos.",
+  "examples": ["Sanatorio del Parque", "Sutura de nylon 3-0", "22/01/2027", "120 sobres", "$1.260", "$151.200", "40%"]
+}

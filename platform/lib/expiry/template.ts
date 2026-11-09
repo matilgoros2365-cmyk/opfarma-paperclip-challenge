@@ -3,27 +3,24 @@
  *
  * Una oferta la inicia OpFarma, así que Meta exige una plantilla aprobada: el
  * texto libre sólo se puede mandar dentro de las 24 horas siguientes a un
- * mensaje del cliente. Este archivo es la fuente única del texto: lo que se da
- * de alta en el WhatsApp Manager se copia de acá, y lo que arma el agente sale
- * de acá, así que no pueden divergir sin que un test lo detecte.
+ * mensaje del cliente. El texto tiene una sola fuente, data/offer-template.json:
+ * de ahí lo lee el script que da de alta la plantilla en Meta y de ahí salen las
+ * variables que arma el agente, así que no pueden divergir.
  */
+import offerTemplate from "@/data/offer-template.json";
+
 import type { Offer } from "./offer";
 
-export const OFFER_TEMPLATE = {
-  name: "oferta_lote_por_vencer",
-  language: "es_AR",
-  category: "MARKETING",
-  body: [
-    "Hola, {{1}}. Les escribimos de OpFarma por un lote de {{2}} que vence el {{3}}.",
-    "",
-    "Tenemos {{4}} disponibles a {{5}} por unidad, {{6}} en total, con un {{7}} de descuento sobre el precio de lista.",
-    "",
-    "Se lo ofrecemos porque, por su consumo habitual, lo usarían antes de esa fecha. Si les interesa, respondan este mensaje y coordinamos la entrega.",
-  ].join("\n"),
-  footer: "Si no les sirve, avísennos y no insistimos.",
-  /** Valores de ejemplo que Meta pide al dar de alta la plantilla. */
-  examples: ["Sanatorio del Parque", "Sutura de nylon 3-0", "22/01/2027", "120 sobres", "$1.260", "$151.200", "40%"],
-} as const;
+// El texto vive en data/offer-template.json, que también lee el script que da de
+// alta la plantilla en Meta (scripts/create-template.mjs).
+export const OFFER_TEMPLATE = offerTemplate as {
+  readonly name: string;
+  readonly language: string;
+  readonly category: "MARKETING" | "UTILITY";
+  readonly body: string;
+  readonly footer: string;
+  readonly examples: readonly string[];
+};
 
 const pesos = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
 

@@ -51,19 +51,18 @@ WhatsApp Business, y generar un token con los permisos
 
 ### 4. Dar de alta la plantilla
 
-En el **WhatsApp Manager → Plantillas de mensajes**, crear:
+El texto está en `platform/data/offer-template.json`, que es el mismo archivo que
+usa el agente. La forma más segura de darla de alta es con el script, que lo lee
+de ahí y lo envía por la API, sin copiar nada a mano:
 
-| Campo | Valor |
-| --- | --- |
-| Nombre | `oferta_lote_por_vencer` |
-| Categoría | Marketing |
-| Idioma | Español (Argentina) |
-| Cuerpo | El texto de `OFFER_TEMPLATE.body` en `platform/lib/expiry/template.ts` |
-| Pie | El texto de `OFFER_TEMPLATE.footer` en el mismo archivo |
-| Ejemplos | Los de `OFFER_TEMPLATE.examples`, en orden |
+```bash
+cd platform && META_WABA_ID=<id de la cuenta de WhatsApp Business> META_WHATSAPP_TOKEN=<token> node scripts/create-template.mjs
+```
 
-El texto se copia de ese archivo y de ningún otro lado: es el mismo que usa el
-agente, y los tests verifican que cada oferta complete todas las variables.
+Queda como `oferta_lote_por_vencer`, categoría Marketing, en español de
+Argentina, con su pie y un ejemplo por variable. Si se prefiere la interfaz, en
+el **WhatsApp Manager → Plantillas de mensajes** se cargan los mismos campos del
+archivo. La aprobación suele tardar minutos.
 
 Antes de mandar mensajes de marketing, Meta exige que el cliente haya aceptado
 recibirlos por WhatsApp. Ese consentimiento tiene que quedar registrado por
