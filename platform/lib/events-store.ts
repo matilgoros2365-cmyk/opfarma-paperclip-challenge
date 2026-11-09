@@ -7,10 +7,16 @@
  * KV_REST_API_TOKEN), o las de Upstash directo. Si no están, el webhook sigue
  * respondiendo y validando, y los eventos sólo quedan en el log: es un estado
  * válido, y se informa como tal.
+ *
+ * Sólo se guardan los avisos de mensajes que mandó OpFarma. Cada envío anota
+ * su identificador, y el webhook descarta el resto. Importa porque una cuenta de
+ * WhatsApp Business puede estar compartida con otra app: sus avisos llegan al
+ * mismo webhook y no son nuestros.
  */
 import type { WebhookEvent } from "./webhook";
 
-const KEY = "opfarma:whatsapp:events";
+const EVENTS = "opfarma:whatsapp:events";
+const SENT = "opfarma:whatsapp:sent";
 const KEEP = 200;
 
 export interface StoreConfig {
@@ -35,6 +41,40 @@ async function call(config: StoreConfig, path: string, body: unknown, fetchImpl:
   return response.json();
 }
 
+/** Lo llama el envío: a partir de acá, los avisos de este mensaje son nuestros. */
+export async function recordSent(wamid: string, config: StoreConfig, fetchImpl: typeof fetch = fetch): Promise<void> {
+  await call(config, "", ["SADD", SENT, wamid], fetchImpl);
+}
+
+/**
+ * Se queda con los avisos de mensajes propios. Las respuestas entrantes se
+ * conservan sólo si la cuenta no está compartida: en una cuenta compartida no
+ * hay forma de saber si el cliente le contestó a OpFarma o a la otra app.
+ */
+export async function keepOwn(
+  events: WebhookEvent[],
+  config: StoreConfig,
+  options: { sharedAccount: boolean },
+  fetchImpl: typeof fetch = fetch,
+): Promise<WebhookEvent[]> {
+  const statuses = events.filter((event) => event.kind === "status");
+  let own = new Set<string>();
+
+  if (statuses.length > 0) {
+    const answers = (await call(
+      config,
+      "/pipeline",
+      statuses.map((event) => ["SISMEMBER", SENT, event.wamid]),
+      fetchImpl,
+    )) as Array<{ result?: number }>;
+    own = new Set(statuses.filter((_, i) => answers[i]?.result === 1).map((event) => event.wamid));
+  }
+
+  return events.filter((event) =>
+    event.kind === "status" ? own.has(event.wamid) : !options.sharedAccount,
+  );
+}
+
 export async function saveEvents(
   events: WebhookEvent[],
   config: StoreConfig,
@@ -44,7 +84,7 @@ export async function saveEvents(
   await call(
     config,
     "/pipeline",
-    [["LPUSH", KEY, ...events.map((event) => JSON.stringify(event))], ["LTRIM", KEY, "0", String(KEEP - 1)]],
+    [["LPUSH", EVENTS, ...events.map((event) => JSON.stringify(event))], ["LTRIM", EVENTS, "0", String(KEEP - 1)]],
     fetchImpl,
   );
 }
@@ -55,7 +95,7 @@ export async function recentEvents(
   limit = 50,
   fetchImpl: typeof fetch = fetch,
 ): Promise<WebhookEvent[]> {
-  const raw = (await call(config, "", ["LRANGE", KEY, "0", String(limit - 1)], fetchImpl)) as { result?: string[] };
+  const raw = (await call(config, "", ["LRANGE", EVENTS, "0", String(limit - 1)], fetchImpl)) as { result?: string[] };
   return (raw.result ?? []).flatMap((entry) => {
     try {
       return [JSON.parse(entry) as WebhookEvent];

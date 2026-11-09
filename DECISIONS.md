@@ -18,7 +18,7 @@ mensaje, así que sale exactamente lo que se aprobó.
 - El canal quedó listo para producción: plantilla de oferta definida en el
   código, webhook de estado de entrega con firma verificada, y el procedimiento
   para activarlo en la cuenta de la empresa ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
-- 170 tests, con una verificación independiente del motor
+- 173 tests, con una verificación independiente del motor
   ([`VERIFICATION.md`](VERIFICATION.md)).
 
 **Qué no funcionó.**

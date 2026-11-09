@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { readStoreConfig, recentEvents, saveEvents } from "@/lib/events-store";
+import { keepOwn, readStoreConfig, recentEvents, recordSent, saveEvents } from "@/lib/events-store";
 import { maskNumber, parseWebhook, verifySignature, verifySubscription } from "@/lib/webhook";
 
 const SECRET = "app-secret-de-prueba";
@@ -155,6 +155,36 @@ describe("el almacén de eventos", () => {
     const fetchImpl = vi.fn();
     await saveEvents([], { url: "https://x", token: "t" }, fetchImpl as unknown as typeof fetch);
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("anota cada envío propio en el conjunto de mensajes de OpFarma", async () => {
+    const fetchImpl = vi.fn().mockImplementation(async () => new Response('{"result":1}', { status: 200 }));
+    await recordSent("wamid.MIO", { url: "https://x", token: "t" }, fetchImpl as unknown as typeof fetch);
+    expect(JSON.parse(fetchImpl.mock.calls[0]![1].body)).toEqual(["SADD", "opfarma:whatsapp:sent", "wamid.MIO"]);
+  });
+
+  describe("en una cuenta compartida con otra app", () => {
+    const store = { url: "https://x", token: "t" };
+    const mixed = [
+      ...parseWebhook(statusPayload("delivered")), // wamid.ABC, de OpFarma
+      ...parseWebhook(statusPayload("read")).map((e) => ({ ...e, wamid: "wamid.DE_OTRA_APP" })),
+      { kind: "inbound" as const, from: "…3333", type: "text", at: "2026-11-09T00:00:00.000Z" },
+    ];
+    // El almacén contesta SISMEMBER: 1 para el propio, 0 para el ajeno.
+    const fetchImpl = vi
+      .fn()
+      .mockImplementation(async () => new Response(JSON.stringify([{ result: 1 }, { result: 0 }]), { status: 200 }));
+
+    it("guarda sólo los avisos de mensajes propios y descarta las respuestas", async () => {
+      const kept = await keepOwn(mixed, store, { sharedAccount: true }, fetchImpl as unknown as typeof fetch);
+      expect(kept).toHaveLength(1);
+      expect(kept[0]).toMatchObject({ kind: "status", wamid: "wamid.ABC" });
+    });
+
+    it("con una cuenta propia, conserva también las respuestas", async () => {
+      const kept = await keepOwn(mixed, store, { sharedAccount: false }, fetchImpl as unknown as typeof fetch);
+      expect(kept.map((e) => e.kind)).toEqual(["status", "inbound"]);
+    });
   });
 
   it("devuelve los eventos y descarta entradas corruptas", async () => {

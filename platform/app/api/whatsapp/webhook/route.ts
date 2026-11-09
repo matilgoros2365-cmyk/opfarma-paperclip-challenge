@@ -3,10 +3,13 @@
  * META_WEBHOOK_VERIFY_TOKEN, suscripto al campo "messages".
  *
  * GET  responde el desafío de suscripción.
- * POST verifica la firma con META_APP_SECRET, guarda los estados de entrega y
- *      responde 200 enseguida: si Meta no recibe 200, reintenta.
+ * POST verifica la firma con META_APP_SECRET, guarda los estados de entrega de
+ *      los mensajes que mandó OpFarma y responde 200 enseguida: si Meta no
+ *      recibe 200, reintenta. Con WHATSAPP_SHARED_ACCOUNT=true, además descarta
+ *      las respuestas entrantes, que en una cuenta compartida pueden no ser
+ *      para OpFarma.
  */
-import { readStoreConfig, saveEvents } from "@/lib/events-store";
+import { keepOwn, readStoreConfig, saveEvents } from "@/lib/events-store";
 import { parseWebhook, verifySignature, verifySubscription } from "@/lib/webhook";
 
 export const runtime = "nodejs";
@@ -38,19 +41,27 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("Bad request", { status: 400 });
   }
 
-  const events = parseWebhook(body);
+  const received = parseWebhook(body);
   const store = readStoreConfig();
+  const sharedAccount = process.env.WHATSAPP_SHARED_ACCOUNT?.trim() === "true";
+  let events = received;
 
   if (store) {
     try {
+      events = await keepOwn(received, store, { sharedAccount });
       await saveEvents(events, store);
     } catch (error) {
       // Se registra y se responde 200 igual: un reintento de Meta no arregla un
       // problema del almacén, y sí duplicaría eventos.
       console.error("whatsapp-webhook: could not store events", String(error));
+      events = [];
     }
   }
-  console.log("whatsapp-webhook", JSON.stringify({ stored: Boolean(store), events }));
+  // Al log va sólo la cuenta, no el contenido: puede haber avisos de otra app.
+  console.log(
+    "whatsapp-webhook",
+    JSON.stringify({ received: received.length, stored: store ? events.length : 0 }),
+  );
 
   return new Response("OK", { status: 200 });
 }

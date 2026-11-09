@@ -99,6 +99,7 @@ conectarlo al proyecto. La integración crea `KV_REST_API_URL` y
 | `META_CHANNEL_MODE` | — | `own_number` |
 | `META_ALLOWED_RECIPIENTS` | — | Vacío: el número propio no tiene lista |
 | `WHATSAPP_ALLOW_SEND` | `false` | `true` |
+| `WHATSAPP_SHARED_ACCOUNT` | `false` con cuenta propia | — |
 
 La separación es a propósito: la plataforma pública recibe los avisos de Meta,
 pero no puede enviar. Sólo envía la instancia que usan los agentes, y siempre

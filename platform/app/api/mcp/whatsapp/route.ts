@@ -25,7 +25,7 @@ import {
   readDraftConfig,
 } from "@/lib/channel";
 import { assertDraftMatches, DraftMismatchError, draftId } from "@/lib/drafts";
-import { readStoreConfig, recentEvents } from "@/lib/events-store";
+import { readStoreConfig, recentEvents, recordSent } from "@/lib/events-store";
 import { renderTemplate } from "@/lib/expiry/template";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
@@ -232,12 +232,26 @@ const handler = createMcpHandler((server) => {
 
         const receipt = await deliver(payload, config);
 
+        // Desde acá, los avisos de este mensaje son de OpFarma y el webhook los
+        // guarda. Si el almacén falla, el envío ya salió: se informa, no se oculta.
+        const store = readStoreConfig();
+        let tracking = store ? "recorded" : "no event store configured";
+        if (store) {
+          try {
+            await recordSent(receipt.wamid, store);
+          } catch (error) {
+            tracking = `could not record the message id: ${String(error)}`;
+          }
+        }
+
         return ok("Delivered. Meta returned a message id, which is the receipt for this send.", {
           dry_run: false,
           draft_id: args.draft_id,
           recipient: payload.to,
           preview: renderPreview(message),
           ...receipt,
+          delivery_tracking: tracking,
+          next_step: "Call whatsapp_delivery_status with this wamid to record whether it was delivered and read.",
         });
       } catch (error) {
         if (error instanceof DraftMismatchError) {
