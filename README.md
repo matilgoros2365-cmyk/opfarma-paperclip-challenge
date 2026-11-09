@@ -20,6 +20,7 @@ por separado, cada mensaje.
   técnico de cada obstáculo está en [`docs/BITACORA.md`](docs/BITACORA.md).
 - **Cómo lo verifiqué:** [`VERIFICATION.md`](VERIFICATION.md).
 - **El problema y sus fuentes:** [`research/EXPIRY.md`](research/EXPIRY.md).
+- **Cómo pasar WhatsApp a producción:** [`docs/PRODUCCION.md`](docs/PRODUCCION.md).
 
 ## Por qué este problema
 
@@ -175,7 +176,7 @@ con los workspaces aislados, y está documentada en la bitácora.
 cd platform && npm test
 ```
 
-Son 143 tests. Además de las pruebas por módulo, incluyen una verificación
+Son 170 tests. Además de las pruebas por módulo, incluyen una verificación
 independiente que rehace todas las cuentas del motor desde la especificación,
 sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
 que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).
@@ -214,7 +215,16 @@ humana y un lote demasiado cerca del vencimiento que el motor se niega a ofrecer
 
 Con `WHATSAPP_ALLOW_SEND=false`, que es el valor por defecto, el canal redacta,
 valida y arma el mensaje exacto, pero no lo entrega: devuelve un dry-run
-explícito. Para enviar de verdad hace falta una app de Meta con su número de
-prueba, que no requiere verificación de negocio. La traba aparece al registrar un
-número propio, y una oferta iniciada por la empresa necesita además una plantilla
-aprobada por Meta.
+explícito. Para enviar de verdad alcanza con una app de Meta y su número de
+prueba, que no requiere verificación de negocio.
+
+Como una oferta la inicia la empresa, fuera de la ventana de 24 horas Meta sólo
+la entrega como plantilla aprobada. La plantilla `oferta_lote_por_vencer` está
+definida en `platform/lib/expiry/template.ts`, y cada oferta devuelve sus
+variables listas para el borrador. Después del envío, Meta informa por webhook
+si el mensaje se entregó, se leyó o falló; la plataforma lo muestra y el agente
+lo puede consultar con `whatsapp_delivery_status` para registrarlo en la tarea.
+
+Lo único que falta para usarlo con clientes reales es la cuenta de la empresa:
+verificación con su CUIT, número propio y la plantilla aprobada en esa cuenta.
+El procedimiento está en [`docs/PRODUCCION.md`](docs/PRODUCCION.md).

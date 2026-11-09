@@ -15,7 +15,10 @@ mensaje, así que sale exactamente lo que se aprobó.
 - La revisión se ejecutó de punta a punta en OPF-2.
 - En OPF-3 Paperclip frenó el envío, pidió aprobación y, al aprobarlo, el
   servidor devolvió el mensaje exacto en dry-run. La auditoría lo confirma.
-- 143 tests, con una verificación independiente del motor
+- El canal quedó listo para producción: plantilla de oferta definida en el
+  código, webhook de estado de entrega con firma verificada, y el procedimiento
+  para activarlo en la cuenta de la empresa ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
+- 170 tests, con una verificación independiente del motor
   ([`VERIFICATION.md`](VERIFICATION.md)).
 
 **Qué no funcionó.**
@@ -29,7 +32,7 @@ mensaje, así que sale exactamente lo que se aprobó.
 
 El detalle está en [`docs/BITACORA.md`](docs/BITACORA.md).
 
-**Qué haría la semana siguiente.** Pasar a un número propio con plantilla
-aprobada y el webhook de estado de Meta; repartir la demanda entre lotes del
+**Qué haría la semana siguiente.** Activar el canal en la cuenta de Meta de la
+empresa, con su CUIT y un número propio; repartir la demanda entre lotes del
 mismo producto; darle a la compañía un workspace de git para eliminar el Retry;
 sacar la clave del MCP de la URL, y conectar el sistema de gestión real.

@@ -17,6 +17,7 @@ import { z } from "zod";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { placeLot, scanInventory } from "@/lib/expiry/engine";
 import { buildOffer, offerMessage, OfferRefused } from "@/lib/expiry/offer";
+import { OFFER_TEMPLATE, offerTemplateVariables } from "@/lib/expiry/template";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
 
@@ -166,8 +167,17 @@ const handler = createMcpHandler((server) => {
             note: SEED_NOTE,
             offer,
             message_body: offerMessage(offer),
+            // An offer is business-initiated, so outside the 24h window Meta only
+            // delivers it as an approved template. These are its exact arguments.
+            whatsapp_template: {
+              to: offer.whatsapp,
+              kind: "template",
+              template_name: OFFER_TEMPLATE.name,
+              language: OFFER_TEMPLATE.language,
+              variables: offerTemplateVariables(offer),
+            },
             next_step:
-              "Attach this to the task for review. Once a human approves the margin, pass message_body to whatsapp_draft_message, then whatsapp_send_message — that call asks for approval before anything leaves.",
+              "Attach this to the task for review. Once a human approves the margin, pass whatsapp_template to whatsapp_draft_message (use message_body as text only inside a 24h window the customer opened), then whatsapp_send_message. That call asks a human for approval before anything leaves.",
           },
         );
       } catch (error) {

@@ -8,6 +8,7 @@
  * si la función lo alcanza, y si no, se dice por qué.
  */
 import { describeChannel, loadChannelConfig, readDraftConfig } from "@/lib/channel";
+import { readStoreConfig, recentEvents } from "@/lib/events-store";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { scanInventory, type Placement, type Tier } from "@/lib/expiry/engine";
 import { listAgents, listIssues, loadPaperclipConfig, STATUS_ORDER } from "@/lib/paperclip";
@@ -318,6 +319,56 @@ function LotTable({ placements }: { placements: Placement[] }) {
 /* canal y compañía                                                           */
 /* -------------------------------------------------------------------------- */
 
+const ESTADO_ENVIO: Record<string, string> = {
+  sent: "Enviado",
+  delivered: "Entregado",
+  read: "Leído",
+  failed: "Falló",
+};
+
+function hora(iso: string): string {
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
+async function DeliveryLog() {
+  const store = readStoreConfig();
+  if (!store) return null;
+
+  let events;
+  try {
+    events = (await recentEvents(store, 8)).filter((event) => event.kind === "status");
+  } catch {
+    return <p className="notice">No se pudo leer el registro de entregas.</p>;
+  }
+
+  if (events.length === 0) {
+    return <p>Todavía no llegó ningún aviso de entrega de Meta.</p>;
+  }
+
+  return (
+    <>
+      <p style={{ marginTop: 14 }}>Lo último que informó Meta sobre los envíos reales:</p>
+      <ul className="issues">
+        {events.map((event) => (
+          <li key={`${event.wamid}-${event.status}`}>
+            <span className="state">{ESTADO_ENVIO[event.status] ?? event.status}</span>
+            <span>
+              al número {event.recipient}, {hora(event.at)}
+              {event.error ? ` (${event.error.title ?? `error ${event.error.code}`})` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 async function Channel() {
   const draft = readDraftConfig();
 
@@ -326,13 +377,14 @@ async function Channel() {
       <section className="section" aria-labelledby="canal">
         <h2 id="canal">WhatsApp, hoy</h2>
         <p className="status">
-          Sólo borradores <span>sin credenciales de Meta</span>
+          Esta instancia sólo arma borradores <span>sin credenciales de Meta</span>
         </p>
         <p>
-          Los mensajes se arman y se validan igual, cada uno con su <code>draft_id</code>. Si una persona aprueba el envío,
-          el servidor devuelve el mensaje exacto que habría salido y no entrega nada.
+          Acá los mensajes se arman y se validan, cada uno con su <code>draft_id</code>, pero no se entregan. Los envíos
+          reales salen de la instancia que corre junto a Paperclip, siempre con la aprobación de una persona, y Meta
+          informa su estado a esta página.
         </p>
-        <p>Con las credenciales cargadas, el mismo borrador sale sin tocar nada más.</p>
+        <DeliveryLog />
       </section>
     );
   }
@@ -355,6 +407,7 @@ async function Channel() {
       ) : (
         <p className="notice">No se pudo consultar a Meta: {observed.reason}</p>
       )}
+      <DeliveryLog />
     </section>
   );
 }

@@ -6,7 +6,8 @@
  *
  *   whatsapp_channel_status   read-only, free, always safe      Allowed
  *   whatsapp_draft_message    pure, free, builds the payload    Allowed
- *   whatsapp_send_message     reaches a real phone              Ask first
+ *   whatsapp_send_message     reaches a real phone              human approval
+ *   whatsapp_delivery_status  read-only, what Meta reported      Allowed
  *
  * The draft hash is what makes that approval mean something: send recomputes
  * the id from the arguments it was handed and refuses if it differs from the
@@ -24,6 +25,8 @@ import {
   readDraftConfig,
 } from "@/lib/channel";
 import { assertDraftMatches, DraftMismatchError, draftId } from "@/lib/drafts";
+import { readStoreConfig, recentEvents } from "@/lib/events-store";
+import { renderTemplate } from "@/lib/expiry/template";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
 import { buildPayload, ChannelError, deliver, messageSchema, renderPreview, type Message } from "@/lib/whatsapp";
@@ -161,6 +164,8 @@ const handler = createMcpHandler((server) => {
             draft_id: id,
             recipient: payload.to,
             preview: renderPreview(message),
+            reads_as:
+              message.kind === "template" ? (renderTemplate(message.name, message.variables) ?? undefined) : message.body,
             payload,
             endpoint: endpointFor(config),
             blockers,
@@ -238,6 +243,49 @@ const handler = createMcpHandler((server) => {
         if (error instanceof DraftMismatchError) {
           return refuse(error.message, { approved_draft: error.claimed, these_arguments_hash_to: error.expected });
         }
+        return fail(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "whatsapp_delivery_status",
+    {
+      title: "WhatsApp delivery status",
+      description:
+        "What Meta reported after a send: sent, delivered, read or failed, as received by the status webhook. Pass the wamid returned by whatsapp_send_message to follow one message, or nothing to see the latest events. Use it to record in the task whether the message actually arrived.",
+      inputSchema: z.object({
+        wamid: z.string().optional().describe("The message id returned by whatsapp_send_message."),
+      }),
+    },
+    async ({ wamid }): Promise<ToolResult> => {
+      try {
+        const store = readStoreConfig();
+        if (!store) {
+          return ok(
+            "No event store is configured here, so delivery statuses cannot be read from this server. The webhook still validates and logs them.",
+            { configured: false, how_to_enable: "Set KV_REST_API_URL and KV_REST_API_TOKEN (an Upstash Redis store)." },
+          );
+        }
+
+        const events = await recentEvents(store, 200);
+        const statuses = events.filter((event) => event.kind === "status");
+        if (!wamid) {
+          return ok(`${events.length} recent event(s), most recent first.`, { events: events.slice(0, 20) });
+        }
+
+        const mine = statuses.filter((event) => event.wamid === wamid);
+        if (mine.length === 0) {
+          return ok(
+            "Meta has not reported anything for this message yet. Statuses usually arrive within seconds; if nothing shows up, check the webhook subscription.",
+            { wamid, events: [] },
+          );
+        }
+
+        const order = ["sent", "delivered", "read", "failed"];
+        const latest = [...mine].sort((a, b) => order.indexOf(b.status) - order.indexOf(a.status))[0]!;
+        return ok(`Latest status reported by Meta: ${latest.status}.`, { wamid, latest, history: mine });
+      } catch (error) {
         return fail(error);
       }
     },

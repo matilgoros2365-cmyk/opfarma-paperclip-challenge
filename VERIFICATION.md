@@ -9,7 +9,8 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 143 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 170 tests en verde; 8 de 8 roturas detectadas |
+| Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 de 5 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
 | Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
@@ -111,6 +112,25 @@ políticas de Paperclip, que decide sin ejecutar nada:
 **El hash del borrador.** Contra el servidor en ejecución: un envío con el
 `draft_id` correcto devuelve el dry-run; el mismo envío con una palabra cambiada
 se rechaza.
+
+**El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
+con el cuerpo modificado después de firmar, ausente o mal formada), el
+handshake de suscripción, la lectura de cada estado y que una respuesta del
+cliente se registre sin guardar su contenido. Contra el servidor en ejecución,
+con un aviso firmado como lo manda Meta:
+
+| Pedido | Respuesta |
+| --- | --- |
+| Suscripción con el token correcto | Devuelve el desafío |
+| Suscripción con otro token | 403 |
+| Aviso firmado | 200 |
+| Aviso sin firma | 401 |
+| Aviso con la firma alterada | 401 |
+
+**La plantilla.** Los tests verifican que cumpla las reglas de Meta (variables
+numeradas sin saltos, que no empiece ni termine con una variable, un ejemplo por
+variable y los límites de largo) y que cada una de las cinco ofertas complete las
+siete variables sin saltos de línea.
 
 ## 4. Reproducibilidad
 
