@@ -1,68 +1,69 @@
-# Hostear Paperclip: lo que intenté y dónde me frené
+# Hostear Paperclip: qué intenté y dónde se frenó
 
-El control plane de Paperclip no va en Vercel. Es un servidor con estado
-—PostgreSQL, archivos, cola de heartbeats y cron— y el único cloud que ellos
-documentan es Docker sobre contenedores persistentes. En Vercel va la otra
-mitad, que sí es HTTP sin estado: los dos servidores MCP y el dashboard de
-lectura.
+El control plane de Paperclip no puede ir en Vercel. Es un servidor con estado
+(PostgreSQL, archivos, una cola de heartbeats y tareas programadas), y el único
+despliegue en la nube que documentan es Docker sobre contenedores persistentes.
+En Vercel corre la otra mitad, que sí es HTTP sin estado: los dos servidores MCP,
+el webhook de WhatsApp y la plataforma.
 
-Dejo acá lo que probé, porque el intento fallido también dice algo sobre
-desplegar este producto.
+Dejo registrado el intento, porque lo que no funcionó también dice algo sobre
+cómo se despliega este producto.
 
 ## Lo que aprendí antes de intentarlo
 
-**No hace falta construir ninguna imagen.** Paperclip publica
-`ghcr.io/paperclipai/paperclip:latest`, para `linux/amd64` y `arm64`, y adentro
-ya vienen el servidor, el PostgreSQL embebido y los CLI de los adapters locales
-(`claude`, `codex`, `opencode`, `gemini`). Eso último es justamente lo que me
+**No hace falta construir una imagen.** Paperclip publica
+`ghcr.io/paperclipai/paperclip:latest`, para `linux/amd64` y `arm64`, y trae
+incluidos el servidor, el PostgreSQL embebido y los CLI de los adapters locales
+(`claude`, `codex`, `opencode` y `gemini`). Eso último era justamente lo que me
 interesaba, porque en Windows el adapter de Claude nunca pasó su chequeo.
 
-**Hace falta un volumen persistente.** Todo el estado vive bajo
-`PAPERCLIP_HOME`: la base, los archivos y la clave maestra de secretos. Sin
-volumen, cada deploy arranca de cero y lo cifrado queda ilegible para siempre.
+**Hace falta un volumen persistente.** Todo el estado vive en `PAPERCLIP_HOME`:
+la base, los archivos y la clave maestra de secretos. Sin volumen, cada deploy
+arranca de cero y lo cifrado queda ilegible.
 
-**No puede dormirse entre visitas.** Tiene una base corriendo adentro y una cola
-de heartbeats; si se suspende, corta las corridas por la mitad.
+**No puede suspenderse entre visitas.** Tiene una base de datos y una cola de
+heartbeats corriendo; si la máquina se suspende, corta las ejecuciones a la
+mitad.
 
 ## Fly.io: hasta dónde llegué
 
-Creé la app, un volumen cifrado de 3 GB en São Paulo —no existe región en Buenos
-Aires, `eze` no está en el catálogo— y configuré todo en [`fly.toml`](fly.toml)
-con las variables que saqué de la documentación.
+Creé la app y un volumen cifrado de 3 GB en São Paulo (no hay región en Buenos
+Aires: `eze` no figura en el catálogo), y dejé la configuración en
+[`fly.toml`](fly.toml) con las variables que indica la documentación.
 
-Ahí me frené con esto:
+El despliegue se frenó con este error:
 
 ```
 Not enough space to unpack image, ghcr.io/paperclipai/paperclip:latest,
 possibly exceeds maximum of 8GiB uncompressed
 ```
 
-La imagen pesa **5,3 GB comprimidos** y al desempaquetarse supera el límite de
-**8 GiB** de la plataforma. Probé agrandar el disco raíz con `--rootfs-size 20`,
-que es la única opción que existe para eso y que `fly deploy` ni siquiera
-expone —hay que usar `fly machine run`—, y el error salió idéntico. O sea que el
-tope no es del disco que pedís sino de Fly.
+La imagen pesa **5,3 GB comprimida** y, al descomprimirse, supera el límite de
+**8 GiB** de la plataforma. Probé ampliar el disco raíz con `--rootfs-size 20`,
+que es la única opción disponible para eso (y que `fly deploy` ni siquiera
+expone: hay que usar `fly machine run`), y el error fue idéntico. Es decir, el
+límite no depende del disco solicitado, sino de Fly.
 
-Con una imagen que trae cuatro CLI de agentes adentro, ese techo queda corto.
-No es algo que se arregle con configuración.
+Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto, y no
+se resuelve con configuración.
 
-En el camino aprendí dos cosas menores que igual sirven: la sintaxis de puertos
-de `fly machine run` necesita el protocolo (`443:3100/tcp:http:tls`, no
-`443:3100/tls:http`), y el trial de un dólar exige tarjeta antes de crear el
-primer release.
+En el camino aparecieron dos detalles menores que vale la pena registrar: la
+sintaxis de puertos de `fly machine run` exige el protocolo
+(`443:3100/tcp:http:tls`, no `443:3100/tls:http`), y la prueba gratuita pide una
+tarjeta antes de crear el primer release.
 
 ## Qué haría con más tiempo
 
-Un VPS con Docker, sin límite de tamaño de imagen, que es el escenario que la
-documentación de Paperclip asume. O Railway, que habría que verificar si impone
-un techo parecido.
+Un servidor virtual con Docker, sin límite de tamaño de imagen, que es el
+escenario que asume la documentación de Paperclip. Railway sería otra opción,
+pero habría que verificar si impone un límite parecido.
 
-Con el servidor arriba, levantar la compañía entera es un comando:
+Con el servidor en línea, crear la compañía completa es un solo comando:
 
 ```bash
-PAPERCLIP_API_URL=https://.../api PAPERCLIP_BOARD_TOKEN=... MCP_API_KEY=... MCP_BASE_URL=https://<app>.vercel.app node scripts/setup-company.mjs
+PAPERCLIP_API_URL=https://.../api PAPERCLIP_BOARD_TOKEN=... MCP_API_KEY=... MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
 ```
 
-Ojo con `MCP_BASE_URL`: apuntando a `127.0.0.1:3200` las conexiones funcionan
-sólo en local. Un Paperclip hosteado necesita la URL pública de Vercel o no va a
-poder llamar a las tools.
+Un detalle importante sobre `MCP_BASE_URL`: si apunta a `127.0.0.1:3200`, las
+conexiones funcionan sólo en local. Un Paperclip hosteado necesita la URL pública
+de Vercel para poder llamar a las herramientas.
