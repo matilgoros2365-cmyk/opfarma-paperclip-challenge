@@ -247,14 +247,15 @@ const handler = createMcpHandler((server) => {
         return ok(
           "Sent: Meta accepted the message and returned its id. That is not proof of delivery: Meta confirms delivery, reading or failure afterwards through the status webhook. Check whatsapp_delivery_status.",
           {
-          dry_run: false,
-          draft_id: args.draft_id,
-          recipient: payload.to,
-          preview: renderPreview(message),
-          ...receipt,
-          delivery_tracking: tracking,
-          next_step: "Call whatsapp_delivery_status with this wamid to record whether it was delivered and read.",
-        });
+            dry_run: false,
+            draft_id: args.draft_id,
+            recipient: payload.to,
+            preview: renderPreview(message),
+            ...receipt,
+            delivery_tracking: tracking,
+            next_step: "Call whatsapp_delivery_status with this wamid to record whether it was delivered and read.",
+          },
+        );
       } catch (error) {
         if (error instanceof DraftMismatchError) {
           return refuse(error.message, { approved_draft: error.claimed, these_arguments_hash_to: error.expected });
