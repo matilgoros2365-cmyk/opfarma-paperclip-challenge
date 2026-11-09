@@ -9,3 +9,4 @@ node_modules/
 agent-workspace/
 *.tsbuildinfo
 NOTES-decisions.md
+LOOM.md
