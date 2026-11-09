@@ -1,4 +1,7 @@
-# Paperclip — mi research
+# Paperclip — mi research (versión larga)
+
+La versión de una página, que es la que pide el enunciado, está en
+[RESEARCH.md](RESEARCH.md).
 
 Lo que sigue lo armé leyendo el sitio, la documentación y el código, y después
 levantándolo en mi máquina. Está sobre la versión **v2026.1106.0**, relevado
@@ -130,9 +133,16 @@ totalmente scriptable hoy no se puede.
 `npx -y` para traer su puente ACP dentro de un probe con timeout. En una máquina
 con la red o la caché lentas falla sin nombrar la descarga.
 
-**Nunca logré que un agente pasara su chequeo de ejecución en Windows**, con el
-CLI de Claude funcionando perfecto por fuera. Descarté nueve hipótesis con
-evidencia; está detallado en `DECISIONS.md`.
+**En Windows los agentes no arrancan.** Nunca logré que uno pasara su chequeo de
+ejecución, con el CLI de Claude funcionando perfecto por fuera. La causa la
+encontré recién en una Mac: el runner nativo sólo soporta Linux y macOS, así que
+en Windows queda únicamente el Legacy, que es el que falla. El detalle, con las
+nueve hipótesis que descarté antes, está en `DECISIONS.md`.
+
+**El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
+respuesta a una tarjeta dispara una continuación que pide un repositorio git
+sobre la carpeta de la corrida anterior, y falla. El Retry manual elige una
+carpeta nueva y anda.
 
 **El diagnóstico útil existe pero está escondido.** El log sólo escribe
 `exitCode 1`. Qué chequeo falló y el comando exacto para reproducirlo están en

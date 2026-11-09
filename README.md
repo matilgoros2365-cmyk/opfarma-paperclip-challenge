@@ -7,7 +7,7 @@ encuentra a qué cliente colocárselos según lo que cada uno consume de verdad,
 manda la oferta por WhatsApp. Antes de que salga nada, una persona aprueba el
 margen.
 
-- Mi research de Paperclip: [`research/PAPERCLIP.md`](research/PAPERCLIP.md)
+- Mi research de Paperclip, en una página: [`research/RESEARCH.md`](research/RESEARCH.md) (la versión larga está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md))
 - Por qué tomé cada decisión y con qué me choqué: [`DECISIONS.md`](DECISIONS.md)
 - Por qué elegí este problema y de dónde saqué los números: [`research/EXPIRY.md`](research/EXPIRY.md)
 
