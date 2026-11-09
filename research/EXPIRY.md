@@ -2,8 +2,8 @@
 
 Este documento respalda la elección del problema y las constantes del motor.
 Lo armé antes de escribir código y lo amplié al cierre con auditorías oficiales,
-normativa, estudios, casos y entrevistas del sector. Relevado entre el 8 y el 9
-de noviembre de 2026.
+normativa, estudios, casos argentinos recientes, datos de mercado y entrevistas
+del sector. Relevado entre el 8 y el 9 de noviembre de 2026.
 
 Distingo tres niveles de respaldo, porque no todo pesa lo mismo:
 
@@ -43,6 +43,19 @@ vencimiento de forma sistemática.
 - **Chile, Contraloría.** En 2020 acreditó que la Central de Abastecimiento
   eliminó más de 3.300 millones de pesos chilenos en medicamentos, y en 2021, que
   el sistema de salud desechó 35 millones de medicamentos por vencimiento.
+- **Argentina, vacunas.** En agosto de 2020, el
+  Ministerio de Salud y la SIGEN informaron unos 4 millones de dosis vencidas en
+  un depósito de la Ciudad de Buenos Aires, la mitad antigripales compradas en
+  2017. En 2022, el informe de gestión de la Jefatura de Gabinete al Senado
+  contabilizó 349.916 dosis contra el COVID vencidas en 2021 y 2022, sobre
+  574.017 descartadas en total. En octubre de 2024, el Ministerio estimó ante el
+  Consejo Federal de Salud una pérdida de 30 millones de dólares en vacunas
+  vencidas en los cuatro años anteriores.
+
+Las vacunas no son el mercado de OpFarma, y cada gobierno usó estas cifras
+contra el anterior. Las incluyo por lo que tienen en común: las pérdidas cruzan
+al menos dos gestiones de distinto signo, con depósitos propios y organismos de
+control. El problema es de proceso, no de una administración.
 
 **Documentado.**
 
@@ -57,9 +70,24 @@ vencimiento de forma sistemática.
   quirúrgicos. En un hospital brasileño, lo descartado entre 2015 y 2019,
   incluido lo vencido, sumó 108.722 dólares.
 
-Estos estudios miden sobre todo insumos abiertos y no usados, no sólo vencidos.
-Los incluyo porque muestran la misma falla de fondo: el stock no se corresponde
-con el consumo real.
+- **Siete años de inventario en un hospital de Riad.** Alanazi y otros
+  (*Risk Management and Healthcare Policy*, 2024) analizaron 2015 a 2021 en King
+  Abdulaziz Medical City. Lo vencido explicó el 79,8% del valor desperdiciado,
+  muy por encima de lo inmovilizado (14,3%) y lo obsoleto (5,9%). Las causas que
+  señalan son el sobrestock en depósito, las epidemias que frenaron la rotación y
+  la llegada de productos nuevos que dejan viejo al anterior. Con una estrategia
+  activa de reducción, el desperdicio total quedó en el 0,21% del gasto.
+- **Bulletin of the World Health Organization, 2017.** Un análisis desde Uganda
+  describe depósitos públicos que guardaban medicamentos vencidos durante un
+  promedio de seis años, y atribuye el problema a pronósticos de demanda pobres,
+  compras paralelas de distintos programas y donaciones que no coinciden con la
+  necesidad.
+
+Los estudios de quirófano miden sobre todo insumos abiertos y no usados, no sólo
+vencidos. Los incluyo porque muestran la misma falla de fondo que el resto: el
+stock no se corresponde con el consumo real. El de Riad agrega un dato que
+conviene no esconder: cuando hay una estrategia sostenida, la pérdida baja
+mucho. Eso es un argumento a favor de actuar, no en contra del problema.
 
 ## 2. La magnitud en un distribuidor
 
@@ -68,8 +96,22 @@ dispositivos médicos vienen de proveedores de software: entre el 1% y el 4% del
 inventario se da de baja cada año, y entre el 2% y el 4% específicamente por
 vencimiento. Un proveedor llega a estimar que hasta el 30% del inventario
 hospitalario podría vencer antes de usarse, pero no publica la fuente primaria.
-No encontré informes independientes de consultoras ni de cámaras del sector con
-este dato.
+GHX, que hace recuentos físicos de inventario en hospitales, informó que en 2024
+identificó casi 9 millones de dólares en productos vencidos, con un promedio de
+90 mil por organización; no dice cuántas organizaciones contó. No encontré
+informes independientes de consultoras ni de cámaras del sector con este dato, y
+el estudio de Riad (0,21% del gasto) sugiere que las cifras de proveedores están
+en el extremo alto.
+
+**Documentado.** El tamaño del terreno en Argentina: según la guía comercial del
+gobierno de Estados Unidos (2025), el mercado de dispositivos médicos rondó los
+902 millones de dólares en 2023, y alrededor del 80% es importado. Las
+importaciones sumaron unos 750 millones entre junio de 2023 y junio de 2024,
+según fuentes de la industria que la guía atribuye a CADIEM; China y Estados
+Unidos son los dos primeros orígenes. Toda importación tiene que hacerla un
+importador inscripto en ANMAT. Esto importa por dos razones: el lote lo compra y
+lo carga el importador o distribuidor local, y llega con la vida útil que ya
+consumió el viaje y la aduana.
 
 Lo que no es opinable es la forma de la pérdida. Un lote que vence en depósito no
 reduce el margen: se pierde el 100% del costo. A eso se suma la disposición
@@ -107,6 +149,24 @@ más tiene un costo concreto.
 No encontré norma específica sobre la venta interna de dispositivos próximos a
 vencer: el marco remite a las normas sanitarias jurisdiccionales. Por eso el
 criterio lo tiene que fijar la empresa y aprobarlo una persona.
+
+**Casos recientes.** Lo que pasa cuando el lote no se mueve a tiempo:
+
+- **San Juan, noviembre de 2026.** Por la Disposición ANMAT 7133/2026, publicada
+  el 4 de noviembre, se prohibió en todo el país el uso y la venta de sistemas
+  de aspiración endotraqueal encontrados en un depósito de la ciudad de San
+  Juan. El lote había vencido el 31 de diciembre de 2023: casi tres años después
+  seguía en stock. ANMAT lo calificó como riesgo potencial para los pacientes y
+  giró el caso a su área legal.
+- **Castelli, Chaco, enero de 2024.** El gobierno provincial informó insumos y
+  medicamentos vencidos o abandonados en el depósito del Hospital Bicentenario
+  (jeringas, guantes, sueros, placas radiográficas, larvicidas vencidos en
+  2021), con un daño que estimó en unos 100 millones de pesos. Es una denuncia
+  de una gestión sobre la anterior, sin auditoría que la confirme todavía.
+
+El caso de San Juan es el más cercano al de OpFarma: un producto médico que
+nadie colocó antes de vencer y que, en vez de convertirse en una venta con
+descuento, terminó en una prohibición.
 
 ## 4. Por qué los tramos empiezan a los seis meses
 
@@ -213,6 +273,11 @@ haría falta:
 - [Auditora General de Canadá, reserva estratégica de emergencia (2026)](https://www.canada.ca/en/auditor-general/our-work/audit-reports/19-auditor-general-202610-public-health-emergency-stockpile.html)
 - [Ontario: baja de 1.400 millones en equipos de protección (CP24)](https://www.cp24.com/politics/queens-park/2025/12/02/ontario-wrote-off-14-billion-of-personal-protective-equipment-auditor-finds/)
 - [Contraloría de Paraguay, Hospital de Clínicas (RDN)](https://www.rdn.com.py/2025/12/01/contraloria-revela-perdida-de-g-2-207-millones-por-medicamentos-vencidos-en-clinicas/)
+- [Vacunas vencidas en un depósito de la Ciudad, 2020 (Chequeado)](https://chequeado.com/el-explicador/que-se-sabe-sobre-las-vacunas-vencidas-que-se-encontraron/)
+- [Dosis contra el COVID vencidas y descartadas, informe de la Jefatura de Gabinete (Infobae, 2022)](https://www.infobae.com/salud/2022/06/03/el-gobierno-confirmo-cuantas-vacunas-covid-se-descartaron-en-argentina/)
+- [Pérdida de 30 millones de dólares en vacunas vencidas (La Nación, 2024)](https://es-us.noticias.yahoo.com/gobierno-detect%C3%B3-p%C3%A9rdida-us-30-232311124.html)
+- [Disposición ANMAT 7133/2026, depósito en San Juan (El Monterizo)](https://elmonterizo.com/compraron-insumos-medicos-con-un-lote-vencido-hace-tres-anos-la-anmat-allano-un-deposito-en-capital)
+- [Insumos vencidos en el Hospital de Castelli, Chaco (Diario Norte, 2024)](https://www.diarionorte.com/250702-hallaron-insumos-y-medicamentos-vencidos-ahora-en-el-hospital-de-castelli-)
 - [Contraloría de Chile, Cenabast (BioBioChile, 2020)](https://www.biobiochile.cl/noticias/nacional/chile/2020/11/10/contraloria-acredita-que-cenabast-elimino-mas-de-3300-millones-en-medicamentos.shtml) y [medicamentos desechados por vencimiento (2021)](https://www.biobiochile.cl/especial/reportajes/2021/04/22/a-la-basura-salud-desecha-35-millones-de-medicamentos-por-vencimiento-descubierto-por-contraloria.shtml)
 
 **Estudios e investigaciones**
@@ -221,10 +286,14 @@ haría falta:
 - [Operating room waste in neurosurgical procedures, UCSF (PubMed)](https://pubmed.ncbi.nlm.nih.gov/27153160/)
 - [Costs of disposable and reusable supplies wasted during surgeries (PubMed)](https://pubmed.ncbi.nlm.nih.gov/29432971/)
 - [Materiales y medicamentos descartados en un hospital brasileño, 2015-2019](https://www.sciencedirect.com/science/article/pii/S277291252200046X)
+- [Alanazi y otros, inventario de siete años en King Abdulaziz Medical City (*Risk Management and Healthcare Policy*, 2024)](https://www.dovepress.com/reducing-pharmaceutical-and-non-pharmaceutical-inventory-waste-in-tert-peer-reviewed-fulltext-article-RMHP)
+- [Kamba y otros, stocks de medicamentos vencidos en países de ingresos bajos y medios (*Bulletin of the WHO*, 2017)](https://pmc.ncbi.nlm.nih.gov/articles/PMC5537748/)
 - [Prototipo de redistribución según vencimiento](https://github.com/shamanthsaravanan/expiry-aware-stock-redistribution-recommender)
 
 **Sector, mercado y entrevistas**
 
+- [Guía comercial de Estados Unidos: productos médicos en Argentina (2025)](https://www.trade.gov/country-commercial-guides/argentina-medical-products)
+- [GHX, recuentos de inventario y productos vencidos (2025)](https://www.ghx.com/the-healthcare-hub/the-hidden-cost-of-expired-supplies-lessons-from-hospital-inventory-counts/)
 - [CADIEM, carta al Banco Central (La Nación, 2022)](https://www.lanacion.com.ar/economia/la-camara-de-insumos-medicos-pidio-al-banco-central-que-excluya-al-sector-de-la-limitacion-para-nid19072022/)
 - [RevMed, entrevista a Andrew Dold (Empowered Patient)](https://empoweredpatientradio.com/medical-marketplace-for-hospitals-and-surgery-centers-of-stale-or-excess-inventory-saves-money-reduces-waste-with-dr-andrew-dold-revmed-transcript)
 - [Hospitals In Focus, "Mission Critical"](https://fah.org/podcasts/mission-critical-strengthening-health-cares-supply-chain/)
