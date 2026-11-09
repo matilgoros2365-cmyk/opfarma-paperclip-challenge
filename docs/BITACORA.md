@@ -405,6 +405,45 @@ mensaje fue aceptado y que la entrega la confirma el webhook. Y el formato de lo
 celulares argentinos: para enviar, Meta aceptó la forma sin el 9 y la normalizó
 con el 9.
 
+### Windows, resuelto con WSL2
+
+Saber que el problema de Windows era el runner, y no Windows en sí, abría una
+salida: correr Paperclip sobre Linux sin salir de la compu. WSL2 es un Ubuntu
+real dentro de Windows, y desde ahí Paperclip se usa igual, con el navegador de
+Windows en `localhost:3100`. Los agentes usan los servidores MCP de Vercel, así
+que no hizo falta levantar la plataforma.
+
+Lo instalé desde cero siguiendo el README, y eso sirvió para encontrar tres cosas
+que en la Mac no se veían:
+
+**El servicio no ve la carpeta del usuario.** La configuración inicial de
+Paperclip ofrece instalarlo como servicio en segundo plano, y un servicio no
+carga la configuración de la sesión. Claude Code estaba instalado en la carpeta
+del usuario, así que el chequeo de los agentes falló con "Command not found in
+PATH: claude", aunque desde la terminal `claude` respondía. Se resuelve con un
+enlace en `/usr/local/bin`, que cualquier servicio ve. Con eso, el chequeo pasó.
+
+**El setup no instalaba las conexiones.** Una conexión creada por API queda
+disponible para la organización pero no instalada para nadie, y los agentes no
+ven sus herramientas. StockScout lo dijo así: las herramientas de WhatsApp "no
+existen en este runtime". En la Mac esa instalación se había hecho desde la
+interfaz en algún momento, así que el problema nunca apareció. Ahora el setup
+instala las dos conexiones para la compañía, y las políticas deciden qué puede
+hacer cada agente: probadas una por una, las decisiones quedaron idénticas a las
+de la Mac.
+
+**Una key equivocada quedaba pegada.** La primera vez se pegó una key del MCP que
+no correspondía, Vercel la rechazó, y volver a correr el setup reutilizaba la
+conexión rota. Ahora el setup detecta que la URL o la key cambiaron, actualiza
+la conexión y verifica el catálogo de nuevo, y si el servidor rechaza la key, el
+error dice qué revisar en lugar del "This app needs you to sign in" de
+Paperclip.
+
+Con las tres resueltas, StockScout corrió en Windows de punta a punta: escaneó
+el inventario con las herramientas de Vercel, colocó cada lote y dejó en la tarea
+el mismo resumen que en la Mac, con los mismos números, y una tarjeta con las
+decisiones que me tocaban.
+
 ## Qué haría la semana que viene
 
 1. **Sacar la clave de la URL.** Hoy la clave del MCP viaja como parámetro de

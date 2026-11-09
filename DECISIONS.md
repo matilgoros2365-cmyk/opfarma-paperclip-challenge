@@ -28,8 +28,9 @@ mensaje, así que sale exactamente lo que se aprobó.
 
 **Qué no funcionó.**
 
-- En Windows los agentes no arrancan: el runner nativo sólo soporta Linux y
-  macOS. La demo corre en una Mac.
+- Directamente en Windows los agentes no arrancan: el runner de Paperclip para
+  Windows falla. Lo resolví corriendo Paperclip en Ubuntu dentro de WSL2, donde
+  los agentes trabajan con las mismas herramientas; la demo grabada es en Mac.
 - El control del envío no venía configurado: Paperclip lo marcaba como riesgoso
   pero lo dejaba pasar. Lo detectó el agente y lo resolví con una política.
 - Con workspace aislado, cada respuesta a una tarjeta falla y requiere Retry.

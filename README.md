@@ -77,10 +77,11 @@ en [`DECISIONS.md`](DECISIONS.md).
 **Requisitos:** macOS o Linux, Node.js 24.11 o más nuevo, git, y Claude Code con
 una suscripción activa.
 
-> **En Windows, los agentes no arrancan.** El servidor de Paperclip funciona,
-> pero el runner nativo de agentes sólo soporta Linux y macOS, y el que queda
-> disponible en Windows falla. La causa, con el código que lo confirma, está en
-> [`docs/BITACORA.md`](docs/BITACORA.md).
+> **En Windows, usá WSL2.** Directamente sobre Windows los agentes no arrancan:
+> el runner de Paperclip para Windows falla, y la causa, con el código que lo
+> confirma, está en [`docs/BITACORA.md`](docs/BITACORA.md). Dentro de WSL2
+> Paperclip corre sobre Linux y los agentes funcionan; los pasos están en
+> [Windows con WSL2](#windows-con-wsl2), más abajo.
 
 ### 1. Claude Code
 
@@ -169,6 +170,83 @@ reanudes. En <http://localhost:3100>, reanudá **StockScout** y
 Si después de responder una tarjeta la corrida falla en un segundo con un error
 de workspace, usá **Retry** en la tarea. Es una limitación conocida de Paperclip
 con los workspaces aislados, y está documentada en la bitácora.
+
+### Windows con WSL2
+
+Paperclip corre dentro de Ubuntu, en WSL2, y se usa desde el navegador de
+Windows en <http://localhost:3100>. Los agentes usan los servidores MCP
+deployados en Vercel, así que no hace falta levantar `platform/`.
+
+**1. Instalar WSL2.** En PowerShell como administrador, y después reiniciar:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Al volver, Ubuntu pide crear un usuario y una contraseña. Todo lo que sigue se
+corre en la terminal de Ubuntu, no en PowerShell.
+
+**2. Node.js 24.** Ubuntu trae una versión anterior; se instala desde el
+repositorio firmado de NodeSource:
+
+```bash
+sudo apt-get install -y ca-certificates curl gnupg && sudo mkdir -p /etc/apt/keyrings
+```
+
+```bash
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+```
+
+```bash
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list && sudo apt-get update && sudo apt-get install -y nodejs
+```
+
+**3. Claude Code, instalado para tu usuario y visible para el servicio.**
+
+```bash
+mkdir -p ~/.npm-global && npm config set prefix ~/.npm-global && echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile && source ~/.profile
+```
+
+```bash
+npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code && sudo ln -sf ~/.npm-global/bin/claude /usr/local/bin/claude
+```
+
+```bash
+claude auth login
+```
+
+El enlace en `/usr/local/bin` es necesario: Paperclip se instala como servicio, y
+un servicio no ve la carpeta de tu usuario. Sin él, el chequeo de los agentes
+falla con "Command not found in PATH: claude".
+
+**4. El repo y Paperclip.**
+
+```bash
+git clone https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge.git && cd opfarma-paperclip-challenge && npm install
+```
+
+```bash
+npx paperclipai run
+```
+
+La primera vez pregunta la configuración: aceptar las opciones por defecto,
+instalarlo como servicio y responder **No** a seguir corriendo después de cerrar
+sesión. El servicio queda en el puerto 3100; si la terminal muestra otro
+servidor en el 3101, cerralo con Ctrl+C.
+
+**5. La compañía**, con los MCP de Vercel y la `MCP_API_KEY` del proyecto en
+Vercel:
+
+```bash
+npx paperclipai token board create --name setup --json
+```
+
+```bash
+PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-de-vercel MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
+```
+
+En WSL2 no hace falta `PAPERCLIP_RUNNER=legacy`: Paperclip elige el runner solo,
+y el chequeo de los agentes pasa.
 
 ## Cómo verificarlo sin esperar a los agentes
 

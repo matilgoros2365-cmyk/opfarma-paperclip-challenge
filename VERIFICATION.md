@@ -15,7 +15,8 @@ los comandos que indico.
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
 | Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
-| Prueba de humo | Las siete herramientas, como las usaría un agente, incluidos los rechazos | 16 de 16 contra el servidor |
+| Prueba de humo | Las siete herramientas, como las usaría un agente, incluidos los rechazos | 16 de 16, en local y en producción |
+| Windows con WSL2 | Instalación desde cero siguiendo el README, y una corrida real de un agente | Agentes funcionando; tres fallas del setup encontradas y corregidas |
 | Dependencias y configuración | Vulnerabilidades conocidas y variables de entorno contra la documentación | 0 vulnerabilidades; una variable sin documentar, corregida |
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
 | Seguridad | Credenciales en el historial de git y valores por defecto | Ninguna credencial publicada; envío apagado por defecto |
@@ -159,8 +160,16 @@ siete variables sin saltos de línea.
 - **El setup, dos veces.** Corrí `setup-company.mjs` contra una instancia real de
   Paperclip ya configurada: cada recurso respondió "ya existía" y no se duplicó
   nada. La política nueva del revisor se creó en esa misma corrida.
-- **Dos sistemas operativos.** El setup corrió en Windows y en macOS. En macOS
-  exigió un ajuste, el runner, que dejé configurable y documentado.
+- **Tres entornos.** El setup corrió en Windows, en macOS y en Ubuntu dentro de
+  WSL2. En macOS exigió un ajuste, el runner, que dejé configurable y
+  documentado.
+- **Una instalación desde cero en WSL2, siguiendo el README.** Sirvió para
+  encontrar lo que en la Mac no se veía: el servicio de Paperclip no encontraba
+  Claude Code, el setup no instalaba las conexiones para los agentes y una key
+  equivocada quedaba pegada al volver a correrlo. Corregidas las tres, el
+  chequeo de los agentes pasó, las decisiones de política coincidieron una por
+  una con las de la Mac, una segunda corrida del setup no duplicó nada, y
+  StockScout completó OPF-1 con las herramientas de Vercel y los mismos números.
 - **Un segundo clon limpio** al cierre, con todo lo agregado después: instala,
   compila sin errores, pasa los tests y genera el build con las rutas del
   webhook incluidas.
@@ -171,7 +180,7 @@ tiene que fallar: sin clave y con una clave incorrecta (401), un lote a punto de
 vencer, una cuenta bloqueada, un mensaje cambiado después de aprobar y un envío
 sin confirmar. Está hecha para no poder mandar un mensaje real: los únicos
 envíos que prueba son los que el servidor debe rechazar antes de llegar a Meta.
-Contra el servidor local pasó 16 de 16.
+Pasó 16 de 16 contra el servidor local y 16 de 16 contra producción, en Vercel.
 
 ```bash
 cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts/smoke.mjs
@@ -242,8 +251,8 @@ corregí lo siguiente:
   plantilla está probado en código y en los tests, no contra Meta.
 - **La intercepción de `done`.** El agente pidió revisión por su cuenta en lugar
   de intentar cerrar la tarea, así que nunca vi al runtime frenarlo.
-- **Linux.** El setup y los agentes corrieron en macOS; en Linux el runner nativo
-  está soportado, pero no lo probé.
+- **Linux fuera de WSL2.** Los agentes corrieron en macOS y en Ubuntu dentro de
+  WSL2; no lo probé en un servidor Linux.
 - **Los 10 minutos con otra persona.** Las instrucciones las validé en mi propio
   recorrido, no con alguien que las siga desde cero.
 - **Las fuentes del problema, una por una.** La normativa la verifiqué contra el
