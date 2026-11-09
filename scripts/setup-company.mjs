@@ -213,10 +213,41 @@ log.step("Conexiones MCP");
 const connectionsResponse = await api("GET", `/companies/${CID}/tools/connections`);
 const connections = connectionsResponse?.connections ?? [];
 
+// El catálogo se carga al pedirlo: esto es lo que verifica que el servidor MCP
+// está vivo y que la key anda. Si la key no coincide, el servidor responde 401
+// y Paperclip lo traduce como "This app needs you to sign in", que no orienta a
+// nadie; acá se dice qué revisar.
+async function verifyCatalog(id, name) {
+  try {
+    const catalog = await api("GET", `/tool-connections/${id}/catalog`);
+    log.ok(`${name} — ${catalog?.catalog?.length ?? 0} tools`);
+  } catch (error) {
+    if (/sign in|401|unauthorized/i.test(String(error))) {
+      fatal(
+        `${name}: el servidor MCP rechazó la key. MCP_API_KEY tiene que ser la misma que tiene el servidor ` +
+          `en ${MCP_BASE} (en Vercel, la variable MCP_API_KEY del proyecto). Corregila y volvé a correr el script: ` +
+          `la conexión se actualiza sola.`,
+      );
+    }
+    throw error;
+  }
+}
+
 async function ensureConnection(name, mcpPath) {
+  const url = `${MCP_BASE}/api/mcp/${mcpPath}?key=${MCP_KEY}`;
   const existing = connections.find((c) => c.name === name);
+
   if (existing) {
-    log.reuse(name);
+    // Si ya existe pero apunta a otra URL o tiene otra key, se corrige en lugar
+    // de reutilizarla rota: pasa cuando se cambia MCP_API_KEY o MCP_BASE_URL.
+    const detail = await api("GET", `/tool-connections/${existing.id}`);
+    if (detail?.config?.url === url) {
+      log.reuse(name);
+      return existing;
+    }
+    await api("PATCH", `/tool-connections/${existing.id}`, { config: { url } });
+    log.ok(`${name}: URL o key actualizada`);
+    await verifyCatalog(existing.id, name);
     return existing;
   }
 
@@ -224,17 +255,14 @@ async function ensureConnection(name, mcpPath) {
     name,
     transport: "mcp_remote",
     authKind: "none",
-    config: { url: `${MCP_BASE}/api/mcp/${mcpPath}?key=${MCP_KEY}` },
+    config: { url },
   });
 
   // La conexión nace en draft: hay que activarla por la ruta que NO está
   // documentada, /api/tool-connections/{id}, no bajo /companies/.
   await api("PATCH", `/tool-connections/${created.id}`, { status: "active", enabled: true });
 
-  // El catálogo se carga al pedirlo: esto es lo que verifica que el servidor
-  // MCP está vivo y que la key anda.
-  const catalog = await api("GET", `/tool-connections/${created.id}/catalog`);
-  log.ok(`${name} — ${catalog?.catalog?.length ?? 0} tools`);
+  await verifyCatalog(created.id, name);
   return created;
 }
 

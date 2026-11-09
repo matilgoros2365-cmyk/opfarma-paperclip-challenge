@@ -5,6 +5,7 @@
   "allowScripts": {
     "@embedded-postgres/windows-x64@18.1.0-beta.16": true,
     "@paperclipai/server@2026.1106.0": true,
-    "protobufjs@7.6.6": true
+    "protobufjs@7.6.6": true,
+    "@embedded-postgres/linux-x64@18.1.0-beta.16": true
   }
 }
