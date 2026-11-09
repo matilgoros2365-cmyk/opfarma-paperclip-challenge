@@ -126,7 +126,7 @@ function Timeline({ placements, asOf }: { placements: Placement[]; asOf: string 
         <svg viewBox={`0 0 ${W} 280`} role="img" aria-labelledby="timeline-title timeline-desc">
           <title id="timeline-title">Cuándo vence cada lote</title>
           <desc id="timeline-desc">
-            Los siete lotes ubicados según los días que faltan para su vencimiento, sobre los cuatro tramos que usa el motor
+            Los {placements.length} lotes ubicados según los días que faltan para su vencimiento, sobre los cuatro tramos que usa el motor
             para decidir qué hacer con cada uno.
           </desc>
 

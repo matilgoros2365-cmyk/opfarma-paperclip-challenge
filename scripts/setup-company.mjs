@@ -23,6 +23,13 @@
  * soporta para Zapier. El costo de esa decisión está escrito en DECISIONS.md.
  */
 
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
 const API = (process.env.PAPERCLIP_API_URL ?? "http://127.0.0.1:3100/api").replace(/\/+$/, "");
 const TOKEN = process.env.PAPERCLIP_BOARD_TOKEN;
 const MCP_BASE = (process.env.MCP_BASE_URL ?? "http://127.0.0.1:3200").replace(/\/+$/, "");
@@ -116,7 +123,20 @@ log.step("Organigrama");
 
 // El rol en Paperclip es un enum cerrado y no incluye "Operator" ni "Reviewer",
 // que son los que sugiere el enunciado. El significado real lo carga el título.
-const AGENT_WORKSPACE = process.env.AGENT_WORKSPACE ?? "C:/dev/paperclip-challenge/agent-workspace";
+const AGENT_WORKSPACE = resolve(process.env.AGENT_WORKSPACE ?? join(REPO_ROOT, "agent-workspace"));
+
+// La carpeta de trabajo de los agentes tiene que ser un repositorio de git con
+// al menos un commit. Si Paperclip pasa una tarea a workspace aislado, pide un
+// git worktree sobre esa carpeta y falla si no lo es (está en DECISIONS).
+if (!existsSync(AGENT_WORKSPACE)) mkdirSync(AGENT_WORKSPACE, { recursive: true });
+if (!existsSync(join(AGENT_WORKSPACE, ".git"))) {
+  const git = (...args) => execFileSync("git", args, { cwd: AGENT_WORKSPACE, stdio: "ignore" });
+  git("init", "-q");
+  git("-c", "user.name=OpFarma setup", "-c", "user.email=setup@opfarma.invalid", "commit", "-q", "--allow-empty", "-m", "Workspace de los agentes");
+  log.ok(`Workspace de los agentes: ${AGENT_WORKSPACE} (repositorio de git creado)`);
+} else {
+  log.reuse(`Workspace de los agentes: ${AGENT_WORKSPACE}`);
+}
 
 /**
  * Qué runner usa el agente. Esto NO es cosmético.

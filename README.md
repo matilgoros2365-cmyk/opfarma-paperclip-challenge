@@ -1,193 +1,217 @@
-# OpFarma — una compañía de agentes con una mano en WhatsApp
+# OpFarma: una compañía de agentes que coloca lotes por vencer
 
-Esto es mi resolución del desafío técnico de Paperclip.
+Mi resolución del desafío técnico de Paperclip.
 
-Armé una company que busca los lotes de insumos médicos que están por vencer,
-encuentra a qué cliente colocárselos según lo que cada uno consume de verdad, y
-manda la oferta por WhatsApp. Antes de que salga nada, una persona aprueba el
-margen.
+OpFarma es una distribuidora de insumos médicos armada como compañía de agentes.
+Los agentes detectan los lotes que se van a vencer en el depósito, buscan qué
+cliente puede consumir cada uno antes de la fecha según lo que realmente compra,
+y preparan la oferta para enviarla por WhatsApp. Una persona aprueba el margen y,
+por separado, cada mensaje.
 
-- La plataforma, deployada en Vercel: **https://opfarma-paperclip-challenge.vercel.app**
-  (el inventario calculado en vivo por el mismo motor que usan los agentes, y los
-  dos servidores MCP en `/api/mcp/inventory` y `/api/mcp/whatsapp`, protegidos con clave)
-- Mi research de Paperclip, en una página: [`research/RESEARCH.md`](research/RESEARCH.md) (la versión larga está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md))
-- Por qué tomé cada decisión y con qué me choqué: [`DECISIONS.md`](DECISIONS.md)
-- Por qué elegí este problema y de dónde saqué los números: [`research/EXPIRY.md`](research/EXPIRY.md)
+## La entrega
 
-## Por qué este problema y no otro
+- **Plataforma deployada en Vercel:** <https://opfarma-paperclip-challenge.vercel.app>.
+  Muestra el inventario calculado en vivo por el mismo motor que usan los agentes,
+  y expone los dos servidores MCP en `/api/mcp/inventory` y `/api/mcp/whatsapp`,
+  protegidos con clave.
+- **Research de Paperclip, en una página:** [`research/RESEARCH.md`](research/RESEARCH.md).
+  La versión extendida está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md).
+- **Decisiones:** [`DECISIONS.md`](DECISIONS.md), en media página. El detalle
+  técnico de cada obstáculo está en [`docs/BITACORA.md`](docs/BITACORA.md).
+- **Cómo lo verifiqué:** [`VERIFICATION.md`](VERIFICATION.md).
+- **El problema y sus fuentes:** [`research/EXPIRY.md`](research/EXPIRY.md).
 
-El enunciado deja libre el objetivo de la company, así que lo elegí yo. No
-quería hacer "el agente escribe un WhatsApp", porque eso es una demo donde el
-agente hace algo que una persona podía hacer igual, sólo que más lento.
+## Por qué este problema
 
-Busqué algo que a mano directamente no se haga, y lo encontré en el vencimiento
-de stock. Un lote que vence en depósito no te come el margen: te come el 100%
-del costo. Las referencias que junté hablan de entre 2% y 5% del inventario por
-año.
+El enunciado deja libre el objetivo de la compañía. No quería una demo en la que
+el agente manda un WhatsApp que una persona podría mandar igual. Busqué una tarea
+que a mano no se llega a hacer.
 
-Saber qué se vence es fácil y cualquier sistema te lo avisa. Lo difícil es saber
-a quién vendérselo antes de la fecha, porque hay que cruzar cada lote contra la
-rotación histórica de cada cuenta. Con cientos de cuentas eso no se hace mal, no
-se hace.
+En un distribuidor de insumos médicos, un lote que vence en depósito no reduce el
+margen: se pierde el 100% del costo. Saber qué se vence es fácil, porque
+cualquier sistema lo avisa. Lo difícil es saber a quién vendérselo antes de la
+fecha, y eso exige cruzar cada lote con la rotación de cada cuenta. Con cientos
+de cuentas, esa tarea simplemente no se hace. El software del rubro avisa pero
+no coloca, y los proyectos que sí hacen esta asignación la resuelven dentro de
+una red hospitalaria, entre sedes. De distribuidor a cliente, como acción
+comercial, no encontré ninguno.
 
-Mientras investigaba encontré que el software comercial del rubro avisa pero no
-coloca, y que los proyectos que sí hacen este matching lo resuelven puertas
-adentro de una red hospitalaria, moviendo stock entre sedes. De distribuidor a
-cliente, como acción comercial, no encontré a nadie.
-
-## Cómo lo armé
+## Cómo está armado
 
 ```
-   Paperclip  (el molde)                    platform/  (las manos)
+   Paperclip  (el molde)                    platform/  (las manos, en Vercel)
    ┌───────────────────────────┐            ┌──────────────────────────────┐
    │ OpFarma                   │            │  /api/mcp/inventory          │
-   │                           │   MCP      │    scan · place · draft      │
-   │  MarginReviewer  (qa)     │◀──────────▶│    → todo Allowed            │
+   │                           │   MCP      │    escanear, colocar, ofertar│
+   │  MarginReviewer  (qa)     │◀──────────▶│    sólo lectura              │
    │        ▲                  │            │                              │
    │        │ reporta          │            │  /api/mcp/whatsapp           │
-   │  StockScout     (general) │            │    status · draft  Allowed   │
-   │                           │            │    send         ASK FIRST    │
+   │  StockScout     (general) │            │    estado y borrador: libre  │
+   │                           │            │    envío: aprobación humana  │
    │  OPF-1  detectar          │            │                              │
-   │  OPF-2  validar  ◀── gate │            │  /  dashboard de lectura     │
+   │  OPF-2  validar  ◀── gate │            │  /  la plataforma            │
    │  OPF-3  enviar            │            └──────────────────────────────┘
    └───────────────────────────┘                        │
             │                                           ▼
-            └──── el humano aprueba ───────▶  WhatsApp Cloud API
+            └──── una persona aprueba ─────▶  WhatsApp Cloud API
 ```
 
-Separé las dos manos a propósito. El servidor de inventario sólo lee el negocio
-y no puede tocar a nadie; el de WhatsApp es el único que sale al mundo. Son dos
-riesgos distintos, así que les puse dos conexiones con dos políticas distintas.
+Separé las dos "manos" a propósito. El servidor de inventario sólo lee el negocio
+y no puede contactar a nadie; el de WhatsApp es el único que sale hacia afuera.
+Son riesgos distintos, así que tienen conexiones y políticas distintas.
 
-Terminaron quedando tres controles en capas diferentes: el agente revisor valida
-los números, una persona aprueba el margen, y el envío pide permiso aparte. Si
-uno falla, los otros dos siguen en pie.
+El resultado son tres controles en capas diferentes: el agente revisor valida los
+números, una persona aprueba el margen y cada envío requiere otra aprobación. Si
+uno falla, los otros dos siguen en pie. El tercero no venía configurado:
+Paperclip marca el envío como `risk=write`, pero esa marca sola no frena nada. La
+aprobación existe sólo si hay una política `require_approval` para esa
+herramienta y ese agente, y el script de setup la crea. El hallazgo está contado
+en [`DECISIONS.md`](DECISIONS.md).
 
-El tercero no vino de fábrica. Paperclip marca el envío como `risk=write`, pero
-esa marca sola no frena nada: la aprobación existe sólo si hay una política
-`require_approval` para esa tool y ese agente, y el script de setup la crea
-explícita. Cómo me di cuenta está en [DECISIONS.md](DECISIONS.md).
+## Cómo levantarlo en unos 10 minutos
 
-## Cómo levantarlo
+**Requisitos:** macOS o Linux, Node.js 24.11 o más nuevo, git, y Claude Code con
+una suscripción activa.
 
-Necesitás Node.js 24.11 o más nuevo y una suscripción de Claude.
+> **En Windows, los agentes no arrancan.** El servidor de Paperclip funciona,
+> pero el runner nativo de agentes sólo soporta Linux y macOS, y el que queda
+> disponible en Windows falla. La causa, con el código que lo confirma, está en
+> [`docs/BITACORA.md`](docs/BITACORA.md).
 
-### 1. El servidor de Paperclip
+### 1. Claude Code
 
 ```bash
-npm install
+npm install -g @anthropic-ai/claude-code
 ```
 
 ```bash
-npx claude setup-token
+claude auth login
 ```
 
-Eso imprime un token que dura un año. Después:
+No dejes `ANTHROPIC_API_KEY` ni `CLAUDE_CODE_OAUTH_TOKEN` en el entorno: tienen
+prioridad sobre el login guardado y hacen fallar el chequeo de los agentes.
+Para confirmar que el CLI responde, `claude -p "ok"` tiene que contestar y
+terminar sin error.
+
+### 2. El repo y Paperclip
 
 ```bash
-.\scripts\start-paperclip.ps1
+git clone https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge.git
 ```
 
-Ese script lo escribí yo después de pelearme un rato con esto. Te pide la
-credencial, le saca los espacios que mete la terminal cuando corta el token en
-dos renglones, valida que esté completa y arranca el servidor en
-<http://localhost:3100>. Si apretás Enter sin pegar nada, usa el login guardado
-de `claude auth login`, que es lo que el adapter prefiere.
+```bash
+cd opfarma-paperclip-challenge && npm install
+```
 
-En Linux o macOS no hace falta el script: `npx paperclipai run` alcanza.
+Si npm avisa que hay scripts de instalación pendientes de aprobación (pasa con
+npm 11 y el PostgreSQL embebido), aprobalos con `npm approve-scripts` y repetí
+`npm install`.
 
-> **Si estás en Windows, dos avisos.** No hay servicio en background —te lo dice
-> el propio `paperclipai doctor`— así que el servidor queda atado a esa
-> terminal. Y si npm te tira `tarball ... seems to be corrupted`, corré
-> `npm cache verify` antes de seguir. A mí me pasó dos veces.
+```bash
+npx paperclipai run
+```
 
-### 2. Las manos
+Queda en <http://localhost:3100>. La primera vez tarda un poco más porque
+inicializa la base. Dejá esa terminal abierta.
+
+### 3. Los servidores MCP
+
+En otra terminal, desde la raíz del repo:
 
 ```bash
 cd platform && npm install && cp .env.example .env.local
 ```
 
-Completá `.env.local` —como mínimo `MCP_API_KEY`; lo de Meta es opcional— y
-levantá:
+Completá `MCP_API_KEY` en `.env.local` con cualquier clave que elijas. Lo de
+Meta es opcional: sin credenciales, el canal arma y valida los mensajes pero no
+los entrega.
 
 ```bash
 npm run dev
 ```
 
-### 3. La compañía
+Queda en <http://localhost:3200>. Dejá también esa terminal abierta.
+
+### 4. La compañía
+
+En una tercera terminal, desde la raíz del repo, generá un token de
+administración:
 
 ```bash
 npx paperclipai token board create --name setup --json
 ```
 
-Con ese token:
+Y con ese token:
 
 ```bash
-PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=... node scripts/setup-company.mjs
+PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma-clave node scripts/setup-company.mjs
 ```
 
-Eso crea la compañía con su presupuesto, el objetivo, los dos agentes con su
-línea de reporte, las dos conexiones MCP —activadas y con el catálogo
-verificado— y las tres tareas, con la política de revisión en la del medio. Lo
-hice idempotente: si algo ya existe lo reusa y te lo dice, así podés correrlo
-dos veces mientras probás.
+El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
+su línea de reporte, las dos conexiones MCP con el catálogo verificado, las
+políticas de aprobación del envío, la carpeta de trabajo de los agentes y las
+tres tareas, con la revisión humana en la del medio. Es idempotente: si algo ya
+existe, lo reutiliza y lo informa.
 
-Los agentes nacen pausados. Nada corre ni gasta hasta que los reanudes.
+`PAPERCLIP_RUNNER=legacy` es necesario: en macOS, el runner nativo falló con un
+error de acceso a la terminal, y el Legacy es el que funcionó de punta a punta.
 
-> **Lo que este script no puede hacer.** El alta de una conexión con credencial
-> propia tiene un último tramo que sólo se completa desde la interfaz. Lo busqué
-> por API y no está: lo cuento en [`DECISIONS.md`](DECISIONS.md). Por eso acá las
-> conexiones se crean con la key dentro de la URL, que es el patrón que
-> Paperclip ya soporta para Zapier.
+### 5. Ponerla a trabajar
 
-## Cómo verificar sin esperar a ningún agente
+Los agentes se crean pausados, así que nada corre ni consume hasta que los
+reanudes. En <http://localhost:3100>, reanudá **StockScout** y
+**MarginReviewer** y abrí la tarea **OPF-1**.
 
-El motor de colocación es código determinista y se prueba solo:
+Si después de responder una tarjeta la corrida falla en un segundo con un error
+de workspace, usá **Retry** en la tarea. Es una limitación conocida de Paperclip
+con los workspaces aislados, y está documentada en la bitácora.
+
+## Cómo verificarlo sin esperar a los agentes
 
 ```bash
 cd platform && npm test
 ```
 
-Son 88 tests. Cubren los tramos de vencimiento, el consumo derivado del
-historial, el piso de precio, los errores de la Graph API mockeados, y la regla
-que más me importaba: que no se pueda construir una oferta para una cuenta que
-el motor descalificó.
+Son 143 tests. Además de las pruebas por módulo, incluyen una verificación
+independiente que rehace todas las cuentas del motor desde la especificación,
+sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
+que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).
 
-Las tools también se pueden llamar a mano:
+Las herramientas también se pueden llamar directamente:
 
 ```bash
-curl -s -X POST "http://127.0.0.1:3200/api/mcp/inventory?key=TU_KEY" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"inventory_scan_expiring","arguments":{}}}'
+curl -s -X POST "http://127.0.0.1:3200/api/mcp/inventory?key=TU_CLAVE" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"inventory_scan_expiring","arguments":{}}}'
 ```
 
 ## Dos decisiones que condicionan todo lo demás
 
 **El precio no lo calcula el modelo.** El piso, el margen y el tramo de
-descuento son aritmética y los dejé en `platform/lib/expiry/engine.ts`, con
-tests. El agente elige a qué cuenta le conviene el lote y escribe el mensaje,
-pero no toca los números.
+descuento son aritmética, y están en `platform/lib/expiry/engine.ts`, con tests.
+El agente elige a qué cuenta le conviene cada lote y redacta el mensaje, pero no
+toca los números.
 
-**El `draft_id` es el hash del payload.** Antes de enviar, el servidor recalcula
-el hash de lo que le pasaron y se niega si no coincide con el draft aprobado.
-Así lo que una persona aprobó es lo que sale, y lo puedo demostrar. Encima eso
-hace que el servidor no necesite base ni sesión, y por eso puede correr
-serverless.
+**El `draft_id` es el hash del mensaje.** Antes de enviar, el servidor recalcula
+el hash de lo que recibe y rechaza el envío si no coincide con el borrador
+aprobado. Así, lo que una persona aprobó es exactamente lo que sale. Además, el
+servidor no necesita base de datos ni sesión, y por eso puede correr serverless.
 
 ## Sobre los datos
 
-El dataset de `platform/data/seed.json` es sembrado y está marcado como tal en
-cada respuesta de las tools. Los lotes con vencimiento y el historial de compras
-por cuenta son justamente lo que ningún ERP expone público, así que los genero
-de forma determinista con `node scripts/make-seed.mjs`.
+El dataset de `platform/data/seed.json` es de ejemplo, y cada respuesta de las
+herramientas lo indica. Los lotes con su vencimiento y el historial de compras
+por cuenta son justamente lo que ningún sistema de gestión expone de forma
+pública, así que los genero de forma determinista con
+`node platform/scripts/make-seed.mjs`.
 
-Lo armé para que tenga los casos incómodos y no sólo el feliz: hay un lote que
-nadie puede absorber, una cuenta con deuda que necesita decisión humana, y un
-lote demasiado cerca del vencimiento que el motor se niega a ofrecer.
+Lo armé para que incluya los casos difíciles y no sólo el que sale bien: un lote
+que ninguna cuenta puede absorber, una cuenta con deuda que requiere una decisión
+humana y un lote demasiado cerca del vencimiento que el motor se niega a ofrecer.
 
 ## Sobre WhatsApp
 
-Con `WHATSAPP_ALLOW_SEND=false`, que es el default, el canal redacta, valida y
-arma el payload exacto, pero no entrega: devuelve el dry-run explícito.
-
-Para enviar de verdad hace falta una app de Meta con su número de prueba, que
-**no** requiere verificación de negocio. El muro aparece recién cuando querés
-registrar un número propio, y de eso hablo en [`DECISIONS.md`](DECISIONS.md).
+Con `WHATSAPP_ALLOW_SEND=false`, que es el valor por defecto, el canal redacta,
+valida y arma el mensaje exacto, pero no lo entrega: devuelve un dry-run
+explícito. Para enviar de verdad hace falta una app de Meta con su número de
+prueba, que no requiere verificación de negocio. La traba aparece al registrar un
+número propio, y una oferta iniciada por la empresa necesita además una plantilla
+aprobada por Meta.
