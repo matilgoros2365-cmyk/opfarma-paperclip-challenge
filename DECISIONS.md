@@ -237,5 +237,14 @@ abierto esa pantalla al principio me ahorraba la mitad de las hipótesis.
 4. **Reemplazar el dataset sembrado por el ERP real.** El motor consume una
    interfaz chica —productos, lotes, cuentas, compras— así que es escribir un
    adapter, no rehacer la lógica.
-5. **Reportarles el bloqueo del adapter.** Nueve hipótesis descartadas con
+5. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
+   una sola cuenta que absorba cada lote completo, y lo evalúa en forma aislada.
+   Lo descubrí usándolo: me reportó un lote de 300 suturas como imposible de
+   colocar, y mi primera reacción fue partirlo entre dos clínicas. Estaba mal,
+   porque otro lote de la misma sutura ya estaba comprometido con una de ellas y
+   le comía la mitad de la demanda. El motor tiene que repartir la demanda de
+   cada cuenta entre todos los lotes del mismo SKU, consumiendo primero el que
+   vence antes, poder partir un lote entre varias cuentas, y que
+   `inventory_draft_offer` acepte cantidad.
+6. **Reportarles el bloqueo del adapter.** Nueve hipótesis descartadas con
    evidencia y un comando reproducible es un issue útil, no una queja.
