@@ -100,7 +100,10 @@ Dos las declara el propio producto y me parece bien citarlas tal cual: los
 presupuestos se calculan sobre gasto reportado, así que pueden pasarse; y el
 review de tarea no intercepta toda llamada externa, porque gobierna el cierre de
 la tarea y no cada acción. Las acciones de conector tienen su propio permiso,
-aparte.
+aparte, pero ojo: ese permiso es una política `require_approval` por tool y por
+agente. Paperclip la crea solo cuando el acceso se da desde la interfaz; si se da
+por API, no existe, y una tool de escritura pasa sin aprobación aunque esté
+clasificada como `risk=write`.
 
 Después está lo que encontré yo levantándolo, que es lo que la documentación no
 cuenta:

@@ -60,6 +60,11 @@ Terminaron quedando tres controles en capas diferentes: el agente revisor valida
 los números, una persona aprueba el margen, y el envío pide permiso aparte. Si
 uno falla, los otros dos siguen en pie.
 
+El tercero no vino de fábrica. Paperclip marca el envío como `risk=write`, pero
+esa marca sola no frena nada: la aprobación existe sólo si hay una política
+`require_approval` para esa tool y ese agente, y el script de setup la crea
+explícita. Cómo me di cuenta está en [DECISIONS.md](DECISIONS.md).
+
 ## Cómo levantarlo
 
 Necesitás Node.js 24.11 o más nuevo y una suscripción de Claude.

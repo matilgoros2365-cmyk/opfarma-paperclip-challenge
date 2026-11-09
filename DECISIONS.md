@@ -50,7 +50,8 @@ base de datos ni sesión, y por eso puede correr serverless.
 También me importó dónde poner al humano, y terminé poniéndolo en dos lugares
 distintos porque son dos riesgos distintos: el revisor valida absorción, piso de
 precio y estado de cuenta, y recién después una persona aprueba el margen. El
-envío tiene su propio permiso aparte, a nivel de la conexión.
+envío tiene su propio permiso aparte, a nivel de la tool. Ese permiso no vino de
+fábrica: lo tuve que crear explícito, y cuento abajo cómo me di cuenta.
 
 El revisor no está aprobando un descuento. Está verificando que no le estemos
 mudando una pérdida a una clínica, y que no quede producto por vencer en una
@@ -69,9 +70,10 @@ vencimiento.
 Los dos servidores MCP quedaron conectados a Paperclip, activos y con sus seis
 tools en el catálogo. Hay algo de eso que me gustó y que no busqué: **Paperclip
 clasificó las tools solo**. Marcó los cinco de lectura como `risk=read` y
-`whatsapp_send_message` como `risk=write`, sin que yo configurara nada. O sea
-que la asimetría que había diseñado sobrevivió al pasaje a la plataforma y no
-depende de que alguien se acuerde de configurarla.
+`whatsapp_send_message` como `risk=write`, sin que yo configurara nada. Al
+principio pensé que con eso la asimetría que había diseñado ya estaba protegida.
+No era así: la clasificación sola no frena nada, y el envío terminó necesitando
+una política propia. Lo cuento en "Qué no funcionó".
 
 **El gate de revisión corrió de punta a punta**, no quedó sólo configurado.
 StockScout trabajó la tarea, pasó a `in_review` y fue reasignada a
@@ -85,6 +87,15 @@ así que el gate enrutó correctamente pero nunca vi al runtime frenar un intent
 de `done`. La documentación dice que lo hace; yo puedo afirmar que la política
 se aplica y que la aprobación humana es inevitable, no que presencié la
 intercepción.
+
+**El envío por WhatsApp corrió entero, con el control humano en el medio.** En
+OPF-3 StockScout consultó el estado del canal, armó el borrador con su
+`draft_id`, adjuntó el payload al hilo y llamó al envío. Paperclip lo frenó y me
+puso una tarjeta de aprobación en la tarea. La aprobé, Paperclip ejecutó la
+llamada y el servidor devolvió `dry_run: true` con el payload exacto que habría
+salido. La tarea quedó en `done` con toda esa cadena en el historial, que es lo
+que pide el enunciado como ideal. Sanatorio del Parque no recibió nada, porque no
+hay credenciales de Meta cargadas.
 
 Y el setup es reproducible por comandos: `setup-company.mjs` levanta la compañía
 entera y lo podés correr dos veces sin romper nada.
@@ -247,6 +258,67 @@ probaba la combinación "sin credenciales, armar un borrador", que era la
 situación real de la demo. Lo encontré porque probé el flujo como lo iba a
 correr, no porque lo atrapara un test.
 
+### El control del envío no existía, y lo encontró el agente
+
+Este fue el hallazgo más importante, y no lo encontré yo. En la primera corrida
+completa de OPF-3, StockScout llamó a `whatsapp_send_message` y el envío pasó
+directo, sin pedirle aprobación a nadie. No salió nada sólo porque el servidor
+estaba en dry-run. El agente lo notó y me lo preguntó en una tarjeta: si el gate
+estaba mal configurado, si estaba pre-aprobado a propósito o si había que
+agregarlo.
+
+Lo confirmé en la auditoría de Paperclip: la llamada figuraba con
+`decision: allow` y `reasonCode: profile_allows_tool`. Yo había dado por hecho
+que el permiso venía con la clasificación `risk=write`, y lo había escrito así en
+el README. Era falso.
+
+Fui al código instalado a ver cómo decide Paperclip. La aprobación humana existe
+sólo si hay una política de tipo `require_approval` para esa tool y ese agente.
+Cuando el acceso a una conexión se da desde la interfaz, Paperclip la crea solo
+para toda tool que no sea de lectura. Mi script daba el acceso por otro camino, y
+ahí la política no se crea. Así que la creé explícita, por API, y la probé con el
+endpoint de test de políticas, que decide sin ejecutar nada: antes daba `allow`,
+después `require_approval`.
+
+De paso apareció otro agujero: MarginReviewer también podía enviar, aunque su
+rol dice que nunca le escribe a un cliente. A ese le puse una política `block`.
+Las dos políticas quedaron en `setup-company.mjs`, así que una instalación limpia
+ya nace con el control. Hay dos detalles que la API no avisa: no acepta `config`
+en estas políticas, aunque Paperclip lo use por dentro, y el `agentId` tiene que
+ir dentro de `conditions.actor`.
+
+Lo que me llevo es que "configurado" y "aplicado" no son lo mismo. La plataforma
+mostraba el envío como de riesgo, yo lo había documentado como protegido, y
+ninguna de las dos cosas lo frenaba. Lo que sí sirvió fue que el agente comparara
+lo que la tarea decía con lo que realmente pasó.
+
+### Cada respuesta a una tarjeta fallaba por el workspace
+
+El problema del workspace aislado que conté para OPF-2 no fue un caso suelto. En
+OPF-3 se repitió con un patrón claro:
+
+| Qué despertó al agente | Resultado |
+| --- | --- |
+| Aprobar el margen | Falló en un segundo |
+| Retry | Funcionó |
+| Responder una tarjeta | Falló, dos veces con el reintento automático |
+| Retry | Funcionó |
+| Responder otra tarjeta | Falló, dos veces |
+| Retry | Funcionó y cerró la tarea |
+
+El Retry elige un workspace aislado nuevo y anda. Responder una tarjeta, en
+cambio, dispara una continuación que pide un `git_worktree` sobre la carpeta de
+la corrida anterior, y esa carpeta nunca es un repositorio. El `git init` que me
+había funcionado en OPF-2 arregla una sola carpeta, pero cada corrida buena crea
+otra nueva, así que la siguiente continuación vuelve a fallar.
+
+Probé sacar la tarea de ese modo con un `PATCH`: devuelve 200 y no cambia nada.
+No encontré el camino soportado, y no tenía sentido seguir buscándolo con el
+tiempo que quedaba. Para terminar la demo alcanzó con hacer Retry después de cada
+respuesta. Lo que sí se mantuvo fue el estado del agente: aunque quedaba en
+`error` después de cada falla, el código sólo saltea agentes pausados o dados de
+baja, así que el siguiente Retry corría igual.
+
 ## Qué haría la semana que viene
 
 1. **Sacar el token de la URL.** Hoy la key del MCP viaja como parámetro de
@@ -261,10 +333,13 @@ correr, no porque lo atrapara un test.
 3. **Cerrar el loop con el webhook de estado de Meta**, para que la tarea no
    termine en "enviado" sino en "entregado" o "leído", y que un rechazo vuelva
    al hilo como evidencia.
-4. **Reemplazar el dataset sembrado por el ERP real.** El motor consume una
+4. **Darle a la compañía un proyecto con workspace de git.** Es lo que pide el
+   error de las continuaciones, y sacaría el Retry manual después de cada
+   respuesta a una tarjeta.
+5. **Reemplazar el dataset sembrado por el ERP real.** El motor consume una
    interfaz chica —productos, lotes, cuentas, compras— así que es escribir un
    adapter, no rehacer la lógica.
-5. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
+6. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
    una sola cuenta que absorba cada lote completo, y lo evalúa en forma aislada.
    Lo descubrí usándolo: me reportó un lote de 300 suturas como imposible de
    colocar, y mi primera reacción fue partirlo entre dos clínicas. Estaba mal,
@@ -273,5 +348,5 @@ correr, no porque lo atrapara un test.
    cada cuenta entre todos los lotes del mismo SKU, consumiendo primero el que
    vence antes, poder partir un lote entre varias cuentas, y que
    `inventory_draft_offer` acepte cantidad.
-6. **Reportarles el bloqueo del adapter.** Nueve hipótesis descartadas con
+7. **Reportarles el bloqueo del adapter.** Nueve hipótesis descartadas con
    evidencia y un comando reproducible es un issue útil, no una queja.
