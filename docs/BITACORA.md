@@ -65,7 +65,7 @@ explica por qué ese paso no se automatiza.
 
 ## Qué funcionó
 
-El proyecto quedó cubierto por **182 tests**: los tramos de vencimiento, el
+El proyecto quedó cubierto por **183 tests**: los tramos de vencimiento, el
 consumo calculado a partir del historial de compras, el piso de precio, los
 errores de la Graph API simulados y una verificación independiente del motor,
 descripta en [`VERIFICATION.md`](../VERIFICATION.md). Me ocupé de que el dataset
@@ -363,13 +363,40 @@ El tercer intento probó el circuito completo con Meta de verdad: la aprobación
 en Paperclip, el envío, el identificador que devuelve Meta, el aviso de estado
 que llega firmado al webhook en Vercel, el almacén que lo guarda y la consulta
 del agente, que dejó el resultado en la tarea. Lo que no llegó fue el mensaje al
-celular, porque Meta tiene bloqueada la cuenta de prueba. Eso no se resuelve
+celular, porque Meta tenía bloqueada esa cuenta de prueba. Eso no se resuelve
 desde el código ni desde Paperclip: es un estado de la cuenta del lado de Meta.
+
+**La cuenta nueva, y la entrega.** Armé todo de nuevo con otra cuenta de Meta:
+un portfolio propio de OpFarma, una app nueva y, con ella, una cuenta de
+WhatsApp Business y un número de prueba que no comparte nadie. Los scripts
+hicieron que fuera rápido: uno conectó el webhook y la suscripción, otro dio de
+alta las dos plantillas. Como la cuenta ya no estaba compartida, volví
+`WHATSAPP_SHARED_ACCOUNT` a `false`.
+
+Hubo dos tropiezos más, los dos útiles. Primero, cargué en la Mac el
+identificador de la cuenta en lugar del identificador del número; Meta lo
+aceptaba pero no devolvía los datos del número, y eso me hizo revisarlo.
+Segundo, el agente intentó repetir el `hello_world` y Paperclip no abrió una
+tarjeta nueva: reconoció que los argumentos eran idénticos a los de un envío ya
+ejecutado y devolvió ese resultado. Es la protección contra envíos duplicados, y
+obligó a cambiar el mensaje.
+
+Lo cambié para mejor. Le escribí al número de prueba desde mi celular, eso abrió
+la ventana de 24 horas, y el agente mandó **la oferta real de L-4028** como
+texto, con su borrador y su `draft_id`. La aprobé en Paperclip, llegó al
+celular, y Meta avisó por el webhook que se entregó. La plataforma lo muestra y
+el agente lo registró en la tarea.
+
+Al leer el mensaje en el teléfono vi que el texto estaba desprolijo: "120 sobre"
+en singular, palabras sin tilde, montos sin separador de miles y la fecha en
+formato ISO. Lo corregí para que se lea como se escribe en Argentina, con tests,
+y unifiqué el formato con el de las plantillas.
 
 **Las plantillas.** Di de alta la oferta completa por API, desde el mismo archivo
 que usa el agente. Quedó en revisión manual, así que armé una segunda, corta y
 sin precios, que suele pasar la revisión automática. Las dos quedaron en
-revisión al cierre. El código puede usar cualquiera de las dos con sólo cambiar
+revisión al cierre, en las dos cuentas; por eso la oferta viajó como texto
+dentro de la ventana de 24 horas. El código puede usar cualquiera de las dos con sólo cambiar
 una variable.
 
 Dos detalles que corregí en el camino: el resultado del envío decía "Delivered"

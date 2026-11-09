@@ -6,6 +6,7 @@
  * an agent's instructions — so an agent cannot argue its way past it, and a
  * future prompt change cannot quietly weaken it.
  */
+import { cantidad, fecha, pesos } from "./format";
 import {
   placeLot,
   type Candidate,
@@ -190,16 +191,16 @@ export function offerMessage(offer: Offer): string {
   const pct = Math.round(money.discountPct * 100);
 
   return [
-    `Hola ${offer.accountName}, les escribimos de OpFarma.`,
+    `Hola, ${offer.accountName}. Les escribimos de OpFarma.`,
     ``,
-    `Tenemos un lote de ${offer.productName} (${offer.sku}) disponible con ${pct}% de descuento:`,
+    `Tenemos un lote de ${offer.productName} (${offer.sku}) con ${pct}% de descuento:`,
     ``,
-    `• Cantidad: ${offer.quantity} ${offer.unit}`,
-    `• Vencimiento: ${offer.expiry} (${offer.daysToExpiry} dias)`,
-    `• Precio: $${money.offerUnitPrice} por ${offer.unit} (lista $${money.listUnitPrice})`,
-    `• Total: $${money.lineTotal}`,
+    `• Cantidad: ${cantidad(offer.quantity, offer.unit)}`,
+    `• Vencimiento: ${fecha(offer.expiry)} (en ${offer.daysToExpiry} días)`,
+    `• Precio: ${pesos(money.offerUnitPrice)} por ${offer.unit} (lista ${pesos(money.listUnitPrice)})`,
+    `• Total: ${pesos(money.lineTotal)}`,
     ``,
-    `Se lo ofrecemos a ustedes porque por su consumo habitual lo usarian antes del vencimiento.`,
-    `Si no les sirve, decinos y no insistimos.`,
+    `Se lo ofrecemos porque, por su consumo habitual, lo usarían antes del vencimiento.`,
+    `Si no les sirve, avísennos y no insistimos.`,
   ].join("\n");
 }

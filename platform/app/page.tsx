@@ -342,7 +342,17 @@ async function DeliveryLog() {
 
   let events;
   try {
-    events = (await recentEvents(store, 8)).filter((event) => event.kind === "status");
+    // Meta puede mandar el mismo aviso más de una vez: se muestra uno por estado.
+    const seen = new Set<string>();
+    events = (await recentEvents(store, 30))
+      .filter((event) => event.kind === "status")
+      .filter((event) => {
+        const key = `${event.wamid}:${event.status}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 8);
   } catch {
     return <p className="notice">No se pudo leer el registro de entregas.</p>;
   }

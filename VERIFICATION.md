@@ -9,7 +9,7 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 182 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 183 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 de 5 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
@@ -120,7 +120,15 @@ identificador. Un segundo después, el aviso de estado llegó firmado al webhook
 Vercel con `failed` y el error 131031 (cuenta bloqueada), se guardó en el almacén
 y el agente lo leyó con `whatsapp_delivery_status` y lo registró en la tarea. El
 circuito de ida y vuelta quedó probado con Meta real; el mensaje no llegó al
-celular por el bloqueo de la cuenta.
+celular por el bloqueo de esa cuenta.
+
+**La entrega, con una cuenta propia.** Con una cuenta de WhatsApp Business nueva,
+sólo de OpFarma, el cuarto intento mandó la oferta real de L-4028 como texto,
+dentro de la ventana de 24 horas que abrió el destinatario. Después de mi
+aprobación en Paperclip, el mensaje llegó al celular, y la plataforma en
+producción mostró los avisos de Meta: enviado y entregado, con el número
+enmascarado. Antes, Paperclip se había negado a repetir un envío con argumentos
+idénticos a uno ya ejecutado, que es su protección contra duplicados.
 
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
@@ -203,9 +211,12 @@ corregí lo siguiente:
 
 ## 8. Lo que no pude verificar
 
-- **La entrega a un teléfono real.** El envío llegó a Meta y fue aceptado, pero
-  Meta informó la cuenta de prueba como bloqueada (131031), así que el mensaje
-  no llegó al celular.
+- **El estado "leído".** Meta informó "enviado" y "entregado", pero no "leído":
+  ese aviso depende de que el destinatario tenga activadas las confirmaciones de
+  lectura en WhatsApp.
+- **Las plantillas aprobadas.** Las dos plantillas de la oferta seguían en
+  revisión de Meta al cierre, así que la oferta viajó como texto; el envío con
+  plantilla está probado en código y en los tests, no contra Meta.
 - **La intercepción de `done`.** El agente pidió revisión por su cuenta en lugar
   de intentar cerrar la tarea, así que nunca vi al runtime frenarlo.
 - **Linux.** El setup y los agentes corrieron en macOS; en Linux el runner nativo

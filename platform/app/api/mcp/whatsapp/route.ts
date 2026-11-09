@@ -290,7 +290,10 @@ const handler = createMcpHandler((server) => {
           return ok(`${events.length} recent event(s), most recent first.`, { events: events.slice(0, 20) });
         }
 
-        const mine = statuses.filter((event) => event.wamid === wamid);
+        // Meta puede repetir un aviso; uno por estado alcanza.
+        const mine = statuses
+          .filter((event) => event.wamid === wamid)
+          .filter((event, i, all) => all.findIndex((other) => other.status === event.status) === i);
         if (mine.length === 0) {
           return ok(
             "Meta has not reported anything for this message yet. Statuses usually arrive within seconds; if nothing shows up, check the webhook subscription.",

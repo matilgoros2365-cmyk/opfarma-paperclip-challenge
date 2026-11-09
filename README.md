@@ -176,7 +176,7 @@ con los workspaces aislados, y está documentada en la bitácora.
 cd platform && npm test
 ```
 
-Son 182 tests. Además de las pruebas por módulo, incluyen una verificación
+Son 183 tests. Además de las pruebas por módulo, incluyen una verificación
 independiente que rehace todas las cuentas del motor desde la especificación,
 sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
 que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).

@@ -124,11 +124,17 @@ describe("offerMessage", () => {
   const { offer } = buildOffer(lot("L-4028"), "ACC-PARQUE", dataset, AS_OF);
   const body = offerMessage(offer);
 
-  it("states quantity, expiry and price plainly", () => {
-    expect(body).toContain("120 sobre");
-    expect(body).toContain("2027-01-22");
-    expect(body).toContain("75 dias");
-    expect(body).toContain("$1260");
+  it("states quantity, expiry and price plainly, the way they are written in Argentina", () => {
+    expect(body).toContain("Cantidad: 120 sobres");
+    expect(body).toContain("Vencimiento: 22/01/2027 (en 75 días)");
+    expect(body).toContain("Precio: $1.260 por sobre (lista $2.100)");
+    expect(body).toContain("Total: $151.200");
+  });
+
+  it("is written with accents and in the same register as the template", () => {
+    expect(body).toContain("usarían");
+    expect(body).toContain("avísennos");
+    expect(body).not.toMatch(/\bdias\b|\busarian\b|decinos/);
   });
 
   it("does not hide the short shelf life", () => {

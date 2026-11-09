@@ -20,6 +20,7 @@
 import full from "@/data/offer-template.json";
 import simple from "@/data/offer-template-simple.json";
 
+import { cantidad, fecha, pesos } from "./format";
 import type { Offer } from "./offer";
 
 export type TemplateField =
@@ -52,19 +53,6 @@ export function activeOfferTemplate(env: Record<string, string | undefined> = pr
   return OFFER_TEMPLATES.find((template) => template.name === wanted) ?? OFFER_TEMPLATE;
 }
 
-const pesos = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
-
-function fecha(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
-/** "sobre" → "sobres", "caja x100" → "cajas x100". Alcanza para las unidades del catálogo. */
-function plural(unit: string): string {
-  const [first, ...rest] = unit.split(" ");
-  return [`${first}s`, ...rest].join(" ");
-}
-
 function fieldValue(offer: Offer, field: TemplateField): string {
   switch (field) {
     case "cuenta":
@@ -74,11 +62,11 @@ function fieldValue(offer: Offer, field: TemplateField): string {
     case "vencimiento":
       return fecha(offer.expiry);
     case "cantidad":
-      return `${offer.quantity} ${offer.quantity === 1 ? offer.unit : plural(offer.unit)}`;
+      return cantidad(offer.quantity, offer.unit);
     case "precio_unitario":
-      return `$${pesos.format(offer.money.offerUnitPrice)}`;
+      return pesos(offer.money.offerUnitPrice);
     case "total":
-      return `$${pesos.format(offer.money.lineTotal)}`;
+      return pesos(offer.money.lineTotal);
     case "descuento":
       return `${Math.round(offer.money.discountPct * 100)}%`;
   }
