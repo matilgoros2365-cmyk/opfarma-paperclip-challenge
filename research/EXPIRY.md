@@ -29,24 +29,41 @@ vencimiento de forma sistemática.
   almacenarlos durante dos años costó 6,3 millones.
 - **Ontario, 2025.** La auditoría provincial informó la baja de 1.400 millones de
   dólares canadienses en equipos de protección personal.
-- **Argentina, AGN.** El informe de gestión 2024-064 sobre vacunas e insumos del
-  Ministerio de Salud de la Nación examina la adquisición, el control de stock y
-  el descarte, y cita como antecedente una advertencia de la auditoría interna
-  sobre más de cuatro millones de vacunas vencidas e insumos.
-- **Argentina, SIGEN, 2025.** Una auditoría constató insumos vencidos o no aptos
-  para distribución en los operadores logísticos del Ministerio de Salud, con
-  costos adicionales de almacenamiento, e irregularidades en la disposición de
-  lo vencido. A abril de 2025 figuraba sin acción correctiva informada.
+- **Argentina, AGN, informe 2024-064.** Es el caso más completo que encontré, y
+  describe en un organismo público exactamente la falla que OpFarma ataca. La
+  Auditoría General de la Nación evaluó la compra, el almacenaje, la
+  distribución y el descarte de vacunas del Ministerio de Salud entre 2016 y
+  2019 (informe fechado el 20 de mayo de 2024). Lo que constató por su cuenta:
+  - De 1.932.564 dosis de vacuna DPTA compradas en 2016, 624.060 se vencieron en
+    el depósito central sin distribuirse, con un costo de 6.989.060 dólares.
+    Cuatro de los seis lotes nunca salieron, y las planillas de control de 2019
+    ni siquiera los listaban, lo que "impidió detectar su vencimiento".
+  - No hubo evidencia de que se usara el criterio FEFO previsto en el propio
+    manual. Según la AGN, con FEFO el vencimiento de lo almacenado "no habría
+    tenido lugar".
+  - No había un control de stock sistemático ni periódico, y los sistemas del
+    Ministerio y del depósito no se hablaban entre sí.
+  - Los lotes llegaron a pasar 232 días en la terminal aduanera y 281 hasta su
+    liberación, que es vida útil que se consume antes de que el producto esté
+    disponible.
+  - Citando un informe conjunto de la SIGEN y la auditoría interna de 2020, la
+    AGN registra 4.141.343 unidades de vacunas vencidas "ocupando espacio
+    rentado" en la cámara frigorífica central. El costo de ese almacenaje no se
+    pudo cuantificar por falta de datos.
+- **Argentina, AGN, informe 2024-077.** En el programa de VIH del mismo
+  Ministerio, con datos del propio organismo, la AGN contabilizó 1.895.801
+  unidades de medicamentos "no conformes" entre 2017 y 2019, una categoría que
+  suma lo vencido con lo roto o dañado. Lo vencido se dispone como residuo
+  peligroso bajo la Ley 24.051, con un servicio contratado para eso.
 - **Paraguay, Contraloría, 2025.** Detectó medicamentos e insumos vencidos en
   depósitos del Hospital de Clínicas, con pérdidas por 2.207 millones de
   guaraníes, y atribuyó el desperdicio a la falta de controles y procedimientos.
 - **Chile, Contraloría.** En 2020 acreditó que la Central de Abastecimiento
   eliminó más de 3.300 millones de pesos chilenos en medicamentos, y en 2021, que
   el sistema de salud desechó 35 millones de medicamentos por vencimiento.
-- **Argentina, vacunas.** En agosto de 2020, el
-  Ministerio de Salud y la SIGEN informaron unos 4 millones de dosis vencidas en
-  un depósito de la Ciudad de Buenos Aires, la mitad antigripales compradas en
-  2017. En 2022, el informe de gestión de la Jefatura de Gabinete al Senado
+- **Argentina, vacunas después de 2019.** El hallazgo de los 4 millones de
+  dosis se hizo público en agosto de 2020, cuando el Ministerio y la SIGEN lo
+  anunciaron. En 2022, el informe de gestión de la Jefatura de Gabinete al Senado
   contabilizó 349.916 dosis contra el COVID vencidas en 2021 y 2022, sobre
   574.017 descartadas en total. En octubre de 2024, el Ministerio estimó ante el
   Consejo Federal de Salud una pérdida de 30 millones de dólares en vacunas
@@ -67,9 +84,16 @@ control. El problema es de proceso, no de una administración.
   653 dólares por cirugía, el 13,1% del costo de insumos, y los autores lo
   extrapolaron a 2,9 millones de dólares por año sólo en neurocirugía. En un
   hospital francés, lo desperdiciado llegó al 20,1% del costo de insumos
-  quirúrgicos. En un hospital brasileño, lo descartado entre 2015 y 2019,
-  incluido lo vencido, sumó 108.722 dólares.
-
+  quirúrgicos.
+- **Un hospital universitario de Belo Horizonte, 2015 a 2019.** Santos y otros
+  (*Cleaner Waste Systems*, 2022) relevaron 1.485 registros de materiales y
+  medicamentos descartados sin usar en un hospital de 509 camas, por 108.722
+  dólares. El 61,8% de los registros fue por vencimiento, y lo vencido sumó
+  78.470 dólares, cerca del 72% del valor. Los autores lo atribuyen a un stock
+  mal dimensionado frente a la demanda real, a la falta de coordinación entre
+  quien planifica la compra y quien distribuye, y a registros débiles. Una
+  salvedad: en su definición, "vencido" incluye también lo que quedó sin usar
+  porque se reemplazó por un producto más nuevo.
 - **Siete años de inventario en un hospital de Riad.** Alanazi y otros
   (*Risk Management and Healthcare Policy*, 2024) analizaron 2015 a 2021 en King
   Abdulaziz Medical City. Lo vencido explicó el 79,8% del valor desperdiciado,
@@ -103,20 +127,59 @@ informes independientes de consultoras ni de cámaras del sector con este dato, 
 el estudio de Riad (0,21% del gasto) sugiere que las cifras de proveedores están
 en el extremo alto.
 
-**Documentado.** El tamaño del terreno en Argentina: según la guía comercial del
-gobierno de Estados Unidos (2025), el mercado de dispositivos médicos rondó los
-902 millones de dólares en 2023, y alrededor del 80% es importado. Las
-importaciones sumaron unos 750 millones entre junio de 2023 y junio de 2024,
-según fuentes de la industria que la guía atribuye a CADIEM; China y Estados
-Unidos son los dos primeros orígenes. Toda importación tiene que hacerla un
-importador inscripto en ANMAT. Esto importa por dos razones: el lote lo compra y
-lo carga el importador o distribuidor local, y llega con la vida útil que ya
-consumió el viaje y la aduana.
+**Comprobado y documentado.** El terreno en Argentina:
+
+- **CADIEM, informe sectorial (febrero de 2019, datos de 2017).** El sector
+  facturó 2.160 millones de dólares, y el 75% fueron productos importados. Lo
+  forman 929 empresas: 274 productores y 655 importadores y comercializadores,
+  con 10 empleados en promedio. La importación está atomizada: las diez
+  primeras empresas explican sólo el 24% de lo importado. Las importaciones de
+  insumos, el segmento de OpFarma, fueron el 17% de los 840 millones
+  importados.
+- **Ministerio de Hacienda, informe de cadena de valor (junio de 2019).** Las
+  importaciones de equipamiento médico sumaron 701 millones de dólares en 2018
+  (en una rama que también incluye óptica e instrumentos de precisión), con un
+  déficit comercial que el informe califica de estructural. Distingue tres
+  compradores: hospitales públicos, obras sociales y medicina privada.
+- **CEPAL, desarrollo de proveedores de dispositivos médicos (2024).** Robbio y
+  Resquín estiman el consumo aparente de dispositivos médicos de Argentina en
+  unos 2.350 millones de dólares en 2021-2022. Sobre una encuesta a 57
+  fabricantes nacionales, el 84% son micro o pequeñas empresas. Anotan además
+  un mecanismo de sobrestock, en este caso del lado de los fabricantes: los
+  pedidos mínimos de los proveedores del exterior obligan a comprar insumos
+  "para varios años de actividad".
+- **Vázquez (*H-industria*, 2025).** En su historia de la industria de
+  dispositivos médicos, con datos del INDEC, la importación pasó del 52% del
+  consumo aparente en 1993 al 72% en 2018. Describe a CADIEM como una cámara de
+  importadores, en su mayoría distribuidoras y oficinas comerciales de
+  multinacionales, y señala que las multinacionales en Argentina sólo importan
+  y comercializan, sin fabricar. Gil (*URVIO*, 2022) llega a una cifra
+  parecida: la producción local abastece sólo un tercio de la demanda.
+- **Guía comercial del gobierno de Estados Unidos (2025).** Estima el mercado de
+  dispositivos médicos en 902 millones de dólares en 2023, con alrededor del 80%
+  importado; China y Estados Unidos son los dos primeros orígenes. Toda
+  importación tiene que hacerla un importador inscripto en ANMAT.
+
+Las estimaciones de tamaño no coinciden, de 902 a 2.350 millones de dólares,
+porque miden cosas distintas: facturación, consumo aparente o sólo
+dispositivos, en años diferentes. Lo que sí coincide en todas es la
+dependencia de la importación, entre dos tercios y cuatro quintos del mercado.
+
+Estos datos importan por tres razones. El lote lo compra y lo carga el
+importador o distribuidor local. Llega con la vida útil que ya consumieron el
+viaje y la aduana: en las vacunas auditadas por la AGN, la liberación de un
+lote llegó a demorar 281 días. Y quien lo tiene que colocar es, en la mayoría
+de los casos, una empresa chica, sin un equipo dedicado a cruzar lotes con
+clientes.
+
+Ninguno de estos informes del sector mide el stock vencido, la obsolescencia o
+los vencimientos. No es que el problema no exista: es que ninguna fuente
+pública que encontré lo mide del lado privado.
 
 Lo que no es opinable es la forma de la pérdida. Un lote que vence en depósito no
 reduce el margen: se pierde el 100% del costo. A eso se suma la disposición
 final, porque los productos vencidos se tratan como residuos peligrosos (Ley
-24.051, citada por la AGN en el informe 2024-077).
+24.051, que la AGN usa como criterio en los informes 2024-064 y 2024-077).
 
 El riesgo, además, es del distribuidor. En el modelo de consignación lo asume
 el fabricante, pero cuando el distribuidor compra el stock, el lote que no rota
@@ -248,8 +311,10 @@ resguardo de 30 días.
 ## 8. Qué faltaría para validarlo del todo
 
 Las fuentes muestran que el problema existe, que es caro y que la respuesta
-actual es reactiva. Lo que no pueden mostrar es cuánto le cuesta a una
-distribuidora concreta ni si sus clientes aceptarían estas ofertas. Para eso
+actual es reactiva. En el sector público hay auditorías con cifras; en el
+privado, ni la cámara ni los informes oficiales lo miden. Lo que las fuentes no
+pueden mostrar es cuánto le cuesta a una distribuidora concreta ni si sus
+clientes aceptarían estas ofertas. Para eso
 haría falta:
 
 1. Entrevistar a tres a cinco responsables comerciales o de depósito de
@@ -267,9 +332,8 @@ haría falta:
 - [Comunicado oficial sobre la nueva normativa de vencimientos](https://www.argentina.gob.ar/noticias/nueva-normativa-sobre-fechas-de-vencimiento-de-productos-medicos-importados)
 - [ANMAT, trazabilidad de productos médicos: normativa](https://www.anmat.gob.ar/trazabilidad_PM/normativa.asp) y [preguntas frecuentes](https://www.anmat.gob.ar/trazabilidad_PM/faqs.asp)
 - [Disposición ANMAT 2303/2014](https://www.argentina.gob.ar/normativa/nacional/norma-229122/texto)
-- [AGN, informe 2024-064, Ministerio de Salud de la Nación](https://agn.ar/sites/default/files/informes/2024-064-2024-Informe.pdf)
-- [AGN, informe 2024-077](https://agn.ar/sites/default/files/informes/2024-077-Informe.pdf)
-- [Auditoría de la SIGEN sobre medicamentos e insumos vencidos (Diario Panorama)](https://www.diariopanorama.com/noticia/519548/auditoria-sigen-detecto-graves-fallas-controles-vacunas-vencidas-gestion-kirchnerista.html)
+- [AGN, informe 2024-064: necesidades, adquisición, almacenaje, distribución y destrucción al vencimiento de vacunas, 2016-2019](https://agn.ar/sites/default/files/informes/2024-064-2024-Informe.pdf)
+- [AGN, informe 2024-077: Programa 22, VIH, ETS e infectocontagiosas, 2017-2019](https://agn.ar/sites/default/files/informes/2024-077-Informe.pdf)
 - [Auditora General de Canadá, reserva estratégica de emergencia (2026)](https://www.canada.ca/en/auditor-general/our-work/audit-reports/19-auditor-general-202610-public-health-emergency-stockpile.html)
 - [Ontario: baja de 1.400 millones en equipos de protección (CP24)](https://www.cp24.com/politics/queens-park/2025/12/02/ontario-wrote-off-14-billion-of-personal-protective-equipment-auditor-finds/)
 - [Contraloría de Paraguay, Hospital de Clínicas (RDN)](https://www.rdn.com.py/2025/12/01/contraloria-revela-perdida-de-g-2-207-millones-por-medicamentos-vencidos-en-clinicas/)
@@ -285,13 +349,18 @@ haría falta:
 - [ProPublica, *What Hospitals Waste*](https://www.propublica.org/article/what-hospitals-waste)
 - [Operating room waste in neurosurgical procedures, UCSF (PubMed)](https://pubmed.ncbi.nlm.nih.gov/27153160/)
 - [Costs of disposable and reusable supplies wasted during surgeries (PubMed)](https://pubmed.ncbi.nlm.nih.gov/29432971/)
-- [Materiales y medicamentos descartados en un hospital brasileño, 2015-2019](https://www.sciencedirect.com/science/article/pii/S277291252200046X)
+- [Santos y otros, materiales y medicamentos descartados en un hospital de Belo Horizonte, 2015-2019 (*Cleaner Waste Systems*, 2022)](https://www.sciencedirect.com/science/article/pii/S277291252200046X)
 - [Alanazi y otros, inventario de siete años en King Abdulaziz Medical City (*Risk Management and Healthcare Policy*, 2024)](https://www.dovepress.com/reducing-pharmaceutical-and-non-pharmaceutical-inventory-waste-in-tert-peer-reviewed-fulltext-article-RMHP)
 - [Kamba y otros, stocks de medicamentos vencidos en países de ingresos bajos y medios (*Bulletin of the WHO*, 2017)](https://pmc.ncbi.nlm.nih.gov/articles/PMC5537748/)
 - [Prototipo de redistribución según vencimiento](https://github.com/shamanthsaravanan/expiry-aware-stock-redistribution-recommender)
 
 **Sector, mercado y entrevistas**
 
+- [CADIEM, informe sectorial (febrero de 2019)](https://cadiem.org.ar)
+- [Ministerio de Hacienda, informe de cadena de valor: equipamiento médico (junio de 2019)](https://www.argentina.gob.ar/sites/default/files/sspmicro_cadenas_de_valor_equipamiento_medico_0.pdf)
+- [CEPAL, *Desarrollo de proveedores de la industria de dispositivos médicos en la Argentina* (Robbio y Resquín, 2024)](https://ideas.repec.org/p/ecr/col022/81162.html)
+- [Vázquez, "De la autonomía sanitaria a la dependencia tecnológica: una historia de la industria de dispositivos médicos en Argentina" (*H-industria*, 2025)](https://doi.org/10.56503/H-Industria/n.36(19)/3291)
+- [Gil, "Seguridad, autonomía e industria: el equipamiento médico en el Mercosur" (*URVIO*, 2022)](https://www.redalyc.org/journal/5526/552669898001/)
 - [Guía comercial de Estados Unidos: productos médicos en Argentina (2025)](https://www.trade.gov/country-commercial-guides/argentina-medical-products)
 - [GHX, recuentos de inventario y productos vencidos (2025)](https://www.ghx.com/the-healthcare-hub/the-hidden-cost-of-expired-supplies-lessons-from-hospital-inventory-counts/)
 - [CADIEM, carta al Banco Central (La Nación, 2022)](https://www.lanacion.com.ar/economia/la-camara-de-insumos-medicos-pidio-al-banco-central-que-excluya-al-sector-de-la-limitacion-para-nid19072022/)
@@ -303,7 +372,10 @@ haría falta:
 - [Bajas de inventario en dispositivos médicos (ConnectSx)](https://connectsx.com/blog/elminate-expired-inventory-risk)
 - [Costo del inventario en consignación vencido (MoveMedical)](https://movemedical.com/post/expired-consignment-inventory-doesnt-disappear-heres-what-it-actually-costs----and-how-leading-medtechs-stopped-it)
 
-*Una advertencia:* las normas las cito a partir del Boletín Oficial, de InfoLEG y
-de comunicados oficiales; los informes de auditoría, a partir de sus versiones
-publicadas y de la prensa. Antes de usar cualquiera de estos datos en una decisión
-real conviene leer el texto completo de cada fuente.
+*Cómo leí las fuentes:* las normas, contra el Boletín Oficial, InfoLEG y los
+comunicados oficiales. Los informes de la AGN, el de CADIEM, los de Hacienda y
+CEPAL, el artículo de Vázquez y los estudios de Belo Horizonte, Riad y Uganda,
+completos. Las auditorías de Ontario, Paraguay y Chile, las cifras de vacunas
+posteriores a 2019 y los casos de San Juan y Castelli, a partir de la prensa. Los
+estudios de quirófano, a partir de sus resúmenes. Antes de usar cualquiera de
+estos datos en una decisión real conviene leer el texto completo de cada fuente.

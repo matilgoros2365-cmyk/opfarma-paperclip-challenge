@@ -254,9 +254,12 @@ corregí lo siguiente:
 - **Los 10 minutos con otra persona.** Las instrucciones las validé en mi propio
   recorrido, no con alguien que las siga desde cero.
 - **Las fuentes del problema, una por una.** La normativa la verifiqué contra el
-  Boletín Oficial y los sitios de ANMAT; varios informes de auditoría y estudios
-  los cito a partir de sus resúmenes y de la prensa. El detalle está en
-  [`research/EXPIRY.md`](research/EXPIRY.md).
+  Boletín Oficial y los sitios de ANMAT. Leí completos los dos informes de la
+  AGN, el informe sectorial de CADIEM, los de Hacienda y CEPAL, el artículo de
+  Vázquez, y los estudios de Belo Horizonte, Riad y Uganda. Las auditorías de Ontario,
+  Paraguay y Chile y los casos argentinos recientes los cito a partir de la
+  prensa, y los estudios de quirófano, a partir de sus resúmenes. El detalle
+  está en [`research/EXPIRY.md`](research/EXPIRY.md).
 - **El problema con una distribuidora real.** Las fuentes muestran que existe y
   que es caro, pero no cuánto le cuesta a una empresa concreta. Eso requiere
   entrevistas y datos propios, y lo dejé planteado como próximo paso.
