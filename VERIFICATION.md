@@ -9,7 +9,7 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 173 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 182 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 de 5 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |

@@ -17,7 +17,7 @@ import { z } from "zod";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { placeLot, scanInventory } from "@/lib/expiry/engine";
 import { buildOffer, offerMessage, OfferRefused } from "@/lib/expiry/offer";
-import { OFFER_TEMPLATE, offerTemplateVariables } from "@/lib/expiry/template";
+import { activeOfferTemplate, offerTemplateVariables } from "@/lib/expiry/template";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
 
@@ -157,6 +157,7 @@ const handler = createMcpHandler((server) => {
 
         const asOf = asOfDate();
         const { offer } = buildOffer(lot, account_id, dataset, asOf);
+        const template = activeOfferTemplate();
 
         return ok(
           offer.warnings.length === 0
@@ -172,9 +173,9 @@ const handler = createMcpHandler((server) => {
             whatsapp_template: {
               to: offer.whatsapp,
               kind: "template",
-              template_name: OFFER_TEMPLATE.name,
-              language: OFFER_TEMPLATE.language,
-              variables: offerTemplateVariables(offer),
+              template_name: template.name,
+              language: template.language,
+              variables: offerTemplateVariables(offer, template),
             },
             next_step:
               "Attach this to the task for review. Once a human approves the margin, pass whatsapp_template to whatsapp_draft_message (use message_body as text only inside a 24h window the customer opened), then whatsapp_send_message. That call asks a human for approval before anything leaves.",

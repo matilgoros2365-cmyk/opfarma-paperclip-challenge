@@ -12,7 +12,10 @@
  */
 import { readFileSync } from "node:fs";
 
-const template = JSON.parse(readFileSync(new URL("../data/offer-template.json", import.meta.url), "utf8"));
+// Por defecto la oferta completa. TEMPLATE_FILE=offer-template-simple.json da de
+// alta la invitación corta.
+const file = process.env.TEMPLATE_FILE?.trim() || "offer-template.json";
+const template = JSON.parse(readFileSync(new URL(`../data/${file}`, import.meta.url), "utf8"));
 
 const wabaId = process.env.META_WABA_ID?.trim();
 const token = process.env.META_WHATSAPP_TOKEN?.trim();

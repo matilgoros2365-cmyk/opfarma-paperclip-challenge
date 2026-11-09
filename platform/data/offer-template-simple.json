@@ -1,0 +1,9 @@
+{
+  "name": "oferta_lote_simple",
+  "language": "es_AR",
+  "category": "MARKETING",
+  "body": "Hola, {{1}}. En OpFarma tenemos un lote de {{2}} con vencimiento {{3}} que podría servirles. Si les interesa, respondan este mensaje y les pasamos precio y condiciones.",
+  "footer": "Si no les sirve, avísennos y no insistimos.",
+  "fields": ["cuenta", "producto", "vencimiento"],
+  "examples": ["Sanatorio del Parque", "Sutura de nylon 3-0", "22/01/2027"]
+}
