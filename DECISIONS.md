@@ -73,9 +73,21 @@ clasificó las tools solo**. Marcó los cinco de lectura como `risk=read` y
 que la asimetría que había diseñado sobrevivió al pasaje a la plataforma y no
 depende de que alguien se acuerde de configurarla.
 
-El gate de revisión quedó guardado como política de la tarea, con las dos
-etapas. Y el setup es reproducible por comandos: `setup-company.mjs` levanta la
-compañía entera y lo podés correr dos veces sin romper nada.
+**El gate de revisión corrió de punta a punta**, no quedó sólo configurado.
+StockScout trabajó la tarea, pasó a `in_review` y fue reasignada a
+MarginReviewer; el revisor validó y aprobó; y la tarea quedó en espera de la
+aprobación humana, asignada a mí. Las dos etapas encadenadas, cada una con su
+decisión registrada en el hilo.
+
+Una precisión que corresponde hacer: **no llegué a provocar la intercepción**.
+StockScout pidió `in_review` por su cuenta en vez de intentar cerrar la tarea,
+así que el gate enrutó correctamente pero nunca vi al runtime frenar un intento
+de `done`. La documentación dice que lo hace; yo puedo afirmar que la política
+se aplica y que la aprobación humana es inevitable, no que presencié la
+intercepción.
+
+Y el setup es reproducible por comandos: `setup-company.mjs` levanta la compañía
+entera y lo podés correr dos veces sin romper nada.
 
 ## Qué no funcionó
 
@@ -182,7 +194,17 @@ de 8 GiB que impone la plataforma. Probé agrandar el disco raíz con
 idéntico — o sea que el tope no es del disco que pedís sino de Fly. Con una
 imagen que trae adentro cuatro CLI de agentes, ese techo queda corto.
 
-Hay otras dos cosas que me frenaron y que vale anotar:
+Hay otras tres cosas que me frenaron y que vale anotar:
+
+**El workspace aislado exige un checkout de git, y no lo dice antes.** Después
+de un reintento, Paperclip puso OPF-2 en modo `fresh_isolated_workspace` por
+precaución —porque una corrida previa había quedado sin efectos verificados— y
+la etapa de revisión empezó a fallar pidiendo un `git_worktree` sobre una
+carpeta que no era un repositorio. El campo no es editable desde la interfaz y
+un `PATCH` a la tarea devuelve 200 pero lo ignora. Se resuelve haciendo
+`git init` en la carpeta de trabajo del agente, pero no hay nada que lo
+anticipe: el modo se activa solo y el requisito aparece recién cuando algo ya
+falló.
 
 **Las conexiones a herramientas se crean por API pero no se terminan por API.**
 La ruta real es `/api/tool-connections/{id}`, no está en la documentación, y la
