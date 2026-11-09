@@ -219,7 +219,65 @@ async function ensureConnection(name, mcpPath) {
 }
 
 await ensureConnection("OpFarma Inventario", "inventory");
-await ensureConnection("OpFarma WhatsApp", "whatsapp");
+const whatsapp = await ensureConnection("OpFarma WhatsApp", "whatsapp");
+
+/* -------------------------------------------------------------------------- */
+
+log.step("Permisos del envío");
+
+/*
+ * Que Paperclip clasifique whatsapp_send_message como risk=write no frena nada.
+ * La aprobación humana existe sólo si hay una política require_approval para
+ * esa tool y ese agente. Cuando el acceso se da desde la interfaz, Paperclip la
+ * crea solo; con el acceso que arma este script no, y el envío pasaba directo
+ * (lo vimos en la auditoría: profile_allows_tool). Así que la creo explícita:
+ *
+ *   StockScout     → whatsapp_send_message pide aprobación humana
+ *   MarginReviewer → whatsapp_send_message bloqueado: el revisor nunca envía
+ *
+ * La API no acepta `config` en estas políticas, y el agentId va dentro de
+ * conditions.actor. El nombre es único por compañía, así que se saltea si ya
+ * existe y el script sigue siendo idempotente.
+ */
+const sendCatalog = await api("GET", `/tool-connections/${whatsapp.id}/catalog`);
+const sendEntry = (sendCatalog?.catalog ?? []).find((t) => t.toolName === "whatsapp_send_message");
+
+if (!sendEntry) {
+  log.warn("whatsapp_send_message no está en el catálogo: no se pudo configurar el permiso del envío.");
+} else {
+  const policiesResponse = await api("GET", `/companies/${CID}/tools/policies`);
+  const policies = Array.isArray(policiesResponse) ? policiesResponse : (policiesResponse?.policies ?? []);
+
+  async function ensurePolicy(name, policyType, agentId, description) {
+    if (policies.some((p) => p.name === name)) {
+      log.reuse(name);
+      return;
+    }
+    await api("POST", `/companies/${CID}/tools/policies`, {
+      name,
+      description,
+      policyType,
+      priority: 0,
+      enabled: true,
+      selectors: { connectionId: whatsapp.id, catalogEntryId: sendEntry.id },
+      conditions: { actor: { agentId } },
+    });
+    log.ok(name);
+  }
+
+  await ensurePolicy(
+    "ask-first:whatsapp_send_message:StockScout",
+    "require_approval",
+    scout.id,
+    "Aprobacion humana antes de que StockScout envie un mensaje por WhatsApp.",
+  );
+  await ensurePolicy(
+    "block:whatsapp_send_message:MarginReviewer",
+    "block",
+    reviewer.id,
+    "El revisor valida ofertas, nunca envia mensajes al cliente.",
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -291,7 +349,7 @@ console.log(`
   Compañía   OpFarma (${company.issuePrefix}) — ${API.replace("/api", "")}/${company.issuePrefix}/dashboard
   Agentes    MarginReviewer (qa) ← StockScout (general)
   Tareas     3, una con review de agente + aprobación humana
-  Conexiones Inventario y WhatsApp, con el envío pendiente de permiso
+  Conexiones Inventario y WhatsApp; el envío pide aprobación humana
 
   Los agentes nacen pausados: nada corre ni gasta hasta reanudarlos.
 `);
