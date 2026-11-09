@@ -165,6 +165,12 @@ corregí lo siguiente:
   se calcula desde el repo, y el setup la crea como repositorio de git.
 - El ejemplo de variables de entorno describía una forma de autenticación que el
   setup no usa, y le faltaba la fecha del inventario.
+- La investigación del problema afirmaba que nadie hacía esta colocación. Al
+  ampliarla con auditorías, normas, estudios y entrevistas, encontré marketplaces
+  de excedentes que no había considerado, y precisé la afirmación: existen
+  vidrieras, no colocación activa del lado del distribuidor. También separé lo que
+  está comprobado, lo documentado y lo estimado, y marqué qué constantes del
+  motor salen de una fuente y cuáles son supuestos míos.
 
 ## 8. Lo que no pude verificar
 
@@ -176,5 +182,10 @@ corregí lo siguiente:
   está soportado, pero no lo probé.
 - **Los 10 minutos con otra persona.** Las instrucciones las validé en mi propio
   recorrido, no con alguien que las siga desde cero.
-- **Las normas de ANMAT.** Las cito a partir de comunicados oficiales y notas de
-  prensa; antes de una decisión real hay que leer el texto en el Boletín Oficial.
+- **Las fuentes del problema, una por una.** La normativa la verifiqué contra el
+  Boletín Oficial y los sitios de ANMAT; varios informes de auditoría y estudios
+  los cito a partir de sus resúmenes y de la prensa. El detalle está en
+  [`research/EXPIRY.md`](research/EXPIRY.md).
+- **El problema con una distribuidora real.** Las fuentes muestran que existe y
+  que es caro, pero no cuánto le cuesta a una empresa concreta. Eso requiere
+  entrevistas y datos propios, y lo dejé planteado como próximo paso.

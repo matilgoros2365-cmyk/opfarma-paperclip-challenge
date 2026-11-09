@@ -31,9 +31,11 @@ miles de productos, esa tarea no se hace mal: simplemente no se hace.
 Revisando qué ofrece el mercado encontré lo que terminó de convencerme. El
 software comercial avisa, pero no coloca: aplica FEFO y alertas de vencimiento,
 informa qué se vence y ahí termina. Los proyectos que sí resuelven la asignación
-lo hacen **dentro** de una red hospitalaria, redistribuyendo entre sedes. Hacia
-afuera, del distribuidor al cliente y como acción comercial, no encontré ninguno.
-El fundamento y las fuentes están en [`research/EXPIRY.md`](../research/EXPIRY.md).
+lo hacen **dentro** de una red hospitalaria, redistribuyendo entre sedes, y los
+marketplaces de excedentes publican el stock y esperan a que alguien lo compre.
+No encontré herramientas que, del lado del distribuidor, busquen activamente al
+cliente que va a consumir cada lote a tiempo. El fundamento y las fuentes están
+en [`research/EXPIRY.md`](../research/EXPIRY.md).
 
 ### Dos decisiones de diseño tempranas
 

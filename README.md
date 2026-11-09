@@ -32,9 +32,12 @@ margen: se pierde el 100% del costo. Saber qué se vence es fácil, porque
 cualquier sistema lo avisa. Lo difícil es saber a quién vendérselo antes de la
 fecha, y eso exige cruzar cada lote con la rotación de cada cuenta. Con cientos
 de cuentas, esa tarea simplemente no se hace. El software del rubro avisa pero
-no coloca, y los proyectos que sí hacen esta asignación la resuelven dentro de
-una red hospitalaria, entre sedes. De distribuidor a cliente, como acción
-comercial, no encontré ninguno.
+no coloca; los proyectos de redistribución la resuelven dentro de una red
+hospitalaria, y los marketplaces de excedentes publican el stock y esperan a un
+comprador. No encontré herramientas que, del lado del distribuidor, busquen
+activamente al cliente que va a consumir cada lote a tiempo. Las auditorías,
+normas, estudios y entrevistas que respaldan el problema están en
+[`research/EXPIRY.md`](research/EXPIRY.md).
 
 ## Cómo está armado
 
