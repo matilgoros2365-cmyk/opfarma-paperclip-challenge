@@ -59,7 +59,7 @@ la que explica por qué ese paso no se puede automatizar.
 
 ## Qué funcionó
 
-El motor de colocación quedó con **81 tests**: los tramos de vencimiento, el
+El motor de colocación quedó con **88 tests**: los tramos de vencimiento, el
 consumo derivado del historial de compras, el piso de precio y los errores de la
 Graph API mockeados. Me preocupé de que el dataset incluyera los casos
 incómodos, no sólo el que sale bien: hay un lote que **nadie** puede absorber, y
@@ -219,6 +219,33 @@ credenciales en el entorno pisando el login, y el comando exacto para
 reproducirlo a mano— está en *Agente → Harness / Runtime → Run test → Test
 details*. A cuatro clics, y ningún mensaje de error lo menciona. Si hubiera
 abierto esa pantalla al principio me ahorraba la mitad de las hipótesis.
+
+### Un error mío, que apareció cuando lo probé como lo iba a usar
+
+No todo lo que falló fue de la plataforma. Antes de mandarle a StockScout el
+pedido de OPF-3, probé las tools de WhatsApp con la misma configuración que
+tenía la Mac, o sea sin credenciales de Meta. Y `whatsapp_draft_message`
+fallaba con `not_configured`: se negaba a armar el borrador.
+
+Era un error de diseño mío. Para armar el payload de la Graph API no hace falta
+ni el token ni el número de Meta, sólo el destinatario y el mensaje. Pero el
+borrador leía la configuración con la misma función que el envío, que exige las
+dos credenciales. El resultado contradecía mi propio README, que dice que Meta
+es opcional, y dejaba sin canal justo el dry-run, que es el mínimo que pide el
+enunciado.
+
+Lo resolví separando las dos cosas. El borrador y el estado del canal usan ahora
+una lectura que nunca falla por credenciales: si faltan, lo informan como
+dry-run, que es un estado válido y no un error. El envío las sigue exigiendo, y
+sin ellas devuelve `dry_run: true` con el payload exacto que habría salido. La
+verificación del `draft_id` no cambió, así que si alguien modifica una palabra
+del mensaje aprobado, el envío se rechaza igual. Agregué los tests de ese caso y
+lo probé contra el servidor corriendo antes de subirlo.
+
+Lo que me llevo es que los tests cubrían cada pieza por separado, pero ninguno
+probaba la combinación "sin credenciales, armar un borrador", que era la
+situación real de la demo. Lo encontré porque probé el flujo como lo iba a
+correr, no porque lo atrapara un test.
 
 ## Qué haría la semana que viene
 

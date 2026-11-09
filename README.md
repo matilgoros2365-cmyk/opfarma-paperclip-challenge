@@ -140,7 +140,7 @@ El motor de colocación es código determinista y se prueba solo:
 cd platform && npm test
 ```
 
-Son 81 tests. Cubren los tramos de vencimiento, el consumo derivado del
+Son 88 tests. Cubren los tramos de vencimiento, el consumo derivado del
 historial, el piso de precio, los errores de la Graph API mockeados, y la regla
 que más me importaba: que no se pueda construir una oferta para una cuenta que
 el motor descalificó.
