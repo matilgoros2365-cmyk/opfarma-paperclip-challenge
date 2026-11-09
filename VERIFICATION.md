@@ -129,8 +129,9 @@ celular por el bloqueo de esa cuenta.
 sólo de OpFarma, el cuarto intento mandó la oferta real de L-4028 como texto,
 dentro de la ventana de 24 horas que abrió el destinatario. Después de mi
 aprobación en Paperclip, el mensaje llegó al celular, y la plataforma en
-producción mostró los avisos de Meta: enviado y entregado, con el número
-enmascarado. Antes, Paperclip se había negado a repetir un envío con argumentos
+producción mostró los avisos de Meta: enviado y entregado y, cuando abrí el
+mensaje con las confirmaciones de lectura activadas, leído; con el número
+enmascarado y cada estado una sola vez. Antes, Paperclip se había negado a repetir un envío con argumentos
 idénticos a uno ya ejecutado, que es su protección contra duplicados.
 
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
@@ -243,9 +244,6 @@ corregí lo siguiente:
 
 ## 8. Lo que no pude verificar
 
-- **El estado "leído".** Meta informó "enviado" y "entregado", pero no "leído":
-  ese aviso depende de que el destinatario tenga activadas las confirmaciones de
-  lectura en WhatsApp.
 - **Las plantillas aprobadas.** Las dos plantillas de la oferta seguían en
   revisión de Meta al cierre, así que la oferta viajó como texto; el envío con
   plantilla está probado en código y en los tests, no contra Meta.

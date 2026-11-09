@@ -13,8 +13,12 @@ que se aprobó.
 - Un script idempotente crea la compañía: dos agentes, conexiones MCP, políticas
   de aprobación y tres tareas, una con revisión de agente y aprobación humana.
 - **La oferta llegó a un celular real.** Con mi aprobación en Paperclip, salió
-  por la Cloud API; Meta avisó por webhook que se entregó y el agente lo
-  registró en la tarea.
+  por la Cloud API; Meta avisó por webhook que se entregó y que se leyó, y el
+  agente lo registró en la tarea.
+- **Corre en macOS y en Windows.** En Windows los agentes de Paperclip no
+  arrancan; encontré la causa en su código (el runner nativo sólo soporta Linux
+  y macOS) y lo resolví corriendo Paperclip en Ubuntu dentro de WSL2, con los
+  mismos resultados que en la Mac.
 - El canal quedó listo para producción en la cuenta de la empresa
   ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
 - 183 tests, con una verificación independiente del motor
@@ -22,7 +26,6 @@ que se aprobó.
 
 **Qué no funcionó.**
 
-- En Windows los agentes no arrancan; lo resolví con Ubuntu dentro de WSL2.
 - El control del envío no venía configurado: Paperclip lo marcaba como riesgoso
   pero lo dejaba pasar. Lo detectó el agente; lo resolví con una política.
 - Con workspace aislado, cada respuesta a una tarjeta requiere Retry.

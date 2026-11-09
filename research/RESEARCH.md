@@ -43,9 +43,9 @@ cierre de la tarea, no cada acción. El resto lo encontré usándolo:
   para ese agente. Paperclip la crea cuando el acceso se da desde la interfaz;
   por API no. Mi envío de WhatsApp pasaba directo aunque estuviera marcado como
   `risk=write`, y lo detectó el propio agente.
-- **En Windows los agentes no arrancan.** El runner nativo sólo soporta Linux y
-  macOS, y el que queda, Legacy, falla en Windows. Terminé corriendo la demo en
-  una Mac.
+- **En Windows nativo los agentes no arrancan.** El runner nativo sólo soporta
+  Linux y macOS, y el que queda, Legacy, falla en Windows. La salida es WSL2:
+  con Paperclip dentro de Ubuntu, los agentes funcionan igual que en la Mac.
 - **No hay conector de WhatsApp, Instagram ni X.** Hace falta un servidor MCP
   propio o un agregador como Zapier.
 - **Las conexiones se crean por API, pero el alta con credencial se termina en la

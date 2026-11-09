@@ -124,12 +124,15 @@ otorga desde la interfaz; si se otorga por API, no existe, y la herramienta pasa
 sin aprobación aunque esté clasificada como `risk=write`. En mi caso lo detectó
 el propio agente, y lo confirmé en la auditoría y en el código.
 
-**En Windows los agentes no arrancan.** Nunca logré que uno pasara su chequeo de
-ejecución, con el CLI de Claude funcionando correctamente por fuera. La causa la
-encontré recién en una Mac: el runner nativo sólo soporta Linux y macOS, así que
-en Windows queda únicamente el Legacy, que es el que falla. El detalle, con las
-nueve hipótesis que descarté antes, está en
-[`docs/BITACORA.md`](../docs/BITACORA.md).
+**En Windows nativo los agentes no arrancan.** Nunca logré que uno pasara su
+chequeo de ejecución, con el CLI de Claude funcionando correctamente por fuera.
+La causa la encontré recién en una Mac: el runner nativo sólo soporta Linux y
+macOS, así que en Windows queda únicamente el Legacy, que es el que falla. La
+salida es WSL2: con Paperclip dentro de Ubuntu, los agentes pasan el chequeo y
+trabajan igual que en la Mac, con un detalle a tener en cuenta (el servicio de
+Paperclip no ve la carpeta del usuario, así que Claude Code tiene que estar en
+una ruta del sistema). El detalle, con las nueve hipótesis que descarté antes,
+está en [`docs/BITACORA.md`](../docs/BITACORA.md).
 
 **El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
 respuesta a una tarjeta dispara una continuación que pide un repositorio de git

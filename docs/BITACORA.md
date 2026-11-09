@@ -108,7 +108,9 @@ completa y se puede ejecutar más de una vez sin duplicar nada.
 
 ## Qué no funcionó
 
-**No logré que un agente arrancara en Windows.** Los dos quedaban alternando
+**Directamente sobre Windows, no logré que un agente arrancara.** Al final lo
+resolví corriendo Paperclip en Ubuntu dentro de WSL2 (ver "Windows, resuelto con
+WSL2", más abajo); esta es la historia de cómo llegué a la causa. Los dos agentes quedaban alternando
 entre `verifying` y `paused` con `harness_test_failed`, mientras el CLI de
 Claude funcionaba correctamente por fuera: ejecutado a mano, con el mismo
 comando y en el mismo directorio, respondía y terminaba con código 0.
