@@ -113,6 +113,15 @@ políticas de Paperclip, que decide sin ejecutar nada:
 `draft_id` correcto devuelve el dry-run; el mismo envío con una palabra cambiada
 se rechaza.
 
+**El envío real (OPF-7).** Contra Meta, con la cuenta de prueba: el primer
+intento volvió con 131030 (formato del número), el segundo con 132001 (plantilla
+en revisión) y el tercero, con `hello_world`, fue aceptado y Meta devolvió su
+identificador. Un segundo después, el aviso de estado llegó firmado al webhook en
+Vercel con `failed` y el error 131031 (cuenta bloqueada), se guardó en el almacén
+y el agente lo leyó con `whatsapp_delivery_status` y lo registró en la tarea. El
+circuito de ida y vuelta quedó probado con Meta real; el mensaje no llegó al
+celular por el bloqueo de la cuenta.
+
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
 handshake de suscripción, la lectura de cada estado y que una respuesta del
@@ -194,8 +203,9 @@ corregí lo siguiente:
 
 ## 8. Lo que no pude verificar
 
-- **La entrega a un teléfono real.** No hay una cuenta de Meta conectada; el
-  envío termina en dry-run.
+- **La entrega a un teléfono real.** El envío llegó a Meta y fue aceptado, pero
+  Meta informó la cuenta de prueba como bloqueada (131031), así que el mensaje
+  no llegó al celular.
 - **La intercepción de `done`.** El agente pidió revisión por su cuenta en lugar
   de intentar cerrar la tarea, así que nunca vi al runtime frenarlo.
 - **Linux.** El setup y los agentes corrieron en macOS; en Linux el runner nativo

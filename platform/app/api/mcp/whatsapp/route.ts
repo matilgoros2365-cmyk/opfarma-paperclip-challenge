@@ -244,7 +244,9 @@ const handler = createMcpHandler((server) => {
           }
         }
 
-        return ok("Delivered. Meta returned a message id, which is the receipt for this send.", {
+        return ok(
+          "Sent: Meta accepted the message and returned its id. That is not proof of delivery: Meta confirms delivery, reading or failure afterwards through the status webhook. Check whatsapp_delivery_status.",
+          {
           dry_run: false,
           draft_id: args.draft_id,
           recipient: payload.to,

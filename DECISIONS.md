@@ -15,9 +15,12 @@ mensaje, así que sale exactamente lo que se aprobó.
 - La revisión se ejecutó de punta a punta en OPF-2.
 - En OPF-3 Paperclip frenó el envío, pidió aprobación y, al aprobarlo, el
   servidor devolvió el mensaje exacto en dry-run. La auditoría lo confirma.
-- El canal quedó listo para producción: plantilla de oferta definida en el
-  código, webhook de estado de entrega con firma verificada, y el procedimiento
-  para activarlo en la cuenta de la empresa ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
+- En OPF-7 el envío fue real: con mi aprobación, Meta aceptó el mensaje y
+  devolvió su identificador, y el aviso de estado volvió por el webhook, quedó
+  guardado y el agente lo registró en la tarea.
+- El canal quedó listo para producción: plantillas definidas en el código,
+  webhook de estado con firma verificada y el procedimiento para activarlo en la
+  cuenta de la empresa ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
 - 182 tests, con una verificación independiente del motor
   ([`VERIFICATION.md`](VERIFICATION.md)).
 
@@ -29,6 +32,10 @@ mensaje, así que sale exactamente lo que se aprobó.
   pero lo dejaba pasar. Lo detectó el agente y lo resolví con una política.
 - Con workspace aislado, cada respuesta a una tarjeta falla y requiere Retry.
 - La imagen de Paperclip supera el límite de Fly; el control plane quedó local.
+- El mensaje no llegó al celular: Meta respondió "cuenta bloqueada" (131031) en
+  la cuenta de WhatsApp de prueba, que tuve que compartir con otro proyecto
+  porque Meta no me dejó crear un portfolio nuevo. Las plantillas de la oferta
+  quedaron en revisión.
 
 El detalle está en [`docs/BITACORA.md`](docs/BITACORA.md).
 

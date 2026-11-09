@@ -335,6 +335,49 @@ respuesta. Un dato que verifiqué en el código: aunque el agente quedaba en est
 `error` después de cada falla, el sistema sólo omite a los agentes pausados o
 dados de baja, así que el siguiente Retry se ejecutaba igual.
 
+### El envío real, y lo que respondió Meta
+
+Para pasar del dry-run a un envío real armé una app de prueba en Meta. Ahí
+aparecieron tres obstáculos, uno detrás del otro, y cada uno volvió al hilo de
+la tarea como evidencia.
+
+**La cuenta compartida.** Al crear la app en mi portfolio comercial existente,
+Meta la enganchó a la misma cuenta de WhatsApp Business que usa otro proyecto
+mío. Intenté crear un portfolio nuevo y Meta respondió que había alcanzado el
+máximo; el otro portfolio que tenía estaba restringido para anunciar y no podía
+tener apps. Seguí con la cuenta compartida, pero con dos resguardos en el código:
+cada envío anota su identificador y el webhook guarda sólo los avisos de esos
+mensajes, y con `WHATSAPP_SHARED_ACCOUNT=true` descarta las respuestas
+entrantes, que pueden ser del otro proyecto.
+
+**Los tres intentos de OPF-7**, cada uno aprobado por mí en Paperclip y dirigido
+a mi celular, que es el único destinatario cargado en el número de prueba:
+
+| Intento | Respuesta de Meta | Qué significaba |
+| --- | --- | --- |
+| Oferta, número con el 9 | 131030, destinatario fuera de la lista | El número de prueba tenía registrado el celular sin el 9 |
+| Oferta, número sin el 9 | 132001, la plantilla no existe | La plantilla estaba en revisión; Meta responde así hasta aprobarla |
+| `hello_world`, número sin el 9 | Aceptado, con su identificador | El envío salió; un segundo después, el webhook informó `failed`, 131031, cuenta bloqueada |
+
+El tercer intento probó el circuito completo con Meta de verdad: la aprobación
+en Paperclip, el envío, el identificador que devuelve Meta, el aviso de estado
+que llega firmado al webhook en Vercel, el almacén que lo guarda y la consulta
+del agente, que dejó el resultado en la tarea. Lo que no llegó fue el mensaje al
+celular, porque Meta tiene bloqueada la cuenta de prueba. Eso no se resuelve
+desde el código ni desde Paperclip: es un estado de la cuenta del lado de Meta.
+
+**Las plantillas.** Di de alta la oferta completa por API, desde el mismo archivo
+que usa el agente. Quedó en revisión manual, así que armé una segunda, corta y
+sin precios, que suele pasar la revisión automática. Las dos quedaron en
+revisión al cierre. El código puede usar cualquiera de las dos con sólo cambiar
+una variable.
+
+Dos detalles que corregí en el camino: el resultado del envío decía "Delivered"
+apenas Meta aceptaba el pedido, y eso no prueba la entrega; ahora dice que el
+mensaje fue aceptado y que la entrega la confirma el webhook. Y el formato de los
+celulares argentinos: para enviar, Meta aceptó la forma sin el 9 y la normalizó
+con el 9.
+
 ## Qué haría la semana que viene
 
 1. **Sacar la clave de la URL.** Hoy la clave del MCP viaja como parámetro de
