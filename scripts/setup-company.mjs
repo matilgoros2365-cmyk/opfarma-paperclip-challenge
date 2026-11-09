@@ -118,11 +118,25 @@ log.step("Organigrama");
 // que son los que sugiere el enunciado. El significado real lo carga el título.
 const AGENT_WORKSPACE = process.env.AGENT_WORKSPACE ?? "C:/dev/paperclip-challenge/agent-workspace";
 
+/**
+ * Qué runner usa el agente. Esto NO es cosmético.
+ *
+ * El runner nativo de Paperclip sólo soporta linux y darwin: `win32` no está en
+ * `paperclipRunnerSupportsPlatform`. Así que en Windows el único disponible es
+ * `legacy`, y en Mac o Linux el default es el nativo (acpx).
+ *
+ * Importa para este script porque `maxTurnsPerRun` es un ajuste exclusivo de
+ * legacy: mandarlo con el runner nativo devuelve
+ * `422 agent_runner_config_incompatible`. Por eso sólo se incluye cuando se pide
+ * legacy explícitamente con PAPERCLIP_RUNNER=legacy.
+ */
+const RUNNER = process.env.PAPERCLIP_RUNNER?.trim() || null;
+
 const adapterConfig = (maxTurns) => ({
   cwd: AGENT_WORKSPACE,
   model: "claude-opus-5",
-  maxTurnsPerRun: maxTurns,
   timeoutSec: 300,
+  ...(RUNNER === "legacy" ? { maxTurnsPerRun: maxTurns } : {}),
 });
 
 const existingAgents = await api("GET", `/companies/${CID}/agents`);
@@ -142,6 +156,7 @@ if (reviewer) {
       "lote antes del vencimiento, que el precio respete el piso de margen, y que la cuenta no tenga " +
       "deuda ni bloqueo administrativo. Aprueba o pide cambios. Nunca envia mensajes al cliente.",
     adapterType: "claude_local",
+    ...(RUNNER ? { runner: RUNNER } : {}),
     adapterConfig: adapterConfig(25),
     budgetMonthlyCents: 800,
   });
@@ -162,6 +177,7 @@ if (scout) {
       "antes de la fecha segun su rotacion historica, y redacta la oferta y el mensaje. No decide el " +
       "precio: lo calcula el motor. No envia nada sin aprobacion humana.",
     adapterType: "claude_local",
+    ...(RUNNER ? { runner: RUNNER } : {}),
     adapterConfig: adapterConfig(40),
     budgetMonthlyCents: 1000,
   });
@@ -207,7 +223,7 @@ await ensureConnection("OpFarma WhatsApp", "whatsapp");
 
 log.step("Tareas");
 
-const issuesResponse = await api("GET", `/companies/${CID}/issues?view=index`);
+const issuesResponse = await api("GET", `/companies/${CID}/issues?view=compact`);
 const issues = Array.isArray(issuesResponse) ? issuesResponse : (issuesResponse?.issues ?? []);
 
 async function ensureIssue(title, description, extra = {}) {

@@ -110,6 +110,69 @@ conexión queda sana, pero al vincularla al agente devuelve "The selected AI
 connection failed validation in this agent's environment". O sea que el bloqueo
 es anterior a la credencial, venga por donde venga.
 
+### La décima hipótesis, que era la buena
+
+Me faltaba una, y la encontré recién cuando levanté todo en una Mac prestada.
+Está en el código instalado, en `@paperclipai/shared/dist/agent-runner.js`:
+
+```js
+export function paperclipRunnerSupportsPlatform(harness, platform, architecture, ...) {
+    return !!paperclipRunnerProfileForHarness(harness)
+        && ...
+        && ((platform === "linux" && ...) || (platform === "darwin" && (architecture === "arm64" || architecture === "x64")));
+}
+```
+
+**`win32` no está en esa lista.** El Paperclip Runner nativo soporta Linux y
+macOS, y nada más.
+
+La consecuencia es que en Windows `agentRunnerAvailability("claude_local")`
+devuelve un único runner disponible, **Legacy**, que es el que spawnea el CLI y
+el puente ACP a mano. Mis agentes nacieron siempre ahí, sin que yo lo eligiera y
+sin que nada me lo dijera. En la Mac, en cambio, el default es el runner nativo:
+los agentes quedaron con `adapterType: paperclip_runner`, `provider: acpx`,
+`acpxAgent: claude`, y llegaron a lifecycle `ready` en vez de ciclar entre
+`verifying` y `paused`.
+
+Lo terminó de confirmar un detalle lindo: en la Mac mi propio
+`setup-company.mjs` se rompió con un `422 agent_runner_config_incompatible`,
+porque `maxTurnsPerRun` es un ajuste **exclusivo de Legacy**. O sea que el
+script funcionaba en Windows justamente porque allá nunca hubo otra opción.
+
+Las nueve hipótesis anteriores estaban bien descartadas. Lo que me faltaba no
+era una causa dentro del camino que estaba mirando: era que **en Windows ese
+camino es el único que hay, y es el que está roto**.
+
+Y quedó confirmado de la forma más limpia posible: en la Mac forcé el runner
+Legacy a mano, o sea la configuración exacta que tenía en Windows, y **ahí sí
+funcionó**. El agente escaneó el inventario, reportó los 7 lotes en riesgo y
+empezó a llamar `inventory_place_lot` por cada uno. Así que la conclusión no es
+"Legacy está roto": es que **Legacy en Windows está roto, y en Windows es lo
+único que hay**.
+
+Hay un detalle más que vale para cualquiera que quiera reproducir esto: como
+`maxTurnsPerRun` es exclusivo de Legacy, mi script de setup tira
+`422 agent_runner_config_incompatible` en Mac o Linux, donde el default es el
+runner nativo. Lo dejé condicionado a `PAPERCLIP_RUNNER=legacy`, así el mismo
+script levanta la compañía en los tres sistemas y además permite reproducir a
+propósito la configuración de Windows.
+
+### Una cosa más sobre las credenciales
+
+Mi regla de no dejar credenciales en el entorno quedó confirmada por el código,
+y es más delicada de lo que pensaba. El probe arma su entorno así:
+
+```js
+{ ...sanitizeInheritedPaperclipEnv(process.env), ...configEnv }
+```
+
+Esa función de sanitizado sólo saca las variables `PAPERCLIP_*`, y el servidor
+borra aparte apenas cuatro de anidamiento de Claude Code. **Todo el resto del
+shell que lanza el servidor le llega al probe.** Por eso en la Mac levanté los
+servidores con `env -i` y un PATH mínimo: si los hubiera lanzado desde una
+sesión cualquiera, variables como `ANTHROPIC_BASE_URL` se habrían colado sin que
+nadie se entere.
+
 Como en Windows no salía, probé mover todo a Linux, que de paso me resolvía el
 link a la plataforma. Monté la app en Fly con la imagen que ellos publican, el
 volumen y las variables, y ahí me choqué con otra cosa: **la imagen de Paperclip
