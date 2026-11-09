@@ -15,6 +15,8 @@ los comandos que indico.
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
 | Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
+| Prueba de humo | Las siete herramientas, como las usaría un agente, incluidos los rechazos | 16 de 16 contra el servidor |
+| Dependencias y configuración | Vulnerabilidades conocidas y variables de entorno contra la documentación | 0 vulnerabilidades; una variable sin documentar, corregida |
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
 | Seguridad | Credenciales en el historial de git y valores por defecto | Ninguna credencial publicada; envío apagado por defecto |
 | Documentación | Cada documento contra el enunciado, y los números entre sí | Inconsistencias encontradas y corregidas |
@@ -159,6 +161,27 @@ siete variables sin saltos de línea.
   nada. La política nueva del revisor se creó en esa misma corrida.
 - **Dos sistemas operativos.** El setup corrió en Windows y en macOS. En macOS
   exigió un ajuste, el runner, que dejé configurable y documentado.
+- **Un segundo clon limpio** al cierre, con todo lo agregado después: instala,
+  compila sin errores, pasa los tests y genera el build con las rutas del
+  webhook incluidas.
+
+**La prueba de humo.** `platform/scripts/smoke.mjs` usa las siete herramientas
+como las usaría un agente, contra cualquier instancia, y verifica también lo que
+tiene que fallar: sin clave y con una clave incorrecta (401), un lote a punto de
+vencer, una cuenta bloqueada, un mensaje cambiado después de aprobar y un envío
+sin confirmar. Está hecha para no poder mandar un mensaje real: los únicos
+envíos que prueba son los que el servidor debe rechazar antes de llegar a Meta.
+Contra el servidor local pasó 16 de 16.
+
+```bash
+cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts/smoke.mjs
+```
+
+**Dependencias y configuración.** `npm audit` sobre las dependencias de
+producción no encontró vulnerabilidades. Crucé cada variable de entorno que lee
+el código con `.env.example`: faltaba una, la que elige la plantilla de la
+oferta, y la agregué. Las demás que no figuran ahí son de los scripts de setup,
+y cada script las documenta en su encabezado.
 
 ## 5. Deploy
 
