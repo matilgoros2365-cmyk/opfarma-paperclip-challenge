@@ -3,8 +3,9 @@
  *
  * Everything here is READ-ONLY on the business: it looks at inventory and
  * history and proposes. Nothing in this file reaches a customer. That is why
- * all three tools are set to Allowed in Paperclip, while the single tool that
- * can reach a phone lives in the other MCP server and is set to Ask first.
+ * all three tools are allowed in Paperclip, while the single tool that can
+ * reach a phone lives in the other MCP server and requires human approval
+ * (a require_approval policy that scripts/setup-company.mjs creates).
  *
  * The guardrail that matters is in lib/expiry/offer.ts, not in any prompt:
  * inventory_draft_offer cannot build an offer for an account the engine
@@ -13,27 +14,14 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
-import seed from "@/data/seed.json";
-import { placeLot, scanInventory, type Dataset } from "@/lib/expiry/engine";
+import { asOfDate, dataset } from "@/lib/expiry/dataset";
+import { placeLot, scanInventory } from "@/lib/expiry/engine";
 import { buildOffer, offerMessage, OfferRefused } from "@/lib/expiry/offer";
 import { withApiKey } from "@/lib/mcp-auth";
 import { fail, ok, refuse, type ToolResult } from "@/lib/mcp-result";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
-
-const dataset = seed as unknown as Dataset;
-
-/**
- * The scenario is anchored to the seed's asOf date so the demo is
- * reproducible. Set INVENTORY_AS_OF to override, or "today" to use the clock.
- */
-function asOfDate(): string {
-  const override = process.env.INVENTORY_AS_OF?.trim();
-  if (override && override !== "today") return override;
-  if (override === "today") return new Date().toISOString().slice(0, 10);
-  return seed.asOf;
-}
 
 function findLot(lotId: string) {
   return dataset.lots.find((lot) => lot.lotId === lotId);

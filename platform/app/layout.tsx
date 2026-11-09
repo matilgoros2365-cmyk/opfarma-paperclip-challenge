@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Ops Lab · WhatsApp channel",
+  title: "OpFarma · lotes por vencer",
   description:
-    "Read-only view of a Paperclip company and the WhatsApp channel its agents hand work off to.",
+    "Vista de sólo lectura de una compañía de agentes en Paperclip que coloca lotes de insumos médicos antes de que venzan.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
