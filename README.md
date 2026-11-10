@@ -307,7 +307,7 @@ MCP_API_KEY=la-de-vercel MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel
 cd platform && npm test
 ```
 
-Son 193 tests. Además de las pruebas por módulo, incluyen una verificación
+Son 209 tests. Además de las pruebas por módulo, incluyen una verificación
 independiente que rehace todas las cuentas del motor desde la especificación,
 sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
 que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).
