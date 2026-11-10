@@ -13,6 +13,8 @@ import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { scanInventory, type Placement } from "@/lib/expiry/engine";
 import { listAgents, listIssues, loadPaperclipConfig, STATUS_ORDER } from "@/lib/paperclip";
 
+import Link from "next/link";
+
 import { Explorer } from "./explorer";
 
 export const dynamic = "force-dynamic";
@@ -175,9 +177,14 @@ async function Company() {
           mandarla por WhatsApp, publicar en LinkedIn el lote que ninguna cuenta absorbe, y dejar ese posteo listo para
           Grok Bot.
         </p>
-        <p className="notice">
-          Paperclip corre en una computadora y esta página no lo alcanza, así que acá no se ve en vivo. Las corridas, las
-          aprobaciones y la auditoría del envío están en <a href={DOC("DECISIONS.md")}>las decisiones del proyecto</a>.
+        <p>
+          Paperclip corre en la computadora de cada persona, así que desde acá no se ve en vivo. El historial real de las
+          tareas, con cada aprobación, está exportado en <Link href="/paperclip">la compañía en Paperclip</Link>.
+        </p>
+        <p>
+          <Link href="/paperclip" className="ev-cta">
+            Ver la compañía trabajando
+          </Link>
         </p>
       </section>
     );
@@ -229,7 +236,9 @@ export default function Page() {
         <span className="wordmark">
           Op<span>Farma</span>
         </span>
-        <span className="masthead-date">Inventario al {fechaLarga(asOf)}</span>
+        <span className="masthead-date">
+          Inventario al {fechaLarga(asOf)} · <Link href="/paperclip">La compañía en Paperclip</Link>
+        </span>
       </header>
 
       <section className="hero">

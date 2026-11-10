@@ -416,6 +416,12 @@ Y me adelanté a dos fallas que todavía no habían pasado.
   versiones nuevas, y una instalación futura podía traer una que rompiera el
   setup. Quedó fijada en la versión con la que se probó todo, v2026.1106.0.
 
+**La página de evidencia.** El historial de la compañía que muestra
+`/paperclip` sale de un export real de Paperclip. El script enmascara teléfonos,
+identificadores de mensajes de Meta, rutas y claves, y se niega a escribir si
+después de la limpieza queda alguno. Además revisé el archivo exportado a mano,
+buscando nombres, correos y números, antes de publicarlo.
+
 ## 9. Lo que no pude verificar
 
 - **La publicación real en LinkedIn.** El código, el formato de texto y el

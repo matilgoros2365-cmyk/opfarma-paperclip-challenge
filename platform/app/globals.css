@@ -845,6 +845,280 @@ code {
   margin: 0;
 }
 
+/* ------------------------------------------------------- evidencia (/paperclip) */
+
+.ev-cta {
+  display: inline-block;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ev-agents {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-agents li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.ev-agents .sub {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.ev-matrix td {
+  font-size: 14.5px;
+}
+
+.ev-perm.ask {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.ev-perm.deny {
+  color: var(--tier-retire);
+}
+
+.ev-perm.allow {
+  color: var(--muted);
+}
+
+.ev-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin: 40px 0 0;
+}
+
+.ev-toc a {
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.ev-toc a:hover {
+  border-color: var(--accent);
+}
+
+.ev-chapter {
+  scroll-margin-top: 16px;
+}
+
+.ev-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ev-via {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.ev-task {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+
+.ev-timeline {
+  margin: 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+  border-left: 2px solid var(--rule);
+}
+
+.ev-timeline > li {
+  position: relative;
+  margin: 0 0 12px;
+}
+
+.ev-timeline > li::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.ev-approval.ok::before {
+  background: var(--accent) !important;
+}
+
+.ev-approval.no::before {
+  background: var(--tier-retire) !important;
+}
+
+.ev-comment details {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.ev-comment summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.ev-author {
+  font-weight: 700;
+}
+
+.ev-time {
+  font-size: 13px;
+  color: var(--muted);
+  font-feature-settings: "tnum" 1;
+}
+
+.ev-title {
+  flex-basis: 100%;
+  color: var(--ink-soft);
+}
+
+.ev-body {
+  padding: 4px 16px 14px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.ev-body h1,
+.ev-body h2,
+.ev-body h3 {
+  font-size: 16.5px;
+  margin: 16px 0 6px;
+}
+
+.ev-body pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ev-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ev-body th,
+.ev-body td {
+  padding: 5px 9px;
+  border: 1px solid var(--rule-soft);
+  text-align: left;
+}
+
+.ev-body blockquote {
+  margin: 8px 0;
+  padding: 2px 12px;
+  border-left: 3px solid var(--rule);
+  color: var(--ink-soft);
+}
+
+.ev-approval {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.ev-approval.ok {
+  border-color: var(--accent);
+}
+
+.ev-approval.no {
+  border-color: var(--tier-retire);
+}
+
+.ev-approval-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.ev-badge {
+  font-weight: 700;
+}
+
+.ev-approval.ok .ev-badge {
+  color: var(--accent);
+}
+
+.ev-approval.no .ev-badge {
+  color: var(--tier-retire);
+}
+
+.ev-approval-tool {
+  margin: 4px 0 6px;
+  font-size: 15px;
+}
+
+.ev-args {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.ev-args div {
+  display: contents;
+}
+
+.ev-args dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-feature-settings: "tnum" 1;
+}
+
+@media (max-width: 760px) {
+  .ev-agents {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 960px) {
   .explore {
     grid-template-columns: 1fr;

@@ -25,6 +25,11 @@ tarea.
   el precio y el mensaje que saldría. Una barra adelanta el reloj para ver qué
   pasa si nadie hace nada. También expone los dos servidores MCP en
   `/api/mcp/inventory` y `/api/mcp/whatsapp`, protegidos con clave.
+- **La compañía en Paperclip, tal como trabajó**, en
+  <https://opfarma-paperclip-challenge.vercel.app/paperclip>. Paperclip corre en
+  la máquina de cada persona, así que ahí está el historial real de siete tareas,
+  con cada tarjeta de aprobación, exportado con `scripts/export-evidence.mjs` y
+  sin datos personales.
 - **Research de Paperclip**, de una página, en [`research/RESEARCH.md`](research/RESEARCH.md).
   La versión extendida está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md).
 - **Decisiones**, de media página, en [`DECISIONS.md`](DECISIONS.md). El detalle
