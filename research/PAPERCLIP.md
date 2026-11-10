@@ -134,6 +134,14 @@ Paperclip no ve la carpeta del usuario, así que Claude Code tiene que estar en
 una ruta del sistema). El detalle, con las nueve hipótesis que descarté antes,
 está en [`docs/BITACORA.md`](../docs/BITACORA.md).
 
+**La aprobación humana de una tarea no se puede dar desde la interfaz.** El
+servidor exige que la decisión llegue con un comentario en el mismo pedido
+(`Approving a review or approval stage requires a comment`), pero el menú de
+estado manda sólo el cambio a `done` y recibe un 422, y el cuadro de mensajes
+manda sólo el comentario: con la tarea en la etapa de aprobación, la reabre en
+lugar de aprobarla. "Approval pending with You" es una etiqueta, sin botón. En
+esta versión, esa etapa se aprueba por la API.
+
 **El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
 respuesta a una tarjeta dispara una continuación que pide un repositorio de git
 sobre la carpeta de la corrida anterior, y falla. El Retry manual elige una
