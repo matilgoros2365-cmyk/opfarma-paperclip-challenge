@@ -1,8 +1,9 @@
 # Paperclip, en una página
 
-*Lo armé leyendo el sitio, la documentación y el código, y usándolo dos días para
-levantar OpFarma. Versión v2026.1106.0, relevada el 7 y 8 de noviembre de 2026.
-La versión larga está en [PAPERCLIP.md](PAPERCLIP.md).*
+*Elaborado con Claude Code a partir del sitio, la documentación y el código de
+Paperclip, y de dos días de uso para levantar OpFarma. Versión v2026.1106.0,
+relevada el 7 y 8 de noviembre de 2026. La versión extendida está en
+[PAPERCLIP.md](PAPERCLIP.md).*
 
 **Qué es y qué no es.** Paperclip es un control plane open source (MIT) para
 operar un equipo de agentes. Es un servidor Node con interfaz en React que se

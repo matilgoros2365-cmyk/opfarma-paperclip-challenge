@@ -2,6 +2,15 @@
 
 Mi resolución del desafío técnico de Paperclip.
 
+Desarrollé esta solución con Claude Code, que usé como herramienta para el
+código, la plataforma y la documentación, y que además ejecuta a los agentes de
+OpFarma. Estuvieron a mi cargo la definición del problema, las decisiones de
+diseño y toda la operación con sistemas reales. Di de alta y configuré la cuenta
+de WhatsApp Business de OpFarma cuando Meta bloqueó la primera, cargué las
+credenciales, aprobé cada tarjeta en Paperclip, ejecuté el circuito completo en
+macOS y en Windows, recibí las ofertas en un celular real y verifiqué los
+servidores en producción.
+
 OpFarma es una distribuidora de insumos médicos armada como compañía de agentes.
 Los agentes detectan los lotes que se van a vencer en el depósito, buscan qué
 cliente puede consumir cada uno antes de la fecha según lo que realmente compra,

@@ -55,3 +55,9 @@ que probé, en la [bitácora](docs/BITACORA.md).
 una rutina que cree las tareas sola; que el webhook le avise a la tarea cuando el
 cliente lee o responde; publicar en LinkedIn con la app aprobada; alojar
 Paperclip en un servidor, y conectar el sistema de gestión real.
+
+**Cómo lo trabajé.** Usé Claude Code para desarrollar el código, la plataforma y
+los documentos, y revisé y corregí cada entrega. Me reservé lo que este desafío
+pone a prueba y no corresponde delegar, que es definir en qué puntos interviene
+una persona, limitar cada agente a las herramientas de su área, dar de alta las
+cuentas reales y aprobar cada acción que tiene consecuencias para un tercero.

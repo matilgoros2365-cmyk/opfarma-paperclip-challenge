@@ -301,6 +301,10 @@ export default function Page() {
           tercero, el margen, el mensaje al cliente y el posteo. El control del mensaje no venía configurado en Paperclip; lo
           detectó el propio agente cuando el envío pasó sin pedir permiso.
         </p>
+        <p>
+          La desarrollé con Claude Code. La cuenta de Meta, las aprobaciones y las pruebas con un celular real estuvieron a
+          mi cargo.
+        </p>
         <ul>
           <li>
             <a href={DOC("DECISIONS.md")}>Qué decidí y con qué me choqué</a>
