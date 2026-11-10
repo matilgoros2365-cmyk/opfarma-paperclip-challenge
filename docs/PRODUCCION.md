@@ -1,12 +1,12 @@
 # Pasar WhatsApp a producción
 
-El canal quedó listo para conectar: el código arma y valida cada mensaje, lo
+El canal quedó listo para conectar. El código arma y valida cada mensaje, lo
 manda sólo con la aprobación de una persona en Paperclip, y recibe por webhook
 el estado de entrega. Lo probé de punta a punta con el número de prueba de Meta.
 
 Lo que falta para usarlo con clientes reales depende de la empresa, no del
-código: una cuenta de Meta verificada a su nombre, un número propio y la
-plantilla aprobada en esa cuenta. Nada de eso se puede transferir desde una
+código. Hace falta una cuenta de Meta verificada a su nombre, un número propio
+y la plantilla aprobada en esa cuenta. Nada de eso se puede transferir desde una
 cuenta personal, así que este documento es el procedimiento para hacerlo en la
 cuenta de la empresa.
 
@@ -53,7 +53,7 @@ WhatsApp Business, y generar un token con los permisos
 
 El texto está en `platform/data/offer-template.json`, que es el mismo archivo que
 usa el agente. La forma más segura de darla de alta es con el script, que lo lee
-de ahí y lo envía por la API, sin copiar nada a mano:
+de ahí y lo envía por la API, sin copiar nada a mano.
 
 ```bash
 cd platform && META_WABA_ID=<id de la cuenta de WhatsApp Business> META_WHATSAPP_TOKEN=<token> node scripts/create-template.mjs
@@ -70,14 +70,15 @@ cuenta, y también corresponde por la ley de protección de datos personales.
 
 ### 5. Suscribir el webhook
 
-Con el script, que registra la URL, la hace verificar por Meta y suscribe la app
-a la cuenta de WhatsApp Business en un solo paso:
+Se hace con el script, que registra la URL, la hace verificar por Meta y
+suscribe la app a la cuenta de WhatsApp Business en un solo paso.
 
 ```bash
 cd platform && META_APP_ID=... META_APP_SECRET=... META_WEBHOOK_VERIFY_TOKEN=... META_WABA_ID=... META_WHATSAPP_TOKEN=... WEBHOOK_URL=https://<dominio-de-la-plataforma>/api/whatsapp/webhook node scripts/subscribe-webhook.mjs
 ```
 
-O desde la interfaz, en la app, **WhatsApp → Configuración → Webhook**:
+O desde la interfaz de la app, en **WhatsApp → Configuración → Webhook**, con
+estos valores.
 
 - URL de devolución: `https://<dominio-de-la-plataforma>/api/whatsapp/webhook`
 - Token de verificación: el valor de `META_WEBHOOK_VERIFY_TOKEN`
@@ -103,11 +104,11 @@ conectarlo al proyecto. La integración crea `KV_REST_API_URL` y
 | `META_PHONE_NUMBER_ID` | No | Sí |
 | `META_WHATSAPP_TOKEN` | No | Sí, el token permanente |
 | `META_CHANNEL_MODE` | — | `own_number` |
-| `META_ALLOWED_RECIPIENTS` | — | Vacío: el número propio no tiene lista |
+| `META_ALLOWED_RECIPIENTS` | — | Vacío, porque el número propio no tiene lista |
 | `WHATSAPP_ALLOW_SEND` | `false` | `true` |
 | `WHATSAPP_SHARED_ACCOUNT` | `false` con cuenta propia | — |
 
-La separación es a propósito: la plataforma pública recibe los avisos de Meta,
+La separación es a propósito. La plataforma pública recibe los avisos de Meta,
 pero no puede enviar. Sólo envía la instancia que usan los agentes, y siempre
 con la aprobación de una persona en Paperclip.
 

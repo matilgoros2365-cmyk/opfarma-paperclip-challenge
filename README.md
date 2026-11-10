@@ -1,4 +1,4 @@
-# OpFarma: una compañía de agentes que coloca lotes por vencer
+# OpFarma, una compañía de agentes que coloca lotes por vencer
 
 Mi resolución del desafío técnico de Paperclip.
 
@@ -10,21 +10,21 @@ por separado, cada mensaje.
 
 ## La entrega
 
-- **Video del flujo (Loom, menos de 2 minutos):**
-  <https://www.loom.com/share/19870b3b2b5b469c8e9faae649a780d9>. De la tarea en
-  Paperclip a las dos aprobaciones con tarjeta, el WhatsApp que llega y el aviso
-  de Meta en la plataforma.
-- **Plataforma deployada en Vercel:** <https://opfarma-paperclip-challenge.vercel.app>.
+- **Video del flujo** (Loom, menos de 2 minutos), en
+  <https://www.loom.com/share/19870b3b2b5b469c8e9faae649a780d9>. Va de la tarea
+  en Paperclip a las dos aprobaciones con tarjeta, el WhatsApp que llega y el
+  aviso de Meta en la plataforma.
+- **Plataforma deployada en Vercel**, en <https://opfarma-paperclip-challenge.vercel.app>.
   Muestra el inventario calculado en vivo por el mismo motor que usan los agentes,
   y expone los dos servidores MCP en `/api/mcp/inventory` y `/api/mcp/whatsapp`,
   protegidos con clave.
-- **Research de Paperclip, en una página:** [`research/RESEARCH.md`](research/RESEARCH.md).
+- **Research de Paperclip**, de una página, en [`research/RESEARCH.md`](research/RESEARCH.md).
   La versión extendida está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md).
-- **Decisiones:** [`DECISIONS.md`](DECISIONS.md), en media página. El detalle
+- **Decisiones**, de media página, en [`DECISIONS.md`](DECISIONS.md). El detalle
   técnico de cada obstáculo está en [`docs/BITACORA.md`](docs/BITACORA.md).
-- **Cómo lo verifiqué:** [`VERIFICATION.md`](VERIFICATION.md).
-- **El problema y sus fuentes:** [`research/EXPIRY.md`](research/EXPIRY.md).
-- **Cómo pasar WhatsApp a producción:** [`docs/PRODUCCION.md`](docs/PRODUCCION.md).
+- **Cómo lo verifiqué**, en [`VERIFICATION.md`](VERIFICATION.md).
+- **El problema y sus fuentes**, en [`research/EXPIRY.md`](research/EXPIRY.md).
+- **Cómo pasar WhatsApp a producción**, en [`docs/PRODUCCION.md`](docs/PRODUCCION.md).
 
 ## Por qué este problema
 
@@ -33,7 +33,7 @@ el agente manda un WhatsApp que una persona podría mandar igual. Busqué una ta
 que a mano no se llega a hacer.
 
 En un distribuidor de insumos médicos, un lote que vence en depósito no reduce el
-margen: se pierde el 100% del costo. Saber qué se vence es fácil, porque
+margen. Se pierde el 100% del costo. Saber qué se vence es fácil, porque
 cualquier sistema lo avisa. Lo difícil es saber a quién vendérselo antes de la
 fecha, y eso exige cruzar cada lote con la rotación de cada cuenta. Con cientos
 de cuentas, esa tarea simplemente no se hace. El software del rubro avisa pero
@@ -68,11 +68,11 @@ Separé las dos "manos" a propósito. El servidor de inventario no puede contact
 a nadie; el de WhatsApp es el único que sale hacia afuera.
 Son riesgos distintos, así que tienen conexiones y políticas distintas.
 
-El resultado son tres controles en capas diferentes: el agente revisor valida los
+El resultado son tres controles en capas diferentes. El agente revisor valida los
 números, una persona aprueba el margen y cada envío requiere otra aprobación. Si
 uno falla, los otros dos siguen en pie. Las dos aprobaciones humanas son
 tarjetas de Paperclip sobre una herramienta, con una política `require_approval`
-que crea el script de setup. Esa política no venía configurada: Paperclip marca
+que crea el script de setup. Esa política no venía configurada. Paperclip marca
 el envío como `risk=write`, pero esa marca sola no frena nada. Y el margen se
 aprueba con una herramienta, `inventory_commit_offer`, porque la etapa de
 aprobación humana de una tarea no tiene botón en la interfaz de esta versión. El
@@ -81,12 +81,12 @@ hallazgos están contados en [`DECISIONS.md`](DECISIONS.md).
 
 ## Cómo levantarlo en unos 10 minutos
 
-**Requisitos:** macOS o Linux, Node.js 24.11 o más nuevo, git, y Claude Code con
-una suscripción activa.
+Necesitás macOS o Linux, Node.js 24.11 o más nuevo, git, y Claude Code con una
+suscripción activa.
 
-> **En Windows, usá WSL2.** Directamente sobre Windows los agentes no arrancan:
-> el runner de Paperclip para Windows falla, y la causa, con el código que lo
-> confirma, está en [`docs/BITACORA.md`](docs/BITACORA.md). Dentro de WSL2
+> **En Windows, usá WSL2.** Directamente sobre Windows los agentes no arrancan,
+> porque el runner de Paperclip para Windows falla. La causa, con el código que
+> lo confirma, está en [`docs/BITACORA.md`](docs/BITACORA.md). Dentro de WSL2
 > Paperclip corre sobre Linux y los agentes funcionan; los pasos están en
 > [Windows con WSL2](#windows-con-wsl2), más abajo.
 
@@ -100,7 +100,7 @@ npm install -g @anthropic-ai/claude-code
 claude auth login
 ```
 
-No dejes `ANTHROPIC_API_KEY` ni `CLAUDE_CODE_OAUTH_TOKEN` en el entorno: tienen
+No dejes `ANTHROPIC_API_KEY` ni `CLAUDE_CODE_OAUTH_TOKEN` en el entorno. Tienen
 prioridad sobre el login guardado y hacen fallar el chequeo de los agentes.
 Para confirmar que el CLI responde, `claude -p "ok"` tiene que contestar y
 terminar sin error.
@@ -128,14 +128,14 @@ inicializa la base. Dejá esa terminal abierta.
 
 ### 3. Los servidores MCP
 
-En otra terminal, desde la raíz del repo:
+En otra terminal, desde la raíz del repo.
 
 ```bash
 cd platform && npm install && cp .env.example .env.local
 ```
 
 Completá `MCP_API_KEY` en `.env.local` con cualquier clave que elijas. Lo de
-Meta es opcional: sin credenciales, el canal arma y valida los mensajes pero no
+Meta es opcional. Sin credenciales, el canal arma y valida los mensajes pero no
 los entrega.
 
 ```bash
@@ -147,13 +147,13 @@ Queda en <http://localhost:3200>. Dejá también esa terminal abierta.
 ### 4. La compañía
 
 En una tercera terminal, desde la raíz del repo, generá un token de
-administración:
+administración.
 
 ```bash
 npx paperclipai token board create --name setup --json
 ```
 
-Y con ese token:
+Después, con ese token, corré el setup.
 
 ```bash
 PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma-clave node scripts/setup-company.mjs
@@ -162,11 +162,11 @@ PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma
 El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
 su línea de reporte, las dos conexiones MCP con el catálogo verificado, las
 políticas de aprobación del margen y del envío, la carpeta de trabajo de los
-agentes y las tres tareas: el escaneo, la oferta con su revisor y el envío con
-las dos aprobaciones humanas. La del envío nace sin asignar: se la asignás a
+agentes y las tres tareas (el escaneo, la oferta con su revisor y el envío con
+las dos aprobaciones humanas). La del envío nace sin asignar, y se la asignás a
 StockScout cuando la oferta pasó la revisión. Para armar otra oferta en una
-compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. Es idempotente: si algo ya
-existe, lo reutiliza y lo informa.
+compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. El script es idempotente.
+Si algo ya existe, lo reutiliza y lo informa.
 
 Para usar el canal real en lugar del local, agregá
 `MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app` y la
@@ -174,8 +174,9 @@ Para usar el canal real en lugar del local, agregá
 así que cualquier instalación de Paperclip manda por el mismo canal. Si la
 compañía ya existía, el script sólo actualiza la dirección de las conexiones.
 
-`PAPERCLIP_RUNNER=legacy` es necesario: en macOS, el runner nativo falló con un
-error de acceso a la terminal, y el Legacy es el que funcionó de punta a punta.
+`PAPERCLIP_RUNNER=legacy` es necesario porque en macOS el runner nativo falló
+con un error de acceso a la terminal, y el Legacy es el que funcionó de punta a
+punta.
 
 ### 5. Ponerla a trabajar
 
@@ -193,7 +194,7 @@ Paperclip corre dentro de Ubuntu, en WSL2, y se usa desde el navegador de
 Windows en <http://localhost:3100>. Los agentes usan los servidores MCP
 deployados en Vercel, así que no hace falta levantar `platform/`.
 
-**1. Instalar WSL2.** En PowerShell como administrador, y después reiniciar:
+**1. Instalar WSL2.** En PowerShell como administrador, y después reiniciar.
 
 ```powershell
 wsl --install -d Ubuntu
@@ -202,8 +203,8 @@ wsl --install -d Ubuntu
 Al volver, Ubuntu pide crear un usuario y una contraseña. Todo lo que sigue se
 corre en la terminal de Ubuntu, no en PowerShell.
 
-**2. Node.js 24.** Ubuntu trae una versión anterior; se instala desde el
-repositorio firmado de NodeSource:
+**2. Node.js 24.** Ubuntu trae una versión anterior, así que se instala
+desde el repositorio firmado de NodeSource.
 
 ```bash
 sudo apt-get install -y ca-certificates curl gnupg && sudo mkdir -p /etc/apt/keyrings
@@ -231,9 +232,9 @@ npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-co
 claude auth login
 ```
 
-El enlace en `/usr/local/bin` es necesario: Paperclip se instala como servicio, y
-un servicio no ve la carpeta de tu usuario. Sin él, el chequeo de los agentes
-falla con "Command not found in PATH: claude".
+Paperclip se instala como servicio, y un servicio no ve la carpeta de tu
+usuario, así que el enlace en `/usr/local/bin` es necesario. Sin él, el chequeo
+de los agentes falla con "Command not found in PATH: claude".
 
 **4. El repo y Paperclip.**
 
@@ -245,13 +246,13 @@ git clone https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge.git
 npx paperclipai run
 ```
 
-La primera vez pregunta la configuración: aceptar las opciones por defecto,
-instalarlo como servicio y responder **No** a seguir corriendo después de cerrar
+La primera vez pregunta la configuración. Aceptá las opciones por defecto,
+instalalo como servicio y respondé **No** a seguir corriendo después de cerrar
 sesión. El servicio queda en el puerto 3100; si la terminal muestra otro
 servidor en el 3101, cerralo con Ctrl+C.
 
 **5. La compañía**, con los MCP de Vercel y la `MCP_API_KEY` del proyecto en
-Vercel:
+Vercel.
 
 ```bash
 npx paperclipai token board create --name setup --json
@@ -261,7 +262,7 @@ npx paperclipai token board create --name setup --json
 PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-de-vercel MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
 ```
 
-En WSL2 no hace falta `PAPERCLIP_RUNNER=legacy`: Paperclip elige el runner solo,
+En WSL2 no hace falta `PAPERCLIP_RUNNER=legacy`. Paperclip elige el runner solo,
 y el chequeo de los agentes pasa.
 
 ## Cómo verificarlo sin esperar a los agentes
@@ -275,7 +276,7 @@ independiente que rehace todas las cuentas del motor desde la especificación,
 sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
 que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).
 
-Las herramientas también se pueden llamar directamente:
+Las herramientas también se pueden llamar directamente.
 
 ```bash
 curl -s -X POST "http://127.0.0.1:3200/api/mcp/inventory?key=TU_CLAVE" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"inventory_scan_expiring","arguments":{}}}'
@@ -301,14 +302,14 @@ por cuenta son justamente lo que ningún sistema de gestión expone de forma
 pública, así que los genero de forma determinista con
 `node platform/scripts/make-seed.mjs`.
 
-Lo armé para que incluya los casos difíciles y no sólo el que sale bien: un lote
-que ninguna cuenta puede absorber, una cuenta con deuda que requiere una decisión
+Lo armé para que incluya los casos difíciles y no sólo el que sale bien. Hay un
+lote que ninguna cuenta puede absorber, una cuenta con deuda que requiere una decisión
 humana y un lote demasiado cerca del vencimiento que el motor se niega a ofrecer.
 
 ## Sobre WhatsApp
 
 Con `WHATSAPP_ALLOW_SEND=false`, que es el valor por defecto, el canal redacta,
-valida y arma el mensaje exacto, pero no lo entrega: devuelve un dry-run
+valida y arma el mensaje exacto, pero en lugar de entregarlo devuelve un dry-run
 explícito. Para enviar de verdad alcanza con una app de Meta y su número de
 prueba, que no requiere verificación de negocio.
 
@@ -319,6 +320,6 @@ variables listas para el borrador. Después del envío, Meta informa por webhook
 si el mensaje se entregó, se leyó o falló; la plataforma lo muestra y el agente
 lo puede consultar con `whatsapp_delivery_status` para registrarlo en la tarea.
 
-Lo único que falta para usarlo con clientes reales es la cuenta de la empresa:
-verificación con su CUIT, número propio y la plantilla aprobada en esa cuenta.
+Para usarlo con clientes reales sólo falta la cuenta de la empresa, verificada
+con su CUIT, con número propio y con la plantilla aprobada en esa cuenta.
 El procedimiento está en [`docs/PRODUCCION.md`](docs/PRODUCCION.md).

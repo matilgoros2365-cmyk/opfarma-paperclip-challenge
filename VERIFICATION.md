@@ -39,18 +39,18 @@ escala.
 | Chequeos de la prueba de humo | 16 de 16 en local y en producción; 18 de 18 con la herramienta del margen |
 | Pedidos al webhook con firmas válidas, alteradas o ausentes | 5, cada uno con la respuesta esperada |
 | Pedidos de control contra producción | 5 en el deploy y otros 5 en la revisión final |
-| Entornos donde corrió el setup | 3: Windows, macOS y Ubuntu en WSL2 |
+| Entornos donde corrió el setup | 3 (Windows, macOS y Ubuntu en WSL2) |
 | Corridas del setup sobre una compañía existente, sin duplicar nada | 3 |
 | Clones limpios del repo público, instalados y compilados desde cero | 2 |
-| Mensajes reales entregados en un celular | 4, dos desde la Mac y dos desde Windows |
+| Mensajes reales entregados en un celular | 5, tres desde la Mac y dos desde Windows |
 | Veces que el agente se negó a enviar con una configuración incorrecta, en vez de improvisar | 2 |
 | Inconsistencias de documentación encontradas y corregidas | 6 |
-| Informes y estudios del problema leídos en su texto original | 9: 7 completos y 2 hasta sus conclusiones |
+| Informes y estudios del problema leídos en su texto original | 9 (7 completos y 2 hasta sus conclusiones) |
 
 ## Los tipos de prueba
 
-Ninguna prueba sola alcanza: cada una ve un tipo de error y es ciega a otros. Por
-eso combiné estas, cada una desde un ángulo distinto.
+Ninguna prueba sola alcanza, porque cada una ve un tipo de error y es ciega a
+otros. Por eso combiné estas, cada una desde un ángulo distinto.
 
 | Tipo | Qué pregunta responde | Dónde |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ eso combiné estas, cada una desde un ángulo distinto.
 | Segunda revisión de cada decisión | ¿Mi respuesta al agente tiene un error que yo no vi? | Sección 2 |
 | Auditoría cruzada | ¿Lo que dice el hilo coincide con los registros de Paperclip? | Sección 3 |
 | Pruebas de política sin ejecutar | ¿Cada agente puede hacer exactamente lo que debe, y nada más? | Sección 3 |
-| Pruebas negativas y de manipulación | ¿Se rechaza lo que tiene que rechazarse: sin clave, firma alterada, mensaje cambiado después de aprobar? | Secciones 3 y 4 |
+| Pruebas negativas y de manipulación | ¿Se rechaza lo que tiene que rechazarse, como un pedido sin clave, una firma alterada o un mensaje cambiado después de aprobar? | Secciones 3 y 4 |
 | Punta a punta con Meta real | ¿El mensaje llega de verdad a un celular, y el aviso vuelve? | Sección 3 |
 | Prueba de humo | ¿Las ocho herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
 | Reproducibilidad | ¿Funciona en una carpeta vacía, a partir del repo público? | Sección 4 |
@@ -81,26 +81,27 @@ de la Graph API simulados.
 
 **Una verificación independiente.** El archivo `platform/test/oracle.test.ts`
 rehace todas las cuentas desde la especificación escrita, sin importar ninguna
-función de cálculo del motor, y cuenta los días con otro método. Las compara con
-el motor en las 48 combinaciones de lote y cuenta del dataset: días al
-vencimiento, tramo, consumo mensual, capacidad, cobertura, motivos de
-descalificación, precio y valor en riesgo. También recorre los bordes de los
-tramos día por día, de 0 a 400, y fija los números que citan los documentos y la
-página ($3.004.000 en riesgo, 5 lotes colocables por $1.888.000, L-7703 de baja).
+función de cálculo del motor, y cuenta los días con otro método. En las 48
+combinaciones de lote y cuenta del dataset compara con el motor los días al
+vencimiento, el tramo, el consumo mensual, la capacidad, la cobertura, los
+motivos de descalificación, el precio y el valor en riesgo. También recorre los
+bordes de los tramos día por día, de 0 a 400, y fija los números que citan los
+documentos y la página ($3.004.000 en riesgo, 5 lotes colocables por
+$1.888.000, L-7703 de baja).
 
 **Pruebas de mutación.** Para comprobar que esa verificación detecta errores de
-verdad, rompí el motor a propósito de ocho formas y corrí los tests cada vez:
+verdad, rompí el motor a propósito de ocho formas y corrí los tests cada vez.
 
 | Rotura introducida | Detectada |
 | --- | --- |
-| Días de resguardo: 30 → 29 | Sí, 17 tests fallan |
-| Descuento del tramo "descuento": 20% → 25% | Sí, 18 tests fallan |
-| Margen mínimo: 5% → 4% | Sí, 7 tests fallan |
+| Días de resguardo, de 30 a 29 | Sí, 17 tests fallan |
+| Descuento del tramo "descuento", de 20% a 25% | Sí, 18 tests fallan |
+| Margen mínimo, de 5% a 4% | Sí, 7 tests fallan |
 | La deuda deja de descalificar | Sí, 8 tests fallan |
-| Borde del tramo "colocar": 181 → 180 días | Sí, después de agregar el test de bordes |
-| Borde del tramo "descuento": 91 → 92 días | Sí |
-| Borde del tramo "rescate": 31 → 30 días | Sí |
-| Borde del tramo "sano": 271 → 270 días | Sí |
+| Borde del tramo "colocar", de 181 a 180 días | Sí, después de agregar el test de bordes |
+| Borde del tramo "descuento", de 91 a 92 días | Sí |
+| Borde del tramo "rescate", de 31 a 30 días | Sí |
+| Borde del tramo "sano", de 271 a 270 días | Sí |
 
 En la primera ronda, correr un borde en un día pasaba inadvertido, porque ningún
 lote del dataset cae justo en un límite. Por eso agregué el recorrido de 0 a 400
@@ -112,8 +113,8 @@ cd platform && npm test
 
 ## 2. Cálculo a mano
 
-Antes de aprobar cada oferta en Paperclip, la recalculé por mi cuenta: conté los
-días hasta el vencimiento mes por mes, apliqué el descuento del tramo, verifiqué
+Antes de aprobar cada oferta en Paperclip, la recalculé por mi cuenta. Conté los
+días hasta el vencimiento mes por mes, apliqué el descuento del tramo y verifiqué
 el piso de margen, la capacidad de consumo con los 30 días de resguardo y el
 valor de rescate.
 
@@ -128,7 +129,7 @@ valor de rescate.
 
 Además, cada respuesta que le di al agente en OPF-1 pasó por una segunda revisión
 independiente antes de enviarla. Esa revisión encontró un error en mi primera
-propuesta para L-6612: dividir el lote entre dos clínicas contaba dos veces la
+propuesta para L-6612. Dividir el lote entre dos clínicas contaba dos veces la
 demanda de una de ellas, que ya tenía comprometido otro lote de la misma sutura.
 La respuesta final se corrigió, y el caso quedó como mejora pendiente del motor.
 
@@ -139,23 +140,24 @@ Paperclip la reasignó a MarginReviewer, el revisor aprobó y la tarea quedó a 
 espera de la aprobación humana. Las dos decisiones quedaron en el hilo.
 
 **El envío (OPF-3), contra la auditoría de Paperclip.** No me alcanzó con lo que
-decía el hilo, así que lo crucé con cuatro fuentes: la actividad de la tarea, la
-de toda la compañía, el registro de la acción y la tarjeta de aprobación.
+decía el hilo, así que lo crucé con cuatro fuentes, que son la actividad de la
+tarea, la de toda la compañía, el registro de la acción y la tarjeta de
+aprobación.
 
 | Hora (UTC) | Evento |
 | --- | --- |
 | 06:01:48 | Se crea la política `require_approval` para StockScout |
-| 06:20:14 | StockScout llama al envío: `require_approval`, motivo `requires_approval_policy` |
+| 06:20:14 | StockScout llama al envío, que queda en `require_approval` con motivo `requires_approval_policy` |
 | 06:21:12 | Apruebo la tarjeta |
-| 06:21:12 | Paperclip ejecuta la llamada: `approved` → `executing` → `executed` |
-| 06:23:50 | El agente deja en el hilo la respuesta del servidor: `dry_run: true` y el payload exacto |
+| 06:21:12 | Paperclip ejecuta la llamada, que pasa por `approved` → `executing` → `executed` |
+| 06:23:50 | El agente deja en el hilo la respuesta del servidor, con `dry_run: true` y el payload exacto |
 
 Después de crear la política no hubo ninguna llamada al envío aprobada
 automáticamente, en ninguna tarea ni con ningún agente. La única que pasó sin
 aprobación es anterior, y es la que llevó a crear la política.
 
 **Las políticas, una por una.** Las probé con el endpoint de prueba de
-políticas de Paperclip, que decide sin ejecutar nada:
+políticas de Paperclip, que decide sin ejecutar nada.
 
 | Agente y herramienta | Antes | Después |
 | --- | --- | --- |
@@ -164,7 +166,7 @@ políticas de Paperclip, que decide sin ejecutar nada:
 | StockScout → `whatsapp_draft_message` | `allow` | `allow` (el borrador no se ve afectado) |
 
 Con la aprobación del margen convertida en herramienta, repetí la prueba en
-Windows con las dos herramientas que deciden:
+Windows con las dos herramientas que deciden.
 
 | Agente y herramienta | Decisión |
 | --- | --- |
@@ -174,11 +176,11 @@ Windows con las dos herramientas que deciden:
 | StockScout → `whatsapp_send_message` | `require_approval` |
 | MarginReviewer → `whatsapp_send_message` | `deny` |
 
-**El hash del borrador.** Contra el servidor en ejecución: un envío con el
-`draft_id` correcto devuelve el dry-run; el mismo envío con una palabra cambiada
-se rechaza.
+**El hash del borrador.** Contra el servidor en ejecución, un envío con el
+`draft_id` correcto devuelve el dry-run, y el mismo envío con una palabra
+cambiada se rechaza.
 
-**El envío real (OPF-7).** Contra Meta, con la cuenta de prueba: el primer
+**El envío real (OPF-7).** Contra Meta, con la cuenta de prueba, el primer
 intento volvió con 131030 (formato del número), el segundo con 132001 (plantilla
 en revisión) y el tercero, con `hello_world`, fue aceptado y Meta devolvió su
 identificador. Un segundo después, el aviso de estado llegó firmado al webhook en
@@ -191,27 +193,28 @@ celular por el bloqueo de esa cuenta.
 sólo de OpFarma, el cuarto intento mandó la oferta real de L-4028 como texto,
 dentro de la ventana de 24 horas que abrió el destinatario. Después de mi
 aprobación en Paperclip, el mensaje llegó al celular, y la plataforma en
-producción mostró los avisos de Meta: enviado y entregado y, cuando abrí el
-mensaje con las confirmaciones de lectura activadas, leído; con el número
-enmascarado y cada estado una sola vez. Antes, Paperclip se había negado a repetir un envío con argumentos
-idénticos a uno ya ejecutado, que es su protección contra duplicados.
+producción mostró los avisos de Meta de enviado y entregado y, cuando abrí el
+mensaje con las confirmaciones de lectura activadas, el de leído. Aparecieron
+con el número enmascarado y cada estado una sola vez. Antes, Paperclip se había
+negado a repetir un envío con argumentos idénticos a uno ya ejecutado, que es su
+protección contra duplicados.
 
 **La entrega desde Windows (OPF-4).** El mismo circuito, con Paperclip en Ubuntu
 dentro de WSL2 y el canal de WhatsApp en Vercel, sin credenciales en la máquina
-local. La prueba sirvió además como control: con el canal todavía sin
-credenciales y luego con una variable mal cargada, StockScout se negó a enviar y
-explicó por qué, en lugar de improvisar un destinatario. Con la configuración
+local. La prueba sirvió además como control. Con el canal todavía sin
+credenciales, y luego con una variable mal cargada, StockScout se negó a enviar
+y explicó por qué, en lugar de improvisar un destinatario. Con la configuración
 corregida, armó el borrador hacia el único número habilitado, esperó mi
 aprobación, y el mensaje llegó al celular; la plataforma mostró enviado,
 entregado y leído a las 21:36.
 
 **Las dos aprobaciones con tarjeta, sin terminal (OPF-5 y OPF-6, Windows).**
 Con la aprobación del margen convertida en herramienta, corrí el flujo nuevo de
-punta a punta con el lote L-8890:
+punta a punta con el lote L-8890.
 
 | Paso | Quién | Qué pasó |
 | --- | --- | --- |
-| OPF-5 | StockScout | Armó la oferta: $7.120 por unidad, 32% de margen, $427.200 |
+| OPF-5 | StockScout | Armó la oferta de $427.200, a $7.120 por unidad y con 32% de margen |
 | OPF-5 | MarginReviewer | Recalculó consumo, piso y cuenta desde el dataset; aprobó, y Paperclip cerró la tarea sola |
 | OPF-6 | StockScout | Llamó a `inventory_commit_offer` con los números del motor; Paperclip la frenó con una tarjeta |
 | OPF-6 | Yo | Aprobé el margen con **Approve & run** |
@@ -224,8 +227,8 @@ Ninguna corrida necesitó Retry, y no hizo falta abrir una terminal.
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
 handshake de suscripción, la lectura de cada estado y que una respuesta del
-cliente se registre sin guardar su contenido. Contra el servidor en ejecución,
-con un aviso firmado como lo manda Meta:
+cliente se registre sin guardar su contenido. También lo probé contra el
+servidor en ejecución, con un aviso firmado como lo manda Meta.
 
 | Pedido | Respuesta |
 | --- | --- |
@@ -246,31 +249,32 @@ siete variables sin saltos de línea.
   `npm ci` (2 minutos), compilé sin errores de tipos, corrí los tests y generé el
   build de producción. Todo pasó sin tocar nada.
 - **El setup, dos veces.** Corrí `setup-company.mjs` contra una instancia real de
-  Paperclip ya configurada: cada recurso respondió "ya existía" y no se duplicó
+  Paperclip ya configurada. Cada recurso respondió "ya existía" y no se duplicó
   nada. La política nueva del revisor se creó en esa misma corrida.
 - **Tres entornos.** El setup corrió en Windows, en macOS y en Ubuntu dentro de
   WSL2. En macOS exigió un ajuste, el runner, que dejé configurable y
   documentado.
 - **Una instalación desde cero en WSL2, siguiendo el README.** Sirvió para
-  encontrar lo que en la Mac no se veía: el servicio de Paperclip no encontraba
-  Claude Code, el setup no instalaba las conexiones para los agentes y una key
-  equivocada quedaba pegada al volver a correrlo. Corregidas las tres, el
-  chequeo de los agentes pasó, las decisiones de política coincidieron una por
-  una con las de la Mac, una segunda corrida del setup no duplicó nada, y
+  encontrar tres cosas que en la Mac no se veían. El servicio de Paperclip no
+  encontraba Claude Code, el setup no instalaba las conexiones para los agentes
+  y una key equivocada quedaba pegada al volver a correrlo. Corregidas las tres,
+  el chequeo de los agentes pasó, las decisiones de política coincidieron una
+  por una con las de la Mac, una segunda corrida del setup no duplicó nada, y
   StockScout completó OPF-1 con las herramientas de Vercel y los mismos números.
-- **Un segundo clon limpio** al cierre, con todo lo agregado después: instala,
+- **Un segundo clon limpio** al cierre, con todo lo agregado después, instala,
   compila sin errores, pasa los tests y genera el build con las rutas del
   webhook incluidas.
 
 **La prueba de humo.** `platform/scripts/smoke.mjs` usa las ocho herramientas
 como las usaría un agente, contra cualquier instancia, y verifica también lo que
-tiene que fallar: sin clave y con una clave incorrecta (401), un lote a punto de
-vencer, una cuenta bloqueada, un mensaje cambiado después de aprobar y un envío
-sin confirmar. Está hecha para no poder mandar un mensaje real: los únicos
-envíos que prueba son los que el servidor debe rechazar antes de llegar a Meta.
-Pasó 16 de 16 contra el servidor local y contra producción, en Vercel. Con la
-herramienta del margen sumó dos verificaciones (que el margen se fija con los
-números del motor y que uno inflado se rechaza) y pasó 18 de 18 en producción.
+tiene que fallar. Prueba pedidos sin clave y con una clave incorrecta (401), un
+lote a punto de vencer, una cuenta bloqueada, un mensaje cambiado después de
+aprobar y un envío sin confirmar. Está hecha para no poder mandar un mensaje
+real, porque los únicos envíos que prueba son los que el servidor debe rechazar
+antes de llegar a Meta. Pasó 16 de 16 contra el servidor local y contra
+producción, en Vercel. Con la herramienta del margen sumó dos verificaciones
+(que el margen se fija con los números del motor y que uno inflado se rechaza)
+y pasó 18 de 18 en producción.
 
 ```bash
 cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts/smoke.mjs
@@ -278,13 +282,13 @@ cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts
 
 **Dependencias y configuración.** `npm audit` sobre las dependencias de
 producción no encontró vulnerabilidades. Crucé cada variable de entorno que lee
-el código con `.env.example`: faltaba una, la que elige la plantilla de la
+el código con `.env.example`. Faltaba una, la que elige la plantilla de la
 oferta, y la agregué. Las demás que no figuran ahí son de los scripts de setup,
 y cada script las documenta en su encabezado.
 
 ## 5. Deploy
 
-Contra <https://opfarma-paperclip-challenge.vercel.app>:
+Hice estos pedidos contra <https://opfarma-paperclip-challenge.vercel.app>.
 
 | Pedido | Respuesta esperada | Respuesta |
 | --- | --- | --- |
@@ -301,17 +305,17 @@ celular, sin desplazamiento horizontal.
 ## 6. Seguridad
 
 - Busqué credenciales en todo el historial de git (claves de Anthropic, tokens de
-  Paperclip y de Meta): no hay ninguna publicada. Los archivos con secretos
-  locales están excluidos del repo.
-- El envío está apagado por defecto: sólo se habilita con
+  Paperclip y de Meta) y no encontré ninguna publicada. Los archivos con
+  secretos locales están excluidos del repo.
+- El envío está apagado por defecto. Sólo se habilita con
   `WHATSAPP_ALLOW_SEND=true` exacto, y aun así exige credenciales de Meta, la
   aprobación en Paperclip y un `draft_id` que coincida.
-- El revisor no puede enviar: tiene el envío bloqueado por política.
+- El revisor no puede enviar, porque tiene el envío bloqueado por política.
 
 ## 7. Documentación
 
-Revisé cada documento contra el enunciado y los crucé entre sí. Encontré y
-corregí lo siguiente:
+Revisé cada documento contra el enunciado y los crucé entre sí. Esto es lo que
+encontré y corregí.
 
 - El README afirmaba que el envío pedía aprobación cuando todavía no era cierto.
   Se corrigió al encontrarlo, y hoy es cierto.
@@ -326,27 +330,27 @@ corregí lo siguiente:
   setup no usa, y le faltaba la fecha del inventario.
 - La investigación del problema afirmaba que nadie hacía esta colocación. Al
   ampliarla con auditorías, normas, estudios y entrevistas, encontré marketplaces
-  de excedentes que no había considerado, y precisé la afirmación: existen
-  vidrieras, no colocación activa del lado del distribuidor. También separé lo que
-  está comprobado, lo documentado y lo estimado, y marqué qué constantes del
-  motor salen de una fuente y cuáles son supuestos míos.
+  de excedentes que no había considerado, y precisé la afirmación. Lo que existe
+  son vidrieras, no colocación activa del lado del distribuidor. También separé
+  lo que está comprobado, lo documentado y lo estimado, y marqué qué constantes
+  del motor salen de una fuente y cuáles son supuestos míos.
 
 ## 8. La revisión final
 
-Al cierre, con todo terminado, volví a pasar por todo una vez más:
+Al cierre, con todo terminado, volví a pasar por todo una vez más.
 
-- Los tests y el chequeo de tipos, en verde: hoy son 193.
-- El repo público, archivo por archivo: ningún número de teléfono real, ningún
-  token, clave ni archivo de entorno. Los únicos números son los ficticios de
-  las cuentas del dataset.
+- Los tests, que hoy son 193, y el chequeo de tipos, en verde.
+- El repo público, archivo por archivo. No hay ningún número de teléfono real,
+  ningún token, clave ni archivo de entorno. Los únicos números son los
+  ficticios de las cuentas del dataset.
 - Cada link interno de los documentos apunta a un archivo que existe.
-- Producción: la página responde, los dos MCP rechazan sin clave, el webhook
+- En producción, la página responde, los dos MCP rechazan sin clave, el webhook
   rechaza una suscripción falsa y el canal informa el envío habilitado con el
   número de prueba en calidad verde.
-- Los documentos, contra lo que cambió en los últimos días: el canal real pasó
+- Los documentos, contra lo que cambió en los últimos días. El canal real pasó
   a vivir en Vercel y lo comparten la Mac y Windows, y así quedó escrito.
 
-Y me adelanté a dos fallas que todavía no habían pasado:
+Y me adelanté a dos fallas que todavía no habían pasado.
 
 - **El token de prueba de Meta vence a las 24 horas.** Cuando pasa, la página
   mostraba el error crudo de la Graph API, en inglés. Ahora explica qué pasó y
@@ -371,10 +375,10 @@ Y me adelanté a dos fallas que todavía no habían pasado:
   Boletín Oficial y los sitios de ANMAT. Leí completos los dos informes de la
   AGN, el informe sectorial de CADIEM, los de Hacienda y CEPAL, el artículo de
   Vázquez y el estudio de Belo Horizonte; los de Riad y Uganda, hasta sus
-  conclusiones. Las auditorías de Ontario,
-  Paraguay y Chile y los casos argentinos recientes los cito a partir de la
-  prensa, y los estudios de quirófano, a partir de sus resúmenes. El detalle
-  está en [`research/EXPIRY.md`](research/EXPIRY.md).
+  conclusiones. Las auditorías de Ontario, Paraguay y Chile y los casos
+  argentinos recientes los cito a partir de la prensa, y los estudios de
+  quirófano, a partir de sus resúmenes. El detalle está en
+  [`research/EXPIRY.md`](research/EXPIRY.md).
 - **El problema con una distribuidora real.** Las fuentes muestran que existe y
   que es caro, pero no cuánto le cuesta a una empresa concreta. Eso requiere
   entrevistas y datos propios, y lo dejé planteado como próximo paso.

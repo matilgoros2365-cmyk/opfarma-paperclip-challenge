@@ -1,7 +1,8 @@
 # Bitácora técnica
 
-Este es el detalle detrás de [`DECISIONS.md`](../DECISIONS.md): cada decisión con
-su razón, y cada obstáculo con lo que probé, lo que descarté y cómo lo resolví.
+Este es el detalle detrás de [`DECISIONS.md`](../DECISIONS.md). Acá está cada
+decisión con su razón, y cada obstáculo con lo que probé, lo que descarté y cómo
+lo resolví.
 
 ## Qué elegí y por qué
 
@@ -9,9 +10,10 @@ Elegí la **opción B2, WhatsApp**, a través de la Cloud API de Meta.
 
 La elegí porque el enunciado acepta como ideal "evidencia de envío **o** de
 flujo listo para aprobar por un humano", y porque el número de prueba de Meta no
-exige verificación de negocio. Lo sé por experiencia propia: ya hice ese trámite
-en otro proyecto y conozco dónde está la verdadera traba. No está en enviar un
-mensaje de prueba, sino en registrar un número propio, que es otro proceso.
+exige verificación de negocio. Lo sé por experiencia propia, porque ya hice ese
+trámite en otro proyecto y conozco dónde está la verdadera traba. No está en
+enviar un mensaje de prueba, sino en registrar un número propio, que es otro
+proceso.
 
 El objetivo de la compañía lo definí yo, porque el enunciado lo deja abierto. No
 quería una demo del tipo "el agente manda un WhatsApp", en la que el agente hace
@@ -20,16 +22,16 @@ directamente, no se llega a hacer.
 
 Me quedé con el vencimiento de lotes. **OpFarma** es una distribuidora de
 insumos médicos, y en ese rubro un lote que vence en depósito no reduce el
-margen: se pierde el **100% del costo**. Según las referencias que relevé, entre
-el 2% y el 5% del inventario se descarta cada año.
+margen, sino que se pierde el **100% del costo**. Según las referencias que
+relevé, entre el 2% y el 5% del inventario se descarta cada año.
 
 La dificultad no está en saber qué se vence, porque cualquier sistema lo avisa.
 Está en saber **a quién vendérselo** antes de la fecha, y eso implica cruzar
 cada lote con la rotación histórica de cada cuenta. Con cientos de cuentas y
-miles de productos, esa tarea no se hace mal: simplemente no se hace.
+miles de productos, esa tarea no se hace mal. Simplemente no se hace.
 
 Revisando qué ofrece el mercado encontré lo que terminó de convencerme. El
-software comercial avisa, pero no coloca: aplica FEFO y alertas de vencimiento,
+software comercial avisa, pero no coloca. Aplica FEFO y alertas de vencimiento,
 informa qué se vence y ahí termina. Los proyectos que sí resuelven la asignación
 lo hacen **dentro** de una red hospitalaria, redistribuyendo entre sedes, y los
 marketplaces de excedentes publican el stock y esperan a que alguien lo compre.
@@ -55,7 +57,7 @@ También pensé dónde ubicar a las personas, y terminé poniéndolas en dos lug
 porque son dos riesgos distintos. El agente revisor valida que la cuenta pueda
 consumir el lote, que el precio respete el piso y el estado de la cuenta; recién
 después una persona aprueba el margen. El envío tiene su propio permiso, a nivel
-de la herramienta. Ese permiso no venía configurado: tuve que crearlo
+de la herramienta. Ese permiso no venía configurado. Tuve que crearlo
 explícitamente, y más abajo explico cómo lo detecté.
 
 El revisor no aprueba un descuento. Verifica que no le estemos trasladando una
@@ -65,19 +67,19 @@ explica por qué ese paso no se automatiza.
 
 ## Qué funcionó
 
-El proyecto quedó cubierto por **186 tests**: los tramos de vencimiento, el
-consumo calculado a partir del historial de compras, el piso de precio, los
-errores de la Graph API simulados y una verificación independiente del motor,
-descripta en [`VERIFICATION.md`](../VERIFICATION.md). Me ocupé de que el dataset
-incluyera los casos difíciles, no sólo el que sale bien: hay un lote que
-**ninguna** cuenta puede absorber, y otro que el motor se niega a ofrecer porque
-está demasiado cerca del vencimiento.
+El proyecto quedó cubierto por **186 tests**, que abarcan los tramos de
+vencimiento, el consumo calculado a partir del historial de compras, el piso de
+precio, los errores de la Graph API simulados y una verificación independiente
+del motor, descripta en [`VERIFICATION.md`](../VERIFICATION.md). Me ocupé de que
+el dataset incluyera los casos difíciles, no sólo el que sale bien. Hay un lote
+que **ninguna** cuenta puede absorber, y otro que el motor se niega a ofrecer
+porque está demasiado cerca del vencimiento.
 
 Los dos servidores MCP quedaron conectados a Paperclip, activos y con sus seis
 herramientas en el catálogo. Paperclip, además, **clasificó las herramientas por
-su cuenta**: marcó las cinco de lectura como `risk=read` y `whatsapp_send_message`
+su cuenta**. Marcó las cinco de lectura como `risk=read` y `whatsapp_send_message`
 como `risk=write`, sin que yo configurara nada. En un principio interpreté que
-con eso la asimetría que había diseñado quedaba protegida. No era así: la
+con eso la asimetría que había diseñado quedaba protegida. No era así. La
 clasificación por sí sola no frena nada, y el envío terminó necesitando una
 política propia. Lo detallo en "Qué no funcionó".
 
@@ -87,7 +89,7 @@ MarginReviewer; el revisor validó y aprobó; y la tarea quedó a la espera de l
 aprobación humana, asignada a mí. Las dos etapas encadenadas, cada una con su
 decisión registrada en el hilo.
 
-Corresponde hacer una aclaración: **no llegué a provocar la intercepción**.
+Corresponde aclarar que **no llegué a provocar la intercepción**.
 StockScout pidió `in_review` por su cuenta en lugar de intentar cerrar la tarea,
 de modo que el circuito derivó correctamente, pero nunca vi al runtime frenar un
 intento de `done`. La documentación indica que lo hace; lo que puedo afirmar es
@@ -103,19 +105,20 @@ habría salido. La tarea quedó en `done` con toda esa secuencia en el historial
 que es lo que el enunciado plantea como ideal. Sanatorio del Parque no recibió
 nada, porque no hay credenciales de Meta cargadas.
 
-Por último, el setup es reproducible: `setup-company.mjs` crea la compañía
-completa y se puede ejecutar más de una vez sin duplicar nada.
+Por último, el setup es reproducible, porque `setup-company.mjs` crea la
+compañía completa y se puede ejecutar más de una vez sin duplicar nada.
 
 ## Qué no funcionó
 
 **Directamente sobre Windows, no logré que un agente arrancara.** Al final lo
 resolví corriendo Paperclip en Ubuntu dentro de WSL2 (ver "Windows, resuelto con
-WSL2", más abajo); esta es la historia de cómo llegué a la causa. Los dos agentes quedaban alternando
-entre `verifying` y `paused` con `harness_test_failed`, mientras el CLI de
-Claude funcionaba correctamente por fuera: ejecutado a mano, con el mismo
-comando y en el mismo directorio, respondía y terminaba con código 0.
+WSL2", más abajo); esta es la historia de cómo llegué a la causa. Los dos
+agentes quedaban alternando entre `verifying` y `paused` con
+`harness_test_failed`, mientras el CLI de Claude funcionaba correctamente por
+fuera. Ejecutado a mano, con el mismo comando y en el mismo directorio,
+respondía y terminaba con código 0.
 
-Fui descartando hipótesis una por una:
+Fui descartando hipótesis una por una.
 
 1. Que el servidor no encontrara el CLI en su PATH. Lo reinicié después de
    instalarlo y confirmé que se ve desde una terminal nueva. Seguía fallando.
@@ -138,7 +141,7 @@ Fui descartando hipótesis una por una:
 9. Que Node en Windows no pudiera lanzar un `.cmd` sin shell. Lo apunté al
    `claude.exe` nativo. Seguía fallando.
 
-También probé el camino que propone el producto: conectar Anthropic como
+También probé el camino que propone el producto, que es conectar Anthropic como
 proveedor de modelo desde Connectors, en lugar de usar variables de entorno. La
 conexión queda en buen estado, pero al vincularla al agente devuelve "The
 selected AI connection failed validation in this agent's environment". Es
@@ -147,7 +150,7 @@ decir, el bloqueo ocurre antes de la credencial, venga de donde venga.
 ### La décima hipótesis, que resultó ser la correcta
 
 Me faltaba una, y la encontré recién al levantar todo en una Mac prestada. Está
-en el código instalado, en `@paperclipai/shared/dist/agent-runner.js`:
+en el código instalado, en `@paperclipai/shared/dist/agent-runner.js`.
 
 ```js
 export function paperclipRunnerSupportsPlatform(harness, platform, architecture, ...) {
@@ -163,8 +166,8 @@ macOS, y nada más.
 En consecuencia, en Windows `agentRunnerAvailability("claude_local")` devuelve un
 único runner disponible, **Legacy**, que lanza el CLI y el puente ACP por su
 cuenta. Mis agentes se crearon siempre con ese runner, sin que yo lo eligiera y
-sin ningún aviso. En la Mac, en cambio, el valor por defecto es el runner nativo:
-los agentes quedaron con `adapterType: paperclip_runner`, `provider: acpx` y
+sin ningún aviso. En la Mac, en cambio, el valor por defecto es el runner nativo.
+Los agentes quedaron con `adapterType: paperclip_runner`, `provider: acpx` y
 `acpxAgent: claude`, y llegaron al estado `ready` en lugar de alternar entre
 `verifying` y `paused`.
 
@@ -177,15 +180,15 @@ Las nueve hipótesis anteriores estaban bien descartadas. Lo que faltaba no era
 una causa dentro del camino que estaba analizando, sino advertir que **en
 Windows ese camino es el único disponible, y es el que falla**.
 
-La prueba final fue la más directa: en la Mac forcé el runner Legacy, es decir,
+La prueba final fue la más directa. En la Mac forcé el runner Legacy, es decir,
 la misma configuración que tenía en Windows, y **ahí sí funcionó**. El agente
 escaneó el inventario, reportó los 7 lotes en riesgo y empezó a llamar a
 `inventory_place_lot` para cada uno. La conclusión, entonces, no es que Legacy
 no funcione, sino que **Legacy falla en Windows, y en Windows es la única
 opción**.
 
-Un detalle relevante para quien quiera reproducir esto: como `maxTurnsPerRun` es
-exclusivo de Legacy, el script de setup devolvía
+Hay un detalle relevante para quien quiera reproducir esto. Como
+`maxTurnsPerRun` es exclusivo de Legacy, el script de setup devolvía
 `422 agent_runner_config_incompatible` en Mac o Linux, donde el valor por
 defecto es el runner nativo. Lo dejé condicionado a `PAPERCLIP_RUNNER=legacy`,
 de modo que el mismo script crea la compañía en los tres sistemas y además
@@ -195,7 +198,7 @@ permite reproducir a propósito la configuración de Windows.
 
 Mi criterio de no dejar credenciales en el entorno quedó respaldado por el
 código, y resultó más importante de lo que pensaba. El chequeo de ejecución arma
-su entorno así:
+su entorno así.
 
 ```js
 { ...sanitizeInheritedPaperclipEnv(process.env), ...configEnv }
@@ -204,20 +207,20 @@ su entorno así:
 Esa función sólo elimina las variables `PAPERCLIP_*`, y el servidor borra aparte
 apenas cuatro variables internas de Claude Code. **Todo el resto del entorno
 desde el que se lanza el servidor llega al chequeo.** Por eso en la Mac levanté
-los servidores con `env -i` y un PATH mínimo: si los hubiera lanzado desde una
+los servidores con `env -i` y un PATH mínimo. Si los hubiera lanzado desde una
 sesión cualquiera, variables como `ANTHROPIC_BASE_URL` se habrían filtrado sin
 que nadie lo advirtiera.
 
 Mientras Windows seguía bloqueado, intenté mover todo a Linux, lo que de paso
 resolvía el link público a la plataforma. Monté la aplicación en Fly con la
 imagen que publica Paperclip, el volumen y las variables, y ahí apareció otro
-límite: **la imagen de Paperclip no entra en Fly**. Pesa 5,3 GB comprimida y, al
+límite. **La imagen de Paperclip no entra en Fly**. Pesa 5,3 GB comprimida y, al
 descomprimirse, supera el máximo de 8 GiB que admite la plataforma. Probé ampliar
 el disco raíz con `--rootfs-size`, que es la única opción disponible para eso, y
-el error fue idéntico: el límite no depende del disco solicitado, sino de Fly.
-Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto.
+el error fue idéntico, porque el límite no depende del disco solicitado, sino de
+Fly. Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto.
 
-Hubo otros tres obstáculos que vale la pena registrar:
+Hubo otros tres obstáculos que vale la pena registrar.
 
 **El workspace aislado exige un repositorio de git, y no lo avisa.** Después de
 un reintento, Paperclip pasó OPF-2 al modo `fresh_isolated_workspace` por
@@ -225,7 +228,7 @@ precaución, porque una corrida anterior había quedado sin efectos verificados,
 la etapa de revisión empezó a fallar pidiendo un `git_worktree` sobre una carpeta
 que no era un repositorio. El campo no se puede editar desde la interfaz, y un
 `PATCH` a la tarea devuelve 200 pero no lo aplica. Se resuelve con `git init` en
-la carpeta de trabajo del agente, pero nada lo anticipa: el modo se activa solo y
+la carpeta de trabajo del agente, pero nada lo anticipa. El modo se activa solo y
 el requisito aparece recién cuando algo ya falló.
 
 **Las conexiones a herramientas se crean por API, pero no se completan por
@@ -238,7 +241,7 @@ el README en lugar de disimularlo.
 **El diagnóstico útil existe, pero está oculto.** El log del servidor sólo
 registra `exitCode 1`. El detalle real (qué chequeo falló, si hay credenciales
 del entorno que pisan el login y el comando exacto para reproducirlo) está en
-*Agente → Harness / Runtime → Run test → Test details*: a cuatro clics, y ningún
+*Agente → Harness / Runtime → Run test → Test details*, a cuatro clics, y ningún
 mensaje de error lo menciona. Si hubiera abierto esa pantalla al principio, me
 habría ahorrado la mitad de las hipótesis.
 
@@ -247,7 +250,7 @@ habría ahorrado la mitad de las hipótesis.
 No todos los problemas fueron de la plataforma. Antes de pedirle a StockScout que
 ejecutara OPF-3, probé las herramientas de WhatsApp con la misma configuración
 que tenía la Mac, es decir, sin credenciales de Meta. `whatsapp_draft_message`
-fallaba con `not_configured`: se negaba a armar el borrador.
+fallaba con `not_configured` y se negaba a armar el borrador.
 
 Era un error de diseño mío. Para armar el payload de la Graph API no hacen falta
 ni el token ni el número de Meta, sólo el destinatario y el mensaje. Pero el
@@ -257,12 +260,12 @@ opcional, y dejaba sin canal justamente al dry-run, que es el mínimo que pide e
 enunciado.
 
 Lo resolví separando las dos lecturas. El borrador y el estado del canal usan
-ahora una que nunca falla por falta de credenciales: si faltan, informan el
+ahora una que nunca falla por falta de credenciales. Si faltan, informan el
 dry-run como un estado válido y no como un error. El envío las sigue exigiendo y,
 sin ellas, devuelve `dry_run: true` con el payload exacto que habría salido. La
-verificación del `draft_id` no cambió: si alguien modifica una sola palabra del
-mensaje aprobado, el envío se rechaza igual. Agregué los tests de ese caso y lo
-verifiqué contra el servidor en ejecución antes de publicarlo.
+verificación del `draft_id` no cambió, y si alguien modifica una sola palabra
+del mensaje aprobado, el envío se rechaza igual. Agregué los tests de ese caso y
+lo verifiqué contra el servidor en ejecución antes de publicarlo.
 
 La lección es que los tests cubrían cada pieza por separado, pero ninguno probaba
 la combinación "sin credenciales, armar un borrador", que era la situación real
@@ -274,11 +277,11 @@ atrapara un test.
 Fue el hallazgo más importante, y no fui yo quien lo hizo. En la primera corrida
 completa de OPF-3, StockScout llamó a `whatsapp_send_message` y el envío pasó
 directo, sin pedir aprobación a nadie. No salió ningún mensaje sólo porque el
-servidor estaba en dry-run. El agente lo notó y lo planteó en una tarjeta: si el
+servidor estaba en dry-run. El agente lo notó y en una tarjeta preguntó si el
 control estaba mal configurado, si estaba preaprobado a propósito o si había que
 agregarlo.
 
-Lo confirmé en la auditoría de Paperclip: la llamada figuraba con
+Lo confirmé en la auditoría de Paperclip, donde la llamada figuraba con
 `decision: allow` y `reasonCode: profile_allows_tool`. Yo había dado por hecho
 que el permiso venía con la clasificación `risk=write`, y así lo había escrito en
 el README. Era incorrecto.
@@ -289,18 +292,18 @@ agente. Cuando el acceso a una conexión se otorga desde la interfaz, Paperclip 
 crea automáticamente para toda herramienta que no sea de lectura. Mi script
 otorgaba el acceso por otra vía, y en ese caso la política no se crea. La creé
 explícitamente por API y la verifiqué con el endpoint de prueba de políticas, que
-evalúa la decisión sin ejecutar nada: antes devolvía `allow`, después
+evalúa la decisión sin ejecutar nada. Antes devolvía `allow`, y después,
 `require_approval`.
 
-En el proceso apareció otra falla: MarginReviewer también podía enviar mensajes,
+En el proceso apareció otra falla. MarginReviewer también podía enviar mensajes,
 aunque su rol establece que nunca le escribe a un cliente. A ese agente le asigné
 una política `block`. Las dos políticas quedaron incorporadas en
 `setup-company.mjs`, de modo que una instalación nueva ya incluye el control. La
-API tiene dos particularidades que no documenta: no acepta `config` en estas
+API tiene dos particularidades que no documenta. No acepta `config` en estas
 políticas, aunque Paperclip lo use internamente, y el `agentId` tiene que ir
 dentro de `conditions.actor`.
 
-La auditoría posterior confirmó el circuito completo: el envío se frenó por la
+La auditoría posterior confirmó el circuito completo. El envío se frenó por la
 política, quedó registrada mi aprobación y la ejecución devolvió `dry_run: true`.
 Después de crear la política no hubo ningún envío aprobado automáticamente, en
 ninguna tarea ni con ningún agente.
@@ -313,7 +316,7 @@ comparara lo que la tarea decía con lo que efectivamente ocurrió.
 ### Cada respuesta a una tarjeta fallaba por el workspace
 
 El problema del workspace aislado que describí para OPF-2 no fue un caso
-aislado. En OPF-3 se repitió con un patrón claro:
+aislado. En OPF-3 se repitió con un patrón claro.
 
 | Qué despertó al agente | Resultado |
 | --- | --- |
@@ -330,12 +333,12 @@ la corrida anterior, y esa carpeta nunca es un repositorio. El `git init` que
 había resuelto OPF-2 arregla una sola carpeta, pero cada corrida exitosa crea una
 nueva, así que la siguiente continuación vuelve a fallar.
 
-Intenté sacar la tarea de ese modo con un `PATCH`: devuelve 200 y no cambia
+Intenté sacar la tarea de ese modo con un `PATCH`, pero devuelve 200 y no cambia
 nada. No encontré la vía soportada, y con el tiempo disponible no tenía sentido
 seguir buscándola. Para completar la demo alcanzó con hacer Retry después de cada
-respuesta. Un dato que verifiqué en el código: aunque el agente quedaba en estado
-`error` después de cada falla, el sistema sólo omite a los agentes pausados o
-dados de baja, así que el siguiente Retry se ejecutaba igual.
+respuesta. Hay un dato que verifiqué en el código. Aunque el agente quedaba en
+estado `error` después de cada falla, el sistema sólo omite a los agentes
+pausados o dados de baja, así que el siguiente Retry se ejecutaba igual.
 
 ### El envío real, y lo que respondió Meta
 
@@ -347,13 +350,14 @@ la tarea como evidencia.
 Meta la enganchó a la misma cuenta de WhatsApp Business que usa otro proyecto
 mío. Intenté crear un portfolio nuevo y Meta respondió que había alcanzado el
 máximo; el otro portfolio que tenía estaba restringido para anunciar y no podía
-tener apps. Seguí con la cuenta compartida, pero con dos resguardos en el código:
-cada envío anota su identificador y el webhook guarda sólo los avisos de esos
-mensajes, y con `WHATSAPP_SHARED_ACCOUNT=true` descarta las respuestas
+tener apps. Seguí con la cuenta compartida, pero con dos resguardos en el código.
+Cada envío anota su identificador y el webhook guarda sólo los avisos de esos
+mensajes. Además, con `WHATSAPP_SHARED_ACCOUNT=true` descarta las respuestas
 entrantes, que pueden ser del otro proyecto.
 
-**Los tres intentos de OPF-7**, cada uno aprobado por mí en Paperclip y dirigido
-a mi celular, que es el único destinatario cargado en el número de prueba:
+**Los tres intentos de OPF-7.** Cada uno lo aprobé yo en Paperclip y fue
+dirigido a mi celular, que es el único destinatario cargado en el número de
+prueba.
 
 | Intento | Respuesta de Meta | Qué significaba |
 | --- | --- | --- |
@@ -361,25 +365,26 @@ a mi celular, que es el único destinatario cargado en el número de prueba:
 | Oferta, número sin el 9 | 132001, la plantilla no existe | La plantilla estaba en revisión; Meta responde así hasta aprobarla |
 | `hello_world`, número sin el 9 | Aceptado, con su identificador | El envío salió; un segundo después, el webhook informó `failed`, 131031, cuenta bloqueada |
 
-El tercer intento probó el circuito completo con Meta de verdad: la aprobación
-en Paperclip, el envío, el identificador que devuelve Meta, el aviso de estado
-que llega firmado al webhook en Vercel, el almacén que lo guarda y la consulta
-del agente, que dejó el resultado en la tarea. Lo que no llegó fue el mensaje al
+El tercer intento probó el circuito completo con Meta de verdad. Pasó por la
+aprobación en Paperclip, el envío, el identificador que devuelve Meta, el aviso
+de estado que llega firmado al webhook en Vercel, el almacén que lo guarda y la
+consulta del agente, que dejó el resultado en la tarea. Lo que no llegó fue el mensaje al
 celular, porque Meta tenía bloqueada esa cuenta de prueba. Eso no se resuelve
-desde el código ni desde Paperclip: es un estado de la cuenta del lado de Meta.
+desde el código ni desde Paperclip, porque es un estado de la cuenta del lado de
+Meta.
 
-**La cuenta nueva, y la entrega.** Armé todo de nuevo con otra cuenta de Meta:
-un portfolio propio de OpFarma, una app nueva y, con ella, una cuenta de
+**La cuenta nueva, y la entrega.** Armé todo de nuevo con otra cuenta de Meta.
+Creé un portfolio propio de OpFarma, una app nueva y, con ella, una cuenta de
 WhatsApp Business y un número de prueba que no comparte nadie. Los scripts
-hicieron que fuera rápido: uno conectó el webhook y la suscripción, otro dio de
-alta las dos plantillas. Como la cuenta ya no estaba compartida, volví
+hicieron que fuera rápido. Uno conectó el webhook y la suscripción, y otro dio
+de alta las dos plantillas. Como la cuenta ya no estaba compartida, volví
 `WHATSAPP_SHARED_ACCOUNT` a `false`.
 
 Hubo dos tropiezos más, los dos útiles. Primero, cargué en la Mac el
 identificador de la cuenta en lugar del identificador del número; Meta lo
 aceptaba pero no devolvía los datos del número, y eso me hizo revisarlo.
 Segundo, el agente intentó repetir el `hello_world` y Paperclip no abrió una
-tarjeta nueva: reconoció que los argumentos eran idénticos a los de un envío ya
+tarjeta nueva. Reconoció que los argumentos eran idénticos a los de un envío ya
 ejecutado y devolvió ese resultado. Es la protección contra envíos duplicados, y
 obligó a cambiar el mensaje.
 
@@ -389,34 +394,34 @@ texto, con su borrador y su `draft_id`. La aprobé en Paperclip, llegó al
 celular, y Meta avisó por el webhook que se entregó. La plataforma lo muestra y
 el agente lo registró en la tarea.
 
-Al leer el mensaje en el teléfono vi que el texto estaba desprolijo: "120 sobre"
-en singular, palabras sin tilde, montos sin separador de miles y la fecha en
-formato ISO. Lo corregí para que se lea como se escribe en Argentina, con tests,
+Al leer el mensaje en el teléfono vi que el texto estaba desprolijo, con "120
+sobre" en singular, palabras sin tilde, montos sin separador de miles y la fecha
+en formato ISO. Lo corregí para que se lea como se escribe en Argentina, con tests,
 y unifiqué el formato con el de las plantillas.
 
 **Las plantillas.** Di de alta la oferta completa por API, desde el mismo archivo
 que usa el agente. Quedó en revisión manual, así que armé una segunda, corta y
 sin precios, que suele pasar la revisión automática. Las dos quedaron en
 revisión al cierre, en las dos cuentas; por eso la oferta viajó como texto
-dentro de la ventana de 24 horas. El código puede usar cualquiera de las dos con sólo cambiar
-una variable.
+dentro de la ventana de 24 horas. El código puede usar cualquiera de las dos con
+sólo cambiar una variable.
 
-Dos detalles que corregí en el camino: el resultado del envío decía "Delivered"
+Corregí dos detalles en el camino. El resultado del envío decía "Delivered"
 apenas Meta aceptaba el pedido, y eso no prueba la entrega; ahora dice que el
-mensaje fue aceptado y que la entrega la confirma el webhook. Y el formato de los
-celulares argentinos: para enviar, Meta aceptó la forma sin el 9 y la normalizó
-con el 9.
+mensaje fue aceptado y que la entrega la confirma el webhook. El otro fue el
+formato de los celulares argentinos. Para enviar, Meta aceptó la forma sin el 9
+y la normalizó con el 9.
 
 ### Windows, resuelto con WSL2
 
 Saber que el problema de Windows era el runner, y no Windows en sí, abría una
-salida: correr Paperclip sobre Linux sin salir de la compu. WSL2 es un Ubuntu
-real dentro de Windows, y desde ahí Paperclip se usa igual, con el navegador de
+salida, que era correr Paperclip sobre Linux sin salir de la compu. WSL2 es un
+Ubuntu real dentro de Windows, y desde ahí Paperclip se usa igual, con el navegador de
 Windows en `localhost:3100`. Los agentes usan los servidores MCP de Vercel, así
 que no hizo falta levantar la plataforma.
 
 Lo instalé desde cero siguiendo el README, y eso sirvió para encontrar tres cosas
-que en la Mac no se veían:
+que en la Mac no se veían.
 
 **El servicio no ve la carpeta del usuario.** La configuración inicial de
 Paperclip ofrece instalarlo como servicio en segundo plano, y un servicio no
@@ -427,11 +432,11 @@ enlace en `/usr/local/bin`, que cualquier servicio ve. Con eso, el chequeo pasó
 
 **El setup no instalaba las conexiones.** Una conexión creada por API queda
 disponible para la organización pero no instalada para nadie, y los agentes no
-ven sus herramientas. StockScout lo dijo así: las herramientas de WhatsApp "no
+ven sus herramientas. Según StockScout, las herramientas de WhatsApp "no
 existen en este runtime". En la Mac esa instalación se había hecho desde la
 interfaz en algún momento, así que el problema nunca apareció. Ahora el setup
 instala las dos conexiones para la compañía, y las políticas deciden qué puede
-hacer cada agente: probadas una por una, las decisiones quedaron idénticas a las
+hacer cada agente. Probadas una por una, las decisiones quedaron idénticas a las
 de la Mac.
 
 **Una key equivocada quedaba pegada.** La primera vez se pegó una key del MCP que
@@ -441,7 +446,7 @@ la conexión y verifica el catálogo de nuevo, y si el servidor rechaza la key, 
 error dice qué revisar en lugar del "This app needs you to sign in" de
 Paperclip.
 
-Con las tres resueltas, StockScout corrió en Windows de punta a punta: escaneó
+Con las tres resueltas, StockScout corrió en Windows de punta a punta. Escaneó
 el inventario con las herramientas de Vercel, colocó cada lote y dejó en la tarea
 el mismo resumen que en la Mac, con los mismos números, y una tarjeta con las
 decisiones que me tocaban.
@@ -469,7 +474,7 @@ decisiones que me tocaban.
    se trata de escribir un adaptador, no de rehacer la lógica.
 6. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
    una sola cuenta que absorba cada lote completo, y evalúa cada lote por
-   separado. Lo descubrí usándolo: reportó un lote de 300 suturas como imposible
+   separado. Lo descubrí usándolo. Reportó un lote de 300 suturas como imposible
    de colocar, y mi primera idea fue dividirlo entre dos clínicas. Era un error,
    porque otro lote de la misma sutura ya estaba comprometido con una de ellas y
    ocupaba la mitad de su demanda. El motor tiene que distribuir la demanda de

@@ -1,4 +1,4 @@
-# Paperclip: research, versión extendida
+# Paperclip, research en versión extendida
 
 La versión de una página, que es la que pide el enunciado, está en
 [RESEARCH.md](RESEARCH.md).
@@ -9,76 +9,76 @@ versión **v2026.1106.0**, relevada entre el 7 y el 9 de noviembre de 2026.
 
 ## 1. Qué es y qué no es
 
-Paperclip es un **control plane open source para operar un equipo de agentes**:
-un servidor Node con interfaz en React, que se autohospeda. Los agentes los
+Paperclip es un **control plane open source para operar un equipo de agentes**,
+un servidor Node con interfaz en React que se autohospeda. Los agentes los
 aporta cada uno (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Hermes, Grok
 Build, Kimi o cualquier bot que responda un webhook), y Paperclip les agrega
 organigrama, tareas, presupuesto, etapas de revisión y un registro de todo lo
-que hacen. Ellos lo resumen así: si OpenClaw es un empleado, Paperclip es la
-compañía.
+que hacen. Ellos lo resumen diciendo que si OpenClaw es un empleado, Paperclip
+es la compañía.
 
-A primera vista parece un gestor de tareas, pero lo que tiene debajo es otra
-cosa: organigrama, gobernanza y alineación a objetivos.
+A primera vista parece un gestor de tareas, pero lo que tiene debajo es
+organigrama, gobernanza y alineación a objetivos.
 
-También aclaran lo que **no** es: no es un framework de agentes ni define cómo se
+También aclaran lo que **no** es. No es un framework de agentes ni define cómo se
 construye uno; no es un chatbot ni un gestor de prompts; no es una plataforma de
 observabilidad de modelos, y no corre el modelo.
 
-Hay una aclaración que me parece honesta y que vale repetir: no pretende servir
-para un solo agente. Su propia página recomienda omitir esta capa si se trabaja
+Hay una aclaración que me parece honesta y que vale repetir, y es que no pretende
+servir para un solo agente. Su propia página recomienda omitir esta capa si se trabaja
 con un único agente local y se revisa la salida a mano. Rinde cuando varios
 agentes comparten trabajo, presupuesto o revisores.
 
 ## 2. Cómo se organiza el trabajo
 
-**La compañía.** Es la unidad superior: tiene un objetivo, empleados que son
+**La compañía.** Es la unidad superior, y tiene un objetivo, empleados que son
 agentes, una estructura de reporte y un presupuesto mensual expresado en
 centavos. Una misma instancia puede alojar varias compañías aisladas entre sí.
 
 **Los agentes.** Cada uno tiene un adapter y su configuración (es decir, cómo se
 ejecuta), un rol, un título, una línea de reporte, capacidades, presupuesto
-propio y un estado. El organigrama es un árbol estricto: cada agente reporta a
-exactamente un responsable, salvo el CEO.
+propio y un estado. El organigrama es un árbol estricto, en el que cada agente
+reporta a exactamente un responsable, salvo el CEO.
 
-El `role` es una lista cerrada de doce valores: `ceo`, `cto`, `cmo`, `cfo`,
+El `role` es una lista cerrada de doce valores (`ceo`, `cto`, `cmo`, `cfo`,
 `security`, `engineer`, `designer`, `pm`, `qa`, `devops`, `researcher` y
-`general`. Como la taxonomía está pensada para una empresa de software, en una
+`general`). Como la taxonomía está pensada para una empresa de software, en una
 operación comercial el rol dice poco, y el significado real lo termina llevando
 el `title`, que es texto libre.
 
-**Las tareas.** Son la unidad de trabajo: título, descripción, prioridad, un
-único responsable, una tarea madre que encadena hasta el objetivo y un proyecto.
-El ciclo es `backlog → todo → in_progress → in_review → done`, más `blocked` y
-`cancelled`. El paso a `in_progress` exige tomar la tarea de forma atómica: si
-dos agentes la reclaman a la vez, uno recibe un 409 y no debe reintentar.
+**Las tareas.** Son la unidad de trabajo, y cada una tiene título, descripción,
+prioridad, un único responsable, una tarea madre que encadena hasta el objetivo
+y un proyecto. El ciclo es `backlog → todo → in_progress → in_review → done`,
+más `blocked` y `cancelled`. El paso a `in_progress` exige tomar la tarea de
+forma atómica. Si dos agentes la reclaman a la vez, uno recibe un 409 y no debe reintentar.
 
 **La revisión.** Es lo que más me interesó. Con una *execution policy* que
-define una etapa de revisión, marcar una tarea como hecha no la cierra: según la
+define una etapa de revisión, marcar una tarea como hecha no la cierra. Según la
 documentación, el runtime **intercepta la transición**, la deja en `in_review` y
 la reasigna al revisor. No depende de que el agente recuerde pedir revisión, así
 que el control es real y no una convención. Si el revisor pide cambios, vuelve
-al mismo ejecutor. Hay además un detalle fino: si un revisor agente devuelve el
+al mismo ejecutor. Hay además un detalle fino. Si un revisor agente devuelve el
 trabajo tres veces seguidas, el runtime deja de rebotarlo y se lo asigna a la
 persona responsable; si quien pide cambios es una persona, el contador se
 reinicia. El tope existe para frenar ciclos desatendidos entre agentes, no para
 limitar la revisión humana.
 
-**Las aprobaciones del board.** Son otra capa, para decisiones de la compañía:
-contratar un agente, aprobar la estrategia del CEO o un exceso de presupuesto.
-Un dato operativo útil: el CEO no puede mover tareas a `in_progress` hasta que se
-apruebe su estrategia, así que si nada arranca, la cola de aprobaciones es el
-primer lugar donde mirar.
+**Las aprobaciones del board.** Son otra capa, para decisiones de la compañía.
+Sirven para contratar un agente, aprobar la estrategia del CEO o aprobar un
+exceso de presupuesto. Un dato operativo útil es que el CEO no puede mover tareas
+a `in_progress` hasta que se apruebe su estrategia, así que si nada arranca, la
+cola de aprobaciones es el primer lugar donde mirar.
 
 **Los permisos de cada acción.** Son una tercera capa, independiente de las dos
 anteriores. Cada herramienta de una conexión queda clasificada por riesgo
 (`read`, `write`, `destructive`), pero la clasificación por sí sola no frena
-nada: la aprobación humana existe sólo si hay una política `require_approval`
+nada. La aprobación humana existe sólo si hay una política `require_approval`
 para esa herramienta y ese agente. Lo detallo en las limitaciones.
 
 **Los presupuestos.** Registran tokens y costo por compañía, agente, proyecto,
 objetivo, tarea, proveedor y modelo, con umbrales de alerta y cortes duros.
 
-**Los heartbeats.** Los agentes no corren todo el tiempo: se despiertan por
+**Los heartbeats.** Los agentes no corren todo el tiempo. Se despiertan por
 programación, por asignación de una tarea, por una mención en un comentario, por
 una invocación manual o cuando se resuelve una aprobación.
 
@@ -93,29 +93,29 @@ embebido y archivos en `~/.paperclip`; arranca en modo `local_trusted`, atado a
 127.0.0.1, en el puerto 3100. También se puede ejecutar desde el código fuente con
 pnpm, o con Docker.
 
-Tiene tres modos de despliegue: `local_trusted`, sin login y sólo en la propia
-máquina; `authenticated + private`, para una red local o Tailscale; y
-`authenticated + public`, con una URL pública explícita y controles más
+Tiene tres modos de despliegue. `local_trusted` va sin login y sólo en la propia
+máquina; `authenticated + private` sirve para una red local o Tailscale; y
+`authenticated + public` usa una URL pública explícita y controles más
 estrictos. El único despliegue en la nube que documentan es con Docker, con una
 guía para AWS ECS.
 
-Sobre el reparto de los datos, que era lo que más me interesaba: en el servidor
-propio quedan el registro de tareas, los documentos, las aprobaciones y los
+El reparto de los datos era lo que más me interesaba. En el servidor propio
+quedan el registro de tareas, los documentos, las aprobaciones y los
 secretos cifrados. Al proveedor del modelo van los prompts, el contenido de los
 archivos y los resultados de las herramientas que envía cada runtime, porque
 Paperclip no ejecuta el modelo. Las claves son propias y se le paga directamente
 al proveedor. La telemetría anónima viene **activada** y se desactiva con
-`DO_NOT_TRACK=1`. Y hay una clave maestra de secretos: si se pierde, se pierde
+`DO_NOT_TRACK=1`. Y hay una clave maestra de secretos. Si se pierde, se pierde
 todo lo que cifra.
 
 ## 4. Limitaciones
 
-Dos las declara el propio producto, y me parece correcto citarlas tal cual: los
+Dos las declara el propio producto, y me parece correcto citarlas tal cual. Los
 presupuestos se calculan sobre el gasto reportado, así que pueden excederse; y
 la revisión de una tarea no intercepta cada llamada externa, porque gobierna el
 cierre de la tarea y no cada acción.
 
-El resto lo encontré operándolo, y es lo que la documentación no cuenta:
+El resto lo encontré operándolo, y es lo que la documentación no cuenta.
 
 **El permiso de cada acción no siempre viene configurado.** Una herramienta de
 escritura pide aprobación sólo si existe una política `require_approval` para
@@ -126,9 +126,9 @@ el propio agente, y lo confirmé en la auditoría y en el código.
 
 **En Windows nativo los agentes no arrancan.** Nunca logré que uno pasara su
 chequeo de ejecución, con el CLI de Claude funcionando correctamente por fuera.
-La causa la encontré recién en una Mac: el runner nativo sólo soporta Linux y
+La causa la encontré recién en una Mac. El runner nativo sólo soporta Linux y
 macOS, así que en Windows queda únicamente el Legacy, que es el que falla. La
-salida es WSL2: con Paperclip dentro de Ubuntu, los agentes pasan el chequeo y
+salida es WSL2. Con Paperclip dentro de Ubuntu, los agentes pasan el chequeo y
 trabajan igual que en la Mac, con un detalle a tener en cuenta (el servicio de
 Paperclip no ve la carpeta del usuario, así que Claude Code tiene que estar en
 una ruta del sistema). El detalle, con las nueve hipótesis que descarté antes,
@@ -138,8 +138,8 @@ está en [`docs/BITACORA.md`](../docs/BITACORA.md).
 servidor exige que la decisión llegue con un comentario en el mismo pedido
 (`Approving a review or approval stage requires a comment`), pero el menú de
 estado manda sólo el cambio a `done` y recibe un 422, y el cuadro de mensajes
-manda sólo el comentario: con la tarea en la etapa de aprobación, la reabre en
-lugar de aprobarla. "Approval pending with You" es una etiqueta, sin botón. En
+manda sólo el comentario, así que con la tarea en la etapa de aprobación la
+reabre en lugar de aprobarla. "Approval pending with You" es una etiqueta, sin botón. En
 esta versión, esa etapa se aprueba por la API. Lo resolví convirtiendo la
 decisión en una herramienta con política `require_approval`, que sí tiene
 tarjeta con botón.
@@ -148,7 +148,7 @@ tarjeta con botón.
 respuesta a una tarjeta dispara una continuación que pide un repositorio de git
 sobre la carpeta de la corrida anterior, y falla. El Retry manual elige una
 carpeta nueva y funciona, pero la solución de fondo es que la carpeta de trabajo
-ya sea un repositorio: el setup la crea así, y desde entonces el agente sigue
+ya sea un repositorio. El setup la crea así, y desde entonces el agente sigue
 solo después de una aprobación.
 
 **La instalación es más pesada de lo que promete.** Arrastra 440 paquetes, y con
@@ -159,9 +159,9 @@ realidad estaba instalando sin mostrar progreso.
 
 **No hay conector nativo de WhatsApp, Instagram ni X.** El catálogo de
 comunicación incluye AgentMail, Resend y Slack, y los canales de chat son
-experimentales y vienen desactivados. Para el resto hay cuatro caminos: un
-servidor MCP propio, agregadores como Zapier o Composio, skills, o darle al
-agente una CLI en su espacio de trabajo.
+experimentales y vienen desactivados. Para el resto hay cuatro caminos. Se
+puede usar un servidor MCP propio, agregadores como Zapier o Composio o skills,
+o darle al agente una CLI en su espacio de trabajo.
 
 **Las conexiones se crean por API, pero no se completan por API.** La ruta que
 las activa es `/api/tool-connections/{id}`, no está documentada y la encontré
@@ -175,7 +175,7 @@ máquina con la red o la caché lentas, falla sin mencionar la descarga.
 
 **El diagnóstico útil existe, pero está oculto.** El log sólo registra
 `exitCode 1`. Qué chequeo falló y el comando exacto para reproducirlo están en
-*Agente → Harness / Runtime → Run test → Test details*: a cuatro clics, y ningún
+*Agente → Harness / Runtime → Run test → Test details*, a cuatro clics, y ningún
 mensaje de error lo menciona.
 
 **Windows es un sistema de segunda.** El propio `doctor` avisa que no hay
@@ -188,7 +188,7 @@ instala en un comando" y "se instala en un comando si todo sale bien".
 
 ---
 
-*Fuentes:* paperclip.ing/product/ y /product/open-source/, docs.paperclip.ing
+*Fuentes.* paperclip.ing/product/ y /product/open-source/, docs.paperclip.ing
 (connectors, approvals, execution policy, custom MCP servers, adapters), el
 repositorio paperclipai/paperclip y el código instalado de
 `@paperclipai/server` y `@paperclipai/shared`. Relevado entre el 7 y el 9 de
