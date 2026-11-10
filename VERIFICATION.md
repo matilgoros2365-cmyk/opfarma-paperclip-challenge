@@ -134,6 +134,15 @@ mensaje con las confirmaciones de lectura activadas, leído; con el número
 enmascarado y cada estado una sola vez. Antes, Paperclip se había negado a repetir un envío con argumentos
 idénticos a uno ya ejecutado, que es su protección contra duplicados.
 
+**La entrega desde Windows (OPF-4).** El mismo circuito, con Paperclip en Ubuntu
+dentro de WSL2 y el canal de WhatsApp en Vercel, sin credenciales en la máquina
+local. La prueba sirvió además como control: con el canal todavía sin
+credenciales y luego con una variable mal cargada, StockScout se negó a enviar y
+explicó por qué, en lugar de improvisar un destinatario. Con la configuración
+corregida, armó el borrador hacia el único número habilitado, esperó mi
+aprobación, y el mensaje llegó al celular; la plataforma mostró enviado,
+entregado y leído a las 21:36.
+
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
 handshake de suscripción, la lectura de cada estado y que una respuesta del
