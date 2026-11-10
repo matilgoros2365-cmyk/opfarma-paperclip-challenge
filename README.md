@@ -5,8 +5,13 @@ Mi resolución del desafío técnico de Paperclip.
 OpFarma es una distribuidora de insumos médicos armada como compañía de agentes.
 Los agentes detectan los lotes que se van a vencer en el depósito, buscan qué
 cliente puede consumir cada uno antes de la fecha según lo que realmente compra,
-y preparan la oferta para enviarla por WhatsApp. Una persona aprueba el margen y,
-por separado, cada mensaje.
+y le mandan la oferta por WhatsApp. El lote que ninguna cuenta absorbe se ofrece
+a clínicas nuevas con un posteo en LinkedIn, y ese posteo queda listo para que
+Grok Bot lo publique. Una persona aprueba el margen, cada mensaje y cada posteo.
+
+Cubre las tres vías del desafío. B2 (WhatsApp) con envío real, B3 (LinkedIn)
+con un dry-run del pedido exacto, y B1 (Grokbot) con el traspaso listo en la
+tarea.
 
 ## La entrega
 
@@ -54,21 +59,22 @@ normas, estudios y entrevistas que respaldan el problema están en
    │ OpFarma                   │            │  /api/mcp/inventory          │
    │                           │   MCP      │    escanear, colocar, ofertar│
    │  MarginReviewer  (qa)     │◀──────────▶│    margen: aprobación humana │
-   │        ▲                  │            │                              │
-   │        │ reporta          │            │  /api/mcp/whatsapp           │
-   │  StockScout     (general) │            │    estado y borrador: libre  │
-   │                           │            │    envío: aprobación humana  │
-   │  OPF-1  detectar          │            │                              │
-   │  OPF-2  ofertar  ◀── rev. │            │  /  la plataforma            │
-   │  OPF-3  aprobar y enviar  │            └──────────────────────────────┘
-   └───────────────────────────┘                        │
-            │                                           ▼
-            └──── una persona aprueba ─────▶  WhatsApp Cloud API
+   │        ▲                  │            │  /api/mcp/whatsapp           │
+   │        │ reporta          │            │    envío: aprobación humana  │
+   │  StockScout     (general) │            │  /api/mcp/social             │
+   │                           │            │    posteo: aprobación humana │
+   │  detectar                 │            └──────────────────────────────┘
+   │  ofertar  ◀── revisor     │                 │               │
+   │  aprobar y enviar         │                 ▼               ▼
+   │  postear en LinkedIn      │        WhatsApp Cloud API   LinkedIn (dry-run)
+   │  traspaso a Grok Bot ─────┼──MCP──▶ mcp.grokbot.dev ──▶ una persona lo pega en Grok
+   └───────────────────────────┘
 ```
 
-Separé las dos "manos" a propósito. El servidor de inventario no puede contactar
-a nadie; el de WhatsApp es el único que sale hacia afuera.
-Son riesgos distintos, así que tienen conexiones y políticas distintas.
+Separé las "manos" a propósito. El servidor de inventario no puede contactar a
+nadie; el de WhatsApp y el de redes son los únicos que salen hacia afuera. Son
+riesgos distintos, así que tienen conexiones y políticas distintas. Grokbot es
+de terceros y de sólo lectura, así que entra sin clave y sin permisos especiales.
 
 El resultado son tres controles en capas diferentes. El agente revisor valida los
 números, una persona aprueba el margen y cada envío requiere otra aprobación. Si
@@ -80,6 +86,15 @@ aprueba con una herramienta, `inventory_commit_offer`, porque la etapa de
 aprobación humana de una tarea no tiene botón en la interfaz de esta versión. El
 servidor recalcula la oferta y rechaza cualquier número distinto del motor. Los
 hallazgos están contados en [`DECISIONS.md`](DECISIONS.md).
+
+**Dónde está el review humano que pide la Tarea A.** En la tarea del envío.
+Paperclip frena dos veces la ejecución y pide aprobación, primero del margen y
+después del mensaje exacto, y lo mismo con el posteo de LinkedIn. Probé también
+la otra forma que ofrece Paperclip, una etapa de aprobación que bloquea el pase a
+*done* (OPF-2 y OPF-8 en la Mac). Funciona, pero esta versión no trae un botón
+para aprobarla desde la interfaz y sólo se puede por la API. Por eso moví la
+decisión humana a las tarjetas, que sí tienen botón y además frenan la acción,
+no sólo el cierre.
 
 ## Cómo levantarlo en unos 10 minutos
 
@@ -162,11 +177,13 @@ PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma
 ```
 
 El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
-su línea de reporte, las dos conexiones MCP con el catálogo verificado, las
-políticas de aprobación del margen y del envío, la carpeta de trabajo de los
-agentes y las tres tareas (el escaneo, la oferta con su revisor y el envío con
-las dos aprobaciones humanas). La del envío nace sin asignar, y se la asignás a
-StockScout cuando la oferta pasó la revisión. Para armar otra oferta en una
+su línea de reporte, las cuatro conexiones MCP con el catálogo verificado
+(inventario, WhatsApp, redes y Grokbot), las políticas de aprobación del margen,
+del envío y del posteo, la carpeta de trabajo de los agentes y cinco tareas. Son
+el escaneo, la oferta con su revisor, el envío con las dos aprobaciones humanas,
+el posteo en LinkedIn y el traspaso a Grok Bot. El envío y el traspaso nacen
+sin asignar, y se los asignás a StockScout cuando la oferta pasó la revisión y
+el posteo fue aprobado. Para armar otra oferta en una
 compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. El script es idempotente.
 Si algo ya existe, lo reutiliza y lo informa.
 

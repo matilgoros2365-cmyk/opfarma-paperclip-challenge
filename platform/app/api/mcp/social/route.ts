@@ -51,7 +51,10 @@ const handler = createMcpHandler((server) => {
           endpoint: LINKEDIN_ENDPOINT,
           configured: config.configured,
           publishing_enabled: config.publishingEnabled,
+          author: config.authorUrn,
           missing: config.missing,
+          problems: config.problems,
+          how_to_enable: "docs/LINKEDIN.md explains both paths. As a person, add the Share on LinkedIn product and run platform/scripts/linkedin-connect.mjs. As a company page, LinkedIn must approve the app for the Community Management API.",
           constraints: [
             "Posting as a company page requires LinkedIn to approve the app for the Community Management API (w_organization_social). Without that approval there is no token to post with.",
             "The post never names a customer and never makes a health claim. It states product, quantity, expiry and price.",
@@ -127,7 +130,7 @@ const handler = createMcpHandler((server) => {
               request: { method: "POST", url: draft.endpoint, body: draft.payload },
               headers: { "LinkedIn-Version": config.apiVersion, "X-Restli-Protocol-Version": "2.0.0" },
               why: !config.configured
-                ? `Missing ${config.missing.join(" and ")}. Posting as a company page needs LinkedIn to approve the app for the Community Management API.`
+                ? `Missing ${[...config.missing, ...config.problems].join(" ")}. See docs/LINKEDIN.md: as a person it only needs the Share on LinkedIn product; as a company page LinkedIn must approve the app for the Community Management API.`
                 : "Publishing is disabled in this deployment (SOCIAL_ALLOW_PUBLISH is not true).",
             },
           );

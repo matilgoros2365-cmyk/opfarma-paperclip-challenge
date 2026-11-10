@@ -24,25 +24,52 @@ const DEFAULT_API_VERSION = "202610";
 export interface SocialConfig {
   configured: boolean;
   publishingEnabled: boolean;
-  organizationUrn: string | null;
+  /** Quién publica, una página (urn:li:organization:...) o una persona (urn:li:person:...). */
+  authorUrn: string | null;
   apiVersion: string;
   missing: string[];
+  problems: string[];
 }
 
+const AUTHOR_URN = /^urn:li:(organization|person):[A-Za-z0-9_-]+$/;
+
+/**
+ * El autor se puede dar como LINKEDIN_AUTHOR_URN (persona o página) o, por
+ * compatibilidad, como LINKEDIN_ORGANIZATION_URN. Publicar como persona sólo
+ * exige el producto "Share on LinkedIn"; como página, la Community Management
+ * API, que LinkedIn tiene que aprobar.
+ */
 export function loadSocialConfig(env: Record<string, string | undefined> = process.env): SocialConfig {
   const token = env.LINKEDIN_ACCESS_TOKEN?.trim();
-  const org = env.LINKEDIN_ORGANIZATION_URN?.trim();
-  const missing = [
-    ...(token ? [] : ["LINKEDIN_ACCESS_TOKEN"]),
-    ...(org ? [] : ["LINKEDIN_ORGANIZATION_URN"]),
-  ];
+  const author = env.LINKEDIN_AUTHOR_URN?.trim() || env.LINKEDIN_ORGANIZATION_URN?.trim();
+  const missing = [...(token ? [] : ["LINKEDIN_ACCESS_TOKEN"]), ...(author ? [] : ["LINKEDIN_AUTHOR_URN"])];
+  const problems = author && !AUTHOR_URN.test(author)
+    ? [`LINKEDIN_AUTHOR_URN must look like urn:li:organization:123 or urn:li:person:abc, not "${author}".`]
+    : [];
   return {
-    configured: missing.length === 0,
+    configured: missing.length === 0 && problems.length === 0,
     publishingEnabled: env.SOCIAL_ALLOW_PUBLISH?.trim() === "true",
-    organizationUrn: org || null,
+    authorUrn: author || null,
     apiVersion: env.LINKEDIN_API_VERSION?.trim() || DEFAULT_API_VERSION,
     missing,
+    problems,
   };
+}
+
+/**
+ * LinkedIn interpreta el texto en su "little text format", donde \ | { } @ [ ]
+ * ( ) < > # * _ ~ son reservados. Sin escapar, "(SUT-3010)" se toma como parte
+ * de una mención y el posteo sale roto. Se escapan todos, salvo el # de las
+ * etiquetas al principio de una palabra en la línea de hashtags.
+ */
+export function toLittleText(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const hashtags = /^(#[\p{L}\p{N}_]+\s*)+$/u.test(line.trim());
+      return hashtags ? line : line.replace(/[\\|{}@[\]()<>#*_~]/g, (c) => `\\${c}`);
+    })
+    .join("\n");
 }
 
 export class SocialRefused extends Error {
@@ -78,7 +105,7 @@ export interface SocialDraft {
   draftId: string;
 }
 
-/** Sin una organización configurada, el autor queda marcado para que nadie lo confunda con uno real. */
+/** Sin un autor configurado, queda marcado para que nadie lo confunda con uno real. */
 export const PLACEHOLDER_AUTHOR = "urn:li:organization:OPFARMA_ORG_ID";
 
 function meses(daysToExpiry: number): string {
@@ -115,7 +142,7 @@ export function buildSocialDraft(
   lotId: string,
   dataset: Dataset,
   asOf: string,
-  config: Pick<SocialConfig, "organizationUrn"> = { organizationUrn: null },
+  config: Pick<SocialConfig, "authorUrn"> = { authorUrn: null },
 ): SocialDraft {
   const lot = dataset.lots.find((candidate) => candidate.lotId === lotId);
   if (!lot) throw new SocialRefused(`there is no lot ${lotId} in this inventory.`);
@@ -137,8 +164,8 @@ export function buildSocialDraft(
   }
 
   const payload: LinkedInPost = {
-    author: config.organizationUrn ?? PLACEHOLDER_AUTHOR,
-    commentary,
+    author: config.authorUrn ?? PLACEHOLDER_AUTHOR,
+    commentary: toLittleText(commentary),
     visibility: "PUBLIC",
     distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
     lifecycleState: "PUBLISHED",
