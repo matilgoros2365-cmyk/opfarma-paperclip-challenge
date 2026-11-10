@@ -93,6 +93,23 @@ check("un lote a punto de vencer no se ofrece", retired.isError);
 const blocked = await tool("inventory", "inventory_draft_offer", { lot_id: "L-2201", account_id: "ACC-NORTE" });
 check("no se arma una oferta para una cuenta bloqueada", blocked.isError);
 
+// Redes (LinkedIn). Nunca se llama a publicar con confirm true: la prueba no puede publicar nada.
+const socialTools = (await rpc("social", "tools/list", {})).json?.result?.tools?.map((t) => t.name) ?? [];
+check("redes expone sus 4 herramientas", socialTools.length === 4, socialTools.join(", "));
+
+const post = await tool("social", "social_draft_post", { lot_id: "L-6612" });
+const postId = post.data?.draft_id;
+check("el posteo de L-6612 devuelve un draft_id", !post.isError && /^wd_[0-9a-f]{20}$/.test(postId ?? ""));
+
+const otherPost = await tool("social", "social_publish_post", { lot_id: "L-6612", draft_id: "wd_00000000000000000000", confirm: false });
+check("publicar con otro draft_id se rechaza", otherPost.isError && /does not match/i.test(otherPost.text));
+
+const shortLot = await tool("social", "social_draft_post", { lot_id: "L-7703" });
+check("un lote de menos de un mes no se publica", shortLot.isError);
+
+const badHandoff = await tool("social", "social_grok_handoff", { lot_id: "L-6612", draft_id: postId ?? "", plugin_slug: "x", plugin_name: "x", plugin_url: "https://example.com/x" });
+check("el traspaso sólo acepta entradas de grokbot.dev", badHandoff.isError);
+
 // WhatsApp
 const status = await tool("whatsapp", "whatsapp_channel_status", {});
 check("el estado del canal responde", !status.isError, status.text.split("\n")[0]);
