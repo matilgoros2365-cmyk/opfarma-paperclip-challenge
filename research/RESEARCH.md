@@ -38,11 +38,10 @@ con `DO_NOT_TRACK=1`.
 sobre el gasto reportado, así que se pueden pasar, y la revisión gobierna el
 cierre de la tarea, no cada acción. El resto lo encontré usándolo:
 
-- **El permiso de cada acción es otra capa, y no siempre viene configurado.** Una
-  tool de escritura pide aprobación sólo si hay una política `require_approval`
-  para ese agente. Paperclip la crea cuando el acceso se da desde la interfaz;
-  por API no. Mi envío de WhatsApp pasaba directo aunque estuviera marcado como
-  `risk=write`, y lo detectó el propio agente.
+- **El permiso de cada acción no siempre viene configurado.** Una tool de
+  escritura pide aprobación sólo si hay una política `require_approval`, que
+  Paperclip crea cuando el acceso se da desde la interfaz, no por API. Mi envío
+  de WhatsApp pasaba directo, y lo detectó el propio agente.
 - **En Windows nativo los agentes no arrancan.** El runner nativo sólo soporta
   Linux y macOS, y el que queda, Legacy, falla en Windows. La salida es WSL2:
   con Paperclip dentro de Ubuntu, los agentes funcionan igual que en la Mac.
@@ -54,9 +53,9 @@ cierre de la tarea, no cada acción. El resto lo encontré usándolo:
   propio o un agregador como Zapier.
 - **Las conexiones se crean por API, pero el alta con credencial se termina en la
   interfaz**, y la ruta que las activa no está documentada.
-- **El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
-  respuesta a una tarjeta dispara una continuación que pide un repositorio git y
-  falla. Lo único que anduvo fue el Retry manual.
+- **El workspace aislado pide git.** Cada respuesta a una tarjeta dispara una
+  continuación que exige un repositorio git; si la carpeta no lo es, falla. Se
+  evita creándola como repositorio.
 - **El diagnóstico útil está escondido.** El log dice `exitCode 1`; la causa real
   está en *Run test → Test details*, a cuatro clics.
 

@@ -145,7 +145,9 @@ esta versión, esa etapa se aprueba por la API.
 **El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
 respuesta a una tarjeta dispara una continuación que pide un repositorio de git
 sobre la carpeta de la corrida anterior, y falla. El Retry manual elige una
-carpeta nueva y funciona.
+carpeta nueva y funciona, pero la solución de fondo es que la carpeta de trabajo
+ya sea un repositorio: el setup la crea así, y desde entonces el agente sigue
+solo después de una aprobación.
 
 **La instalación es más pesada de lo que promete.** Arrastra 440 paquetes, y con
 npm 11 deja cinco scripts de instalación sin aprobar, entre ellos el del
