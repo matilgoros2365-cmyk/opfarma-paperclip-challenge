@@ -15,9 +15,11 @@ por separado, cada mensaje.
   en Paperclip a las dos aprobaciones con tarjeta, el WhatsApp que llega y el
   aviso de Meta en la plataforma.
 - **Plataforma deployada en Vercel**, en <https://opfarma-paperclip-challenge.vercel.app>.
-  Muestra el inventario calculado en vivo por el mismo motor que usan los agentes,
-  y expone los dos servidores MCP en `/api/mcp/inventory` y `/api/mcp/whatsapp`,
-  protegidos con clave.
+  Tiene un explorador que corre el mismo motor que usan los agentes. Se elige un
+  lote y se ve qué cuenta lo consume a tiempo, por qué las demás quedan afuera,
+  el precio y el mensaje que saldría. Una barra adelanta el reloj para ver qué
+  pasa si nadie hace nada. También expone los dos servidores MCP en
+  `/api/mcp/inventory` y `/api/mcp/whatsapp`, protegidos con clave.
 - **Research de Paperclip**, de una página, en [`research/RESEARCH.md`](research/RESEARCH.md).
   La versión extendida está en [`research/PAPERCLIP.md`](research/PAPERCLIP.md).
 - **Decisiones**, de media página, en [`DECISIONS.md`](DECISIONS.md). El detalle
