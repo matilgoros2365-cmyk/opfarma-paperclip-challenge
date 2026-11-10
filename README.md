@@ -10,6 +10,10 @@ por separado, cada mensaje.
 
 ## La entrega
 
+- **Video del flujo (Loom, menos de 2 minutos):**
+  <https://www.loom.com/share/19870b3b2b5b469c8e9faae649a780d9>. De la tarea en
+  Paperclip a las dos aprobaciones con tarjeta, el WhatsApp que llega y el aviso
+  de Meta en la plataforma.
 - **Plataforma deployada en Vercel:** <https://opfarma-paperclip-challenge.vercel.app>.
   Muestra el inventario calculado en vivo por el mismo motor que usan los agentes,
   y expone los dos servidores MCP en `/api/mcp/inventory` y `/api/mcp/whatsapp`,
