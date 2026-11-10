@@ -42,7 +42,7 @@ escala.
 | Entornos donde corrió el setup | 3: Windows, macOS y Ubuntu en WSL2 |
 | Corridas del setup sobre una compañía existente, sin duplicar nada | 3 |
 | Clones limpios del repo público, instalados y compilados desde cero | 2 |
-| Mensajes reales entregados y leídos en un celular | 2, uno desde la Mac y otro desde Windows |
+| Mensajes reales entregados en un celular | 4, dos desde la Mac y dos desde Windows |
 | Veces que el agente se negó a enviar con una configuración incorrecta, en vez de improvisar | 2 |
 | Inconsistencias de documentación encontradas y corregidas | 6 |
 | Informes y estudios del problema leídos en su texto original | 9: 7 completos y 2 hasta sus conclusiones |
@@ -204,6 +204,22 @@ explicó por qué, en lugar de improvisar un destinatario. Con la configuración
 corregida, armó el borrador hacia el único número habilitado, esperó mi
 aprobación, y el mensaje llegó al celular; la plataforma mostró enviado,
 entregado y leído a las 21:36.
+
+**Las dos aprobaciones con tarjeta, sin terminal (OPF-5 y OPF-6, Windows).**
+Con la aprobación del margen convertida en herramienta, corrí el flujo nuevo de
+punta a punta con el lote L-8890:
+
+| Paso | Quién | Qué pasó |
+| --- | --- | --- |
+| OPF-5 | StockScout | Armó la oferta: $7.120 por unidad, 32% de margen, $427.200 |
+| OPF-5 | MarginReviewer | Recalculó consumo, piso y cuenta desde el dataset; aprobó, y Paperclip cerró la tarea sola |
+| OPF-6 | StockScout | Llamó a `inventory_commit_offer` con los números del motor; Paperclip la frenó con una tarjeta |
+| OPF-6 | Yo | Aprobé el margen con **Approve & run** |
+| OPF-6 | StockScout | Verificó que la ventana de 24 horas estuviera abierta, armó el borrador y pidió el envío |
+| OPF-6 | Yo | Aprobé el mensaje con **Approve & run** |
+| Meta | — | El mensaje llegó al celular; la plataforma mostró enviado y entregado |
+
+Ninguna corrida necesitó Retry, y no hizo falta abrir una terminal.
 
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
