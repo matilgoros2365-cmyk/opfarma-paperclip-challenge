@@ -293,7 +293,7 @@ await ensureInstalled(whatsapp, "OpFarma WhatsApp");
 
 /* -------------------------------------------------------------------------- */
 
-log.step("Permisos del envío");
+log.step("Permisos del envío y del margen");
 
 /*
  * Que Paperclip clasifique whatsapp_send_message como risk=write no frena nada.
@@ -309,43 +309,82 @@ log.step("Permisos del envío");
  * conditions.actor. El nombre es único por compañía, así que se saltea si ya
  * existe y el script sigue siendo idempotente.
  */
-const sendCatalog = await api("GET", `/tool-connections/${whatsapp.id}/catalog`);
-const sendEntry = (sendCatalog?.catalog ?? []).find((t) => t.toolName === "whatsapp_send_message");
+const policiesResponse = await api("GET", `/companies/${CID}/tools/policies`);
+const policies = Array.isArray(policiesResponse) ? policiesResponse : (policiesResponse?.policies ?? []);
 
+async function catalogEntry(connection, toolName) {
+  const catalog = await api("GET", `/tool-connections/${connection.id}/catalog`);
+  return (catalog?.catalog ?? []).find((t) => t.toolName === toolName);
+}
+
+async function ensurePolicy(name, policyType, connection, entry, agentId, description) {
+  if (policies.some((p) => p.name === name)) {
+    log.reuse(name);
+    return;
+  }
+  await api("POST", `/companies/${CID}/tools/policies`, {
+    name,
+    description,
+    policyType,
+    priority: 0,
+    enabled: true,
+    selectors: { connectionId: connection.id, catalogEntryId: entry.id },
+    conditions: { actor: { agentId } },
+  });
+  log.ok(name);
+}
+
+const sendEntry = await catalogEntry(whatsapp, "whatsapp_send_message");
 if (!sendEntry) {
   log.warn("whatsapp_send_message no está en el catálogo: no se pudo configurar el permiso del envío.");
 } else {
-  const policiesResponse = await api("GET", `/companies/${CID}/tools/policies`);
-  const policies = Array.isArray(policiesResponse) ? policiesResponse : (policiesResponse?.policies ?? []);
-
-  async function ensurePolicy(name, policyType, agentId, description) {
-    if (policies.some((p) => p.name === name)) {
-      log.reuse(name);
-      return;
-    }
-    await api("POST", `/companies/${CID}/tools/policies`, {
-      name,
-      description,
-      policyType,
-      priority: 0,
-      enabled: true,
-      selectors: { connectionId: whatsapp.id, catalogEntryId: sendEntry.id },
-      conditions: { actor: { agentId } },
-    });
-    log.ok(name);
-  }
-
   await ensurePolicy(
     "ask-first:whatsapp_send_message:StockScout",
     "require_approval",
+    whatsapp,
+    sendEntry,
     scout.id,
     "Aprobacion humana antes de que StockScout envie un mensaje por WhatsApp.",
   );
   await ensurePolicy(
     "block:whatsapp_send_message:MarginReviewer",
     "block",
+    whatsapp,
+    sendEntry,
     reviewer.id,
     "El revisor valida ofertas, nunca envia mensajes al cliente.",
+  );
+}
+
+/*
+ * La aprobación del margen también es una herramienta con require_approval, y
+ * no una etapa "approval" de la política de ejecución: en Paperclip
+ * v2026.1106.0 esa etapa exige un comentario en el mismo pedido que el cambio
+ * de estado, y ningún control de la interfaz lo manda, así que sólo se podía
+ * aprobar por la API. La tarjeta de una herramienta sí tiene botón.
+ */
+const commitEntry = await catalogEntry(inventory, "inventory_commit_offer");
+if (!commitEntry) {
+  log.warn(
+    "inventory_commit_offer no está en el catálogo: el servidor MCP es anterior a la aprobación del margen. " +
+      "Actualizalo y volvé a correr el script.",
+  );
+} else {
+  await ensurePolicy(
+    "ask-first:inventory_commit_offer:StockScout",
+    "require_approval",
+    inventory,
+    commitEntry,
+    scout.id,
+    "Aprobacion humana del precio y el margen antes de armar el mensaje al cliente.",
+  );
+  await ensurePolicy(
+    "block:inventory_commit_offer:MarginReviewer",
+    "block",
+    inventory,
+    commitEntry,
+    reviewer.id,
+    "El revisor valida la oferta; el margen lo aprueba una persona.",
   );
 }
 
@@ -380,35 +419,48 @@ await ensureIssue(
   { priority: "high" },
 );
 
-// La tarea con el gate. Dos etapas de naturaleza distinta: primero el agente
-// revisor valida los números, después una persona aprueba el margen. El runtime
-// intercepta el pase a done y lo rutea solo.
+// Las dos tareas de una oferta. El lote se elige con OFFER_LOT (por defecto
+// L-4028), así se puede armar otra oferta en una compañía que ya mandó una.
+//
+// La primera la impone el runtime: StockScout arma la oferta y, al cerrarla,
+// Paperclip la intercepta y la pasa al revisor. La segunda tiene las dos
+// decisiones humanas, cada una con su tarjeta de aprobación: el margen
+// (inventory_commit_offer) y el mensaje exacto (whatsapp_send_message). Nace
+// sin asignar y en backlog: arranca cuando una persona se la asigna a
+// StockScout, después de la revisión, y así las tarjetas no vencen esperando.
+const LOT = (process.env.OFFER_LOT ?? "L-4028").trim();
+
 await ensureIssue(
-  "Validar la colocacion del lote L-4028 y aprobar el margen",
-  "Construir la oferta con inventory_draft_offer para el lote L-4028 y la cuenta que el motor " +
-    "habilito. Adjuntar el payload completo al hilo: ajuste de consumo, precio, margen, lo que " +
-    "ahorra el cliente y lo que pagaria un liquidador. El revisor valida absorcion, piso de precio " +
-    "y estado de cuenta. Despues la aprobacion final es humana: no se puede marcar done sin eso.",
+  `Armar y revisar la oferta del lote ${LOT}`,
+  `Construir la oferta con inventory_draft_offer para el lote ${LOT} y la cuenta que el motor ` +
+    "habilito. Adjuntar al hilo el payload completo: ajuste de consumo, precio, margen, lo que " +
+    "ahorra el cliente, lo que pagaria un liquidador y commit_arguments. Despues marcar la tarea " +
+    "como done: Paperclip la pasa al revisor, que valida absorcion, piso de precio y estado de cuenta.",
   {
     priority: "critical",
     executionPolicy: {
       mode: "normal",
       commentRequired: true,
-      stages: [
-        { type: "review", participants: [{ type: "agent", agentId: reviewer.id }] },
-        { type: "approval", participants: [{ type: "user", userId: "local-board" }] },
-      ],
+      stages: [{ type: "review", participants: [{ type: "agent", agentId: reviewer.id }] }],
     },
   },
 );
 
 await ensureIssue(
-  "Enviar la oferta aprobada del lote L-4028 por WhatsApp",
-  "Con la oferta ya aprobada, llamar whatsapp_channel_status, despues whatsapp_draft_message con el " +
-    "message_body de la oferta, y adjuntar el draft_id y el payload al hilo. Recien entonces " +
-    "whatsapp_send_message con ese draft_id y confirm true. Ese ultimo llamado pide aprobacion " +
-    "humana en la conexion: no se puede saltear.",
-  { priority: "high" },
+  `Aprobar el margen y enviar la oferta del lote ${LOT} por WhatsApp`,
+  [
+    `La oferta del lote ${LOT} ya paso por el revisor. Pasos, en este orden:`,
+    "1. inventory_draft_offer de nuevo para el mismo lote y cuenta, y despues inventory_commit_offer " +
+      "con commit_arguments sin tocar ningun numero. Ese llamado pide aprobacion humana del margen: esperarla.",
+    "2. whatsapp_channel_status. Si declared.allowedRecipients tiene numeros, el destinatario de la prueba " +
+      "es el unico de esa lista; si no, el whatsapp de la cuenta.",
+    "3. whatsapp_draft_message con el message_body de la oferta como texto (dentro de la ventana de 24 " +
+      "horas) o con whatsapp_template fuera de ella. Adjuntar draft_id y texto exacto.",
+    "4. whatsapp_send_message con ese draft_id y confirm true. Pide aprobacion humana del mensaje: esperarla.",
+    "5. Un minuto despues, whatsapp_delivery_status, y dejar en el hilo si se entrego y si se leyo.",
+    "Si una aprobacion se rechaza o un envio falla, no reintentar: reportarlo y pasar a blocked.",
+  ].join("\n"),
+  { priority: "high", status: "backlog", assigneeAgentId: null },
 );
 
 /* -------------------------------------------------------------------------- */
@@ -418,8 +470,8 @@ console.log(`
 
   Compañía   OpFarma (${company.issuePrefix}) — ${API.replace("/api", "")}/${company.issuePrefix}/dashboard
   Agentes    MarginReviewer (qa) ← StockScout (general)
-  Tareas     3, una con review de agente + aprobación humana
-  Conexiones Inventario y WhatsApp; el envío pide aprobación humana
+  Tareas     3: el escaneo, la oferta con su revisor y el envío con dos aprobaciones humanas
+  Conexiones Inventario y WhatsApp; el margen y el envío piden aprobación humana
 
   Los agentes nacen pausados: nada corre ni gasta hasta reanudarlos.
 `);

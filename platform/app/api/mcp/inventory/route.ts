@@ -1,11 +1,11 @@
 /**
  * MCP server: OpFarma inventory. One of two "hands" the company's agents use.
  *
- * Everything here is READ-ONLY on the business: it looks at inventory and
- * history and proposes. Nothing in this file reaches a customer. That is why
- * all three tools are allowed in Paperclip, while the single tool that can
- * reach a phone lives in the other MCP server and requires human approval
- * (a require_approval policy that scripts/setup-company.mjs creates).
+ * Nothing in this file reaches a customer. Three tools only read inventory and
+ * history and propose. The fourth, inventory_commit_offer, is the human
+ * decision on the margin: Paperclip holds it for approval (a require_approval
+ * policy that scripts/setup-company.mjs creates), the same way it holds the
+ * only tool that can reach a phone, in the other MCP server.
  *
  * The guardrail that matters is in lib/expiry/offer.ts, not in any prompt:
  * inventory_draft_offer cannot build an offer for an account the engine
@@ -14,6 +14,7 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
+import { commitOffer, marginPercentOf, OfferMismatch } from "@/lib/expiry/commit";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { placeLot, scanInventory } from "@/lib/expiry/engine";
 import { buildOffer, offerMessage, OfferRefused } from "@/lib/expiry/offer";
@@ -27,6 +28,9 @@ export const maxDuration = 30;
 function findLot(lotId: string) {
   return dataset.lots.find((lot) => lot.lotId === lotId);
 }
+
+const REFUSAL_RULE =
+  "Qualification is by consumption rate, compatibility and account standing. A deeper discount does not fix an account that cannot use the stock — it only moves the loss.";
 
 const SEED_NOTE =
   "Data source: seeded dataset (platform/data/seed.json), not a live ERP. Lot and expiry data is exactly what no public API exposes.";
@@ -177,8 +181,15 @@ const handler = createMcpHandler((server) => {
               language: template.language,
               variables: offerTemplateVariables(offer, template),
             },
+            commit_arguments: {
+              lot_id: offer.lotId,
+              account_id: offer.accountId,
+              unit_price: offer.money.offerUnitPrice,
+              margin_percent: marginPercentOf(offer),
+              line_total: offer.money.lineTotal,
+            },
             next_step:
-              "Attach this to the task for review. Once a human approves the margin, pass whatsapp_template to whatsapp_draft_message (use message_body as text only inside a 24h window the customer opened), then whatsapp_send_message. That call asks a human for approval before anything leaves.",
+              "Attach this to the task for review. After review, call inventory_commit_offer with commit_arguments exactly as given: that call asks a human to approve the margin. Only then pass whatsapp_template to whatsapp_draft_message (use message_body as text only inside a 24h window the customer opened), then whatsapp_send_message, which asks a human to approve the message.",
           },
         );
       } catch (error) {
@@ -186,7 +197,73 @@ const handler = createMcpHandler((server) => {
           return refuse(error.message, {
             reasons: error.reasons,
             candidate: error.candidate,
-            rule: "Qualification is by consumption rate, compatibility and account standing. A deeper discount does not fix an account that cannot use the stock — it only moves the loss.",
+            rule: REFUSAL_RULE,
+          });
+        }
+        return fail(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "inventory_commit_offer",
+    {
+      title: "Approve the margin of an offer",
+      description:
+        "Fix the price and margin of one offer, as a human decision. Pass the commit_arguments that inventory_draft_offer returned, unchanged: lot, account, unit price, margin in percent and line total. The server recomputes the offer and refuses any number that differs from the engine, so what the human approves is exactly what the code calculated. In Paperclip this call is held for human approval. Returns a commitment_id; draft the WhatsApp message only after it.",
+      inputSchema: z.object({
+        lot_id: z.string().describe("The lot, e.g. L-8890."),
+        account_id: z.string().describe("The account, e.g. ACC-PARQUE."),
+        unit_price: z.number().describe("Offer price per unit, in pesos, as returned by inventory_draft_offer."),
+        margin_percent: z.number().describe("Margin over cost in percent (5 means 5%), as returned by inventory_draft_offer."),
+        line_total: z.number().describe("Total for the whole lot, in pesos, as returned by inventory_draft_offer."),
+      }),
+    },
+    async ({ lot_id, account_id, unit_price, margin_percent, line_total }): Promise<ToolResult> => {
+      try {
+        const lot = findLot(lot_id);
+        if (!lot) {
+          return refuse(`there is no lot ${lot_id} in this inventory.`, {
+            known_lots: dataset.lots.map((entry) => entry.lotId),
+          });
+        }
+
+        const asOf = asOfDate();
+        const { offer, commitment } = commitOffer(
+          lot,
+          account_id,
+          { unitPrice: unit_price, marginPercent: margin_percent, lineTotal: line_total },
+          dataset,
+          asOf,
+        );
+        const template = activeOfferTemplate();
+
+        return ok(
+          `Margin approved for ${offer.accountName}: ${lot_id} at $${unit_price} per ${offer.unit}, ${margin_percent}% margin, $${line_total} in total. Nothing has been sent.`,
+          {
+            commitment_id: commitment.commitmentId,
+            commitment,
+            message_body: offerMessage(offer),
+            whatsapp_template: {
+              to: offer.whatsapp,
+              kind: "template",
+              template_name: template.name,
+              language: template.language,
+              variables: offerTemplateVariables(offer, template),
+            },
+            next_step:
+              "Record the commitment_id in the task. Then whatsapp_draft_message with this exact offer, and whatsapp_send_message, which asks a human to approve the message.",
+          },
+        );
+      } catch (error) {
+        if (error instanceof OfferMismatch) {
+          return refuse(error.message, { mismatches: error.mismatches });
+        }
+        if (error instanceof OfferRefused) {
+          return refuse(error.message, {
+            reasons: error.reasons,
+            candidate: error.candidate,
+            rule: REFUSAL_RULE,
           });
         }
         return fail(error);

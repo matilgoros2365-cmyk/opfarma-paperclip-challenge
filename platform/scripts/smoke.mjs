@@ -61,7 +61,7 @@ check("con una clave incorrecta, WhatsApp responde 401", (await rpc("whatsapp", 
 
 // Catálogo
 const invTools = (await rpc("inventory", "tools/list", {})).json?.result?.tools?.map((t) => t.name) ?? [];
-check("el inventario expone sus 3 herramientas", invTools.length === 3, invTools.join(", "));
+check("el inventario expone sus 4 herramientas", invTools.length === 4, invTools.join(", "));
 const waTools = (await rpc("whatsapp", "tools/list", {})).json?.result?.tools?.map((t) => t.name) ?? [];
 check("WhatsApp expone sus 4 herramientas", waTools.length === 4, waTools.join(", "));
 
@@ -79,6 +79,13 @@ const offer = await tool("inventory", "inventory_draft_offer", { lot_id: "L-4028
 const template = offer.data?.whatsapp_template;
 check("la oferta de L-4028 trae su plantilla con variables", !offer.isError && Array.isArray(template?.variables) && template.variables.length > 0);
 check("la oferta de L-4028 sale a $1.260 por unidad", offer.text.includes("1260") || offer.text.includes("1.260"));
+
+const commitArgs = offer.data?.commit_arguments;
+const committed = await tool("inventory", "inventory_commit_offer", commitArgs ?? {});
+check("el margen de L-4028 se fija con los números del motor", !committed.isError && /^oc_[0-9a-f]{20}$/.test(committed.data?.commitment_id ?? ""));
+
+const inflated = await tool("inventory", "inventory_commit_offer", { ...(commitArgs ?? {}), margin_percent: 12 });
+check("un margen distinto del motor se rechaza", inflated.isError && /does not match the engine/i.test(inflated.text));
 
 const retired = await tool("inventory", "inventory_draft_offer", { lot_id: "L-7703", account_id: "ACC-LABCENTRO" });
 check("un lote a punto de vencer no se ofrece", retired.isError);
