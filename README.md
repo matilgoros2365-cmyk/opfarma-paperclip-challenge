@@ -30,6 +30,8 @@ tarea.
 - **Decisiones**, de media página, en [`DECISIONS.md`](DECISIONS.md). El detalle
   técnico de cada obstáculo está en [`docs/BITACORA.md`](docs/BITACORA.md).
 - **Cómo lo verifiqué**, en [`VERIFICATION.md`](VERIFICATION.md).
+- **Cada decisión con sus alternativas**, en el
+  [registro de decisiones](docs/REGISTRO-DE-DECISIONES.md).
 - **Por qué tres canales y por qué LinkedIn**, con fuentes, en
   [`research/CANALES.md`](research/CANALES.md).
 - **Cómo pasar LinkedIn de la simulación a publicar de verdad**, en

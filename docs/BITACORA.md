@@ -6,7 +6,11 @@ lo resolví.
 
 ## Qué elegí y por qué
 
-Elegí la **opción B2, WhatsApp**, a través de la Cloud API de Meta.
+Empecé por la **opción B2, WhatsApp**, a través de la Cloud API de Meta, y al
+final sumé las otras dos, **B3 con LinkedIn** y **B1 con Grokbot**. Cómo llegué
+a las tres está más abajo, en "Las otras dos vías", y el porqué con fuentes en
+[`research/CANALES.md`](../research/CANALES.md). Cada decisión con sus
+alternativas está en el [registro de decisiones](REGISTRO-DE-DECISIONES.md).
 
 La elegí porque el enunciado acepta como ideal "evidencia de envío **o** de
 flujo listo para aprobar por un humano", y porque el número de prueba de Meta no
@@ -67,7 +71,7 @@ explica por qué ese paso no se automatiza.
 
 ## Qué funcionó
 
-El proyecto quedó cubierto por **186 tests**, que abarcan los tramos de
+El proyecto quedó cubierto por **209 tests**, que abarcan los tramos de
 vencimiento, el consumo calculado a partir del historial de compras, el piso de
 precio, los errores de la Graph API simulados y una verificación independiente
 del motor, descripta en [`VERIFICATION.md`](../VERIFICATION.md). Me ocupé de que
@@ -340,6 +344,11 @@ respuesta. Hay un dato que verifiqué en el código. Aunque el agente quedaba en
 estado `error` después de cada falla, el sistema sólo omite a los agentes
 pausados o dados de baja, así que el siguiente Retry se ejecutaba igual.
 
+**Cómo quedó resuelto.** La solución de fondo era que la carpeta de trabajo de
+los agentes ya fuera un repositorio de git antes de la primera corrida. El setup
+ahora la crea así, con un commit vacío. En Windows, desde ese cambio, el agente
+siguió solo después de cada aprobación, sin un solo Retry.
+
 ### El envío real, y lo que respondió Meta
 
 Para pasar del dry-run a un envío real armé una app de prueba en Meta. Ahí
@@ -451,6 +460,107 @@ el inventario con las herramientas de Vercel, colocó cada lote y dejó en la ta
 el mismo resumen que en la Mac, con los mismos números, y una tarjeta con las
 decisiones que me tocaban.
 
+### La aprobación del margen no tenía botón
+
+La tarea de la oferta tenía una etapa de aprobación humana en su política de
+ejecución, la que impide marcarla como terminada sin una persona. En la Mac, al
+intentar aprobarla desde la interfaz, Paperclip respondió con un error. Cambiar
+el estado a *done* devolvía un 422, y escribir el comentario en el cuadro de
+mensajes reabría la tarea en lugar de aprobarla.
+
+Lo busqué en el código. El servidor exige que la decisión llegue junto con un
+comentario en el mismo pedido (`Approving a review or approval stage requires a
+comment`), y ningún control de la interfaz manda las dos cosas juntas. La
+etiqueta "Approval pending with You" no tiene botón. En esta versión, esa etapa
+sólo se aprueba por la API.
+
+Tenía tres caminos.
+
+| Camino | Qué tenía de bueno | Por qué no |
+| --- | --- | --- |
+| Aprobar por la API, con un comando | Usa la etapa tal como está pensada | Saca la decisión de Paperclip, y en el video se ve una terminal |
+| Una aprobación del board, con botón en la bandeja | Tiene botón | No frena nada por sí sola, depende de que el agente espere |
+| Una herramienta con política `require_approval` | Tiene botón y Paperclip frena la acción | Hubo que construirla |
+
+Elegí la tercera. `inventory_commit_offer` recibe el lote, la cuenta, el precio,
+el margen y el total, y Paperclip la frena con una tarjeta. Para que lo aprobado
+sea lo que calculó el código, el servidor recalcula la oferta y rechaza cualquier
+número distinto del motor. Es el mismo principio que el `draft_id` del WhatsApp.
+
+Con eso, la tarea del envío pasó a tener dos tarjetas, primero el margen y
+después el mensaje. Lo probé en Windows de punta a punta (OPF-5 y OPF-6), y en el
+README dejé explicado dónde está el review humano que pide la Tarea A.
+
+### El canal real estaba repartido entre dos lugares
+
+Cuando probé el circuito desde Windows, el canal de Vercel respondió en modo
+borrador. No tenía las credenciales de Meta. La Mac mandaba con su propio token,
+guardado en su `.env.local` y en un servidor local, y ese token había vencido a
+las pocas horas.
+
+Pasé las credenciales a Vercel, para que cualquier instalación de Paperclip
+mandara por el mismo canal. En el camino aparecieron dos errores de carga. Una
+variable quedó guardada como secreta con un valor que no era `true`, y otra
+quedó sin el número. Las dos veces StockScout se negó a enviar y explicó qué
+faltaba, en lugar de improvisar un destinatario. Después reemplacé el token de 24
+horas por uno permanente, de un usuario del sistema de Meta, y la página explica
+en castellano qué pasa si alguna vez vence.
+
+### Las otras dos vías
+
+Con WhatsApp funcionando, sumé LinkedIn y Grokbot. Las elegí para que contaran la
+misma historia. WhatsApp coloca el lote en la cuenta que ya lo consume; LinkedIn
+lo ofrece a clínicas nuevas cuando ninguna cuenta lo absorbe; y Grokbot recibe
+ese posteo para que lo publique un agente de terceros.
+
+**LinkedIn.** Publicar como página de empresa exige que LinkedIn apruebe la app,
+así que lo simulé de forma creíble. El servidor arma el pedido exacto a la API,
+con su `draft_id`, y publicar pasa por una tarjeta de aprobación. Sin
+credenciales devuelve el dry-run. Leyendo la documentación encontré algo que
+habría roto el primer posteo real. LinkedIn trata los paréntesis, el `#` y otros
+caracteres como reservados, y "(SUT-3010)" se habría leído como parte de una
+mención. Ahora se escapan solos. El camino para publicar de verdad quedó en
+[`LINKEDIN.md`](LINKEDIN.md).
+
+Probé el control también. Cambié el texto del posteo con la tarjeta pendiente, la
+rechacé, y StockScout registró que no se publicó nada. Al rehacerlo, el
+`draft_id` era otro, porque el texto había cambiado.
+
+**Grokbot.** Esperaba una herramienta que publicara. Es otra cosa, un directorio
+comunitario de plugins para Grok Bot, el producto de agentes de xAI. Grok Bot no
+tiene una API para recibir órdenes de otro sistema, pero el directorio sí tiene
+un servidor MCP público. Paperclip se conecta a él, el agente busca el plugin que
+sirve, explica por qué lo eligió y arma el paquete con el posteo aprobado, para
+que una persona lo pegue en Grok. El propio directorio pide que sus prompts nunca
+se ejecuten solos, y el agente los transcribió como contenido de referencia, sin
+seguir sus instrucciones.
+
+### Un tercer rol, y lo que mostró
+
+Con LinkedIn y Grokbot, StockScout hacía todo. Separé el área de growth en un
+agente nuevo, GrowthScout, y armé una matriz de permisos. Cada agente puede usar
+sólo las herramientas de su área, y lo que decide algo pide aprobación humana.
+
+Para probarlo le pedí a StockScout que publicara en LinkedIn (OPF-10). Armó el
+borrador, que le está permitido, y al intentar publicar Paperclip respondió que
+la herramienta no existía. Un bloqueo no es una regla que el agente pueda
+ignorar, porque Paperclip le saca la herramienta de la lista. Es uno de los
+hallazgos más útiles sobre Paperclip, y lo sumé a la investigación.
+
+### La prueba de los 10 minutos
+
+Seguí el README al pie de la letra con un usuario nuevo de Linux, midiendo cada
+paso. Entró en tiempo, pero encontré cuatro cosas que trababan a alguien que
+llega de cero.
+
+- `npm install -g` de Claude Code falla en Linux sin permisos de administrador.
+  Ahora el README usa el instalador oficial.
+- `npx paperclipai run` no arranca una instalación nueva fuera de una terminal
+  interactiva. Ahora se usa `npx paperclipai onboard --yes`.
+- Si faltaban los servidores MCP, el setup fallaba con un error que no orientaba.
+  Ahora lo chequea antes y dice qué hacer.
+- El token de administración sobraba en la instalación local, y lo saqué.
+
 ## Qué haría la semana que viene
 
 1. **Sacar la clave de la URL.** Hoy la clave del MCP viaja como parámetro de
@@ -458,32 +568,28 @@ decisiones que me tocaban.
    porque `config` y `transportConfig` rechazan campos sensibles y el flujo de
    cuenta sólo existe en la interfaz, pero una URL con clave queda registrada en
    los logs de cualquier proxy intermedio, y un header no.
-2. **Pasar del número de prueba a uno propio.** Implica verificar el portfolio
-   de negocio con la constancia fiscal, cargar un medio de pago (los mensajes
-   iniciados por la empresa se cobran por conversación) y usar un token de
-   usuario del sistema, porque el de la consola vence a las 24 horas. Además,
-   una oferta iniciada por OpFarma necesita una plantilla aprobada por Meta.
-3. **Cerrar el circuito con el webhook de estado de Meta**, para que la tarea no
-   termine en "enviado" sino en "entregado" o "leído", y que un rechazo vuelva al
-   hilo como evidencia.
-4. **Darle a la compañía un proyecto con workspace de git.** Es lo que pide el
-   error de las continuaciones, y eliminaría el Retry manual después de cada
-   respuesta a una tarjeta.
-5. **Reemplazar el dataset de ejemplo por el sistema de gestión real.** El motor
+2. **Pasar WhatsApp a un número propio**, con el portfolio de negocio verificado,
+   un medio de pago y una plantilla aprobada. El paso a paso está en
+   [`PRODUCCION.md`](PRODUCCION.md).
+3. **Publicar en LinkedIn de verdad**, primero como persona y después como página,
+   cuando LinkedIn apruebe la app. Está en [`LINKEDIN.md`](LINKEDIN.md).
+4. **Que las tareas se creen solas.** Una rutina de Paperclip que escanee el
+   inventario cada mañana y abra una tarea por cada lote que conviene mover, y
+   que la tarea del envío se abra sola cuando el revisor aprueba la oferta.
+5. **Que el webhook le avise a la tarea.** Hoy el agente consulta la entrega un
+   minuto después. Si Meta avisa que el cliente leyó o respondió, la tarea
+   tendría que actualizarse sola.
+6. **Reemplazar el dataset de ejemplo por el sistema de gestión real.** El motor
    consume una interfaz acotada (productos, lotes, cuentas y compras), así que
    se trata de escribir un adaptador, no de rehacer la lógica.
-6. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
+7. **Que el motor reparta la demanda entre lotes del mismo producto.** Hoy busca
    una sola cuenta que absorba cada lote completo, y evalúa cada lote por
    separado. Lo descubrí usándolo. Reportó un lote de 300 suturas como imposible
    de colocar, y mi primera idea fue dividirlo entre dos clínicas. Era un error,
    porque otro lote de la misma sutura ya estaba comprometido con una de ellas y
-   ocupaba la mitad de su demanda. El motor tiene que distribuir la demanda de
-   cada cuenta entre todos los lotes del mismo producto, consumiendo primero el
-   que vence antes, poder dividir un lote entre varias cuentas, y
-   `inventory_draft_offer` tiene que aceptar una cantidad.
-7. **Agrupar las ofertas por cliente.** Sanatorio del Parque terminó con tres
-   ofertas separadas. Un solo mensaje por cliente es más claro para quien lo
-   recibe y reduce el costo por conversación.
-8. **Reportar el bloqueo de Windows al equipo de Paperclip.** Nueve hipótesis
-   descartadas con evidencia, la causa en el código y un comando reproducible
-   constituyen un issue útil.
+   ocupaba la mitad de su demanda.
+8. **Agrupar las ofertas por cliente.** Sanatorio del Parque terminó con varias
+   ofertas separadas. Un solo mensaje por cliente es más claro y cuesta menos.
+9. **Reportarle a Paperclip lo que encontré**, con la causa en el código y un
+   comando reproducible. El bloqueo de Windows y la etapa de aprobación sin botón
+   son los dos más útiles.
