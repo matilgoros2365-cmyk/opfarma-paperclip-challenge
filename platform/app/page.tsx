@@ -171,8 +171,9 @@ async function Company() {
           números y no puede enviar mensajes.
         </p>
         <p>
-          Tres tareas. Detectar los lotes en riesgo, armar y revisar la oferta, y aprobar el margen y el mensaje antes de
-          mandarla por WhatsApp.
+          Cinco tareas. Detectar los lotes en riesgo, armar y revisar la oferta, aprobar el margen y el mensaje antes de
+          mandarla por WhatsApp, publicar en LinkedIn el lote que ninguna cuenta absorbe, y dejar ese posteo listo para
+          Grok Bot.
         </p>
         <p className="notice">
           Paperclip corre en una computadora y esta página no lo alcanza, así que acá no se ve en vivo. Las corridas, las

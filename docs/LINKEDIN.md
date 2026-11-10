@@ -45,7 +45,7 @@ El código es el mismo para los dos. Sólo cambia la variable `LINKEDIN_AUTHOR_U
 El script hace el inicio de sesión con LinkedIn en tu computadora y te devuelve
 las variables. No guarda nada y sólo habla con LinkedIn.
 
-En una terminal, desde la raíz del repo (en macOS o Linux):
+En una terminal, desde la raíz del repo, en macOS o Linux.
 
 ```bash
 cd platform && read -rs -p "Client ID: " LINKEDIN_CLIENT_ID; echo; read -rs -p "Client Secret: " LINKEDIN_CLIENT_SECRET; echo; LINKEDIN_CLIENT_ID="$LINKEDIN_CLIENT_ID" LINKEDIN_CLIENT_SECRET="$LINKEDIN_CLIENT_SECRET" node scripts/linkedin-connect.mjs; unset LINKEDIN_CLIENT_ID LINKEDIN_CLIENT_SECRET

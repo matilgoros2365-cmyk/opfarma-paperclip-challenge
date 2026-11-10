@@ -14,6 +14,9 @@ cruzar cada lote con lo que consume cada cuenta.
   público, y Grok Bot no recibe órdenes de otros sistemas. El agente elige el
   plugin y deja el traspaso listo para que una persona lo pegue en Grok.
 
+Las fuentes y el razonamiento de cada elección están en
+[`research/CANALES.md`](research/CANALES.md).
+
 El precio lo calcula código con tests, no el modelo, y cada `draft_id` es el
 hash de lo que sale, así que sale exactamente lo que se aprobó.
 
