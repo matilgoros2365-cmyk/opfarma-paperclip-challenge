@@ -86,15 +86,21 @@ function meses(daysToExpiry: number): string {
   return n === 1 ? "30 días" : `${n} meses`;
 }
 
+function minuscula(nombre: string): string {
+  return nombre.charAt(0).toLowerCase() + nombre.slice(1);
+}
+
 function commentaryFor(p: Placement, unit: string): string {
   const pricing = p.pricing!;
   const pct = Math.round(pricing.discountPct * 100);
   return [
-    `Tenemos ${cantidad(p.quantity, unit)} de ${p.productName} (${p.sku}) que vencen el ${fecha(p.expiry)}, con ${pct}% de descuento sobre la lista.`,
+    `¿En tu servicio usan ${minuscula(p.productName)}? Tenemos un lote que te puede servir.`,
     "",
-    `El precio es ${pesos(pricing.offerPrice)} por ${unit}, contra ${pesos(pricing.listPrice)} de lista. Le conviene a un servicio que lo use en los próximos ${meses(p.daysToExpiry)}, para terminarlo con tiempo antes del vencimiento.`,
+    `Son ${cantidad(p.quantity, unit)} (${p.sku}) con vencimiento el ${fecha(p.expiry)}. Los ofrecemos con ${pct}% de descuento, a ${pesos(pricing.offerPrice)} por ${unit} en lugar de ${pesos(pricing.listPrice)}.`,
     "",
-    "Si a tu institución le sirve, escribinos por mensaje privado y lo coordinamos.",
+    `Le conviene a un servicio que pueda usar el lote completo en los próximos ${meses(p.daysToExpiry)}. Así se aprovecha a tiempo y un insumo en buen estado no termina descartado.`,
+    "",
+    "Si te interesa, escribinos por mensaje privado y lo coordinamos.",
     "",
     "#InsumosMédicos #ComprasHospitalarias #Clínicas",
   ].join("\n");

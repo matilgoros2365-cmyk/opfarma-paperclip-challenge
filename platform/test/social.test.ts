@@ -19,9 +19,9 @@ describe("buildSocialDraft: el posteo de LinkedIn de un lote", () => {
   it("arma el posteo de L-6612, el lote que ninguna cuenta absorbe entero", () => {
     const draft = buildSocialDraft("L-6612", dataset, AS_OF);
     expect(draft.network).toBe("linkedin");
-    expect(draft.commentary).toContain("Sutura de nylon 3-0");
+    expect(draft.commentary).toContain("sutura de nylon 3-0");
     expect(draft.commentary).toContain("14/02/2027");
-    expect(draft.commentary).toContain(`por sobre`);
+    expect(draft.commentary).toContain("por sobre");
     expect(draft.commentary.length).toBeLessThanOrEqual(LINKEDIN_MAX_COMMENTARY);
     expect(draft.payload.visibility).toBe("PUBLIC");
     expect(draft.payload.lifecycleState).toBe("PUBLISHED");
