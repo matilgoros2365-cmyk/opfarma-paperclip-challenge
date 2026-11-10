@@ -64,8 +64,9 @@ normas, estudios y entrevistas que respaldan el problema están en
    │                           │   MCP      │    escanear, colocar, ofertar│
    │  MarginReviewer  (qa)     │◀──────────▶│    margen: aprobación humana │
    │        ▲                  │            │  /api/mcp/whatsapp           │
-   │        │ reporta          │            │    envío: aprobación humana  │
+   │        │ reportan         │            │    envío: aprobación humana  │
    │  StockScout     (general) │            │  /api/mcp/social             │
+   │  GrowthScout    (cmo)     │            │                              │
    │                           │            │    posteo: aprobación humana │
    │  detectar                 │            └──────────────────────────────┘
    │  ofertar  ◀── revisor     │                 │               │
@@ -90,6 +91,13 @@ aprueba con una herramienta, `inventory_commit_offer`, porque la etapa de
 aprobación humana de una tarea no tiene botón en la interfaz de esta versión. El
 servidor recalcula la oferta y rechaza cualquier número distinto del motor. Los
 hallazgos están contados en [`DECISIONS.md`](DECISIONS.md).
+
+**Tres agentes, cada uno con las herramientas de su área.** MarginReviewer
+revisa y no puede enviar, publicar ni fijar márgenes. StockScout, el comercial,
+fija el margen y manda el WhatsApp con aprobación, pero no puede publicar.
+GrowthScout publica en LinkedIn con aprobación, pero no puede mandar mensajes ni
+tocar márgenes. Lo impone Paperclip con políticas. Cuando StockScout intentó
+publicar, Paperclip ni siquiera le mostró la herramienta.
 
 **Dónde está el review humano que pide la Tarea A.** En la tarea del envío.
 Paperclip frena dos veces la ejecución y pide aprobación, primero del margen y

@@ -22,8 +22,9 @@ hash de lo que sale, así que sale exactamente lo que se aprobó.
 
 **Qué funcionó.**
 
-- Un script idempotente crea la compañía con dos agentes, cuatro conexiones MCP,
-  políticas de aprobación y cinco tareas. La del envío lleva el review humano,
+- Un script idempotente crea la compañía con tres agentes (revisor, comercial y
+  growth), cada uno limitado a las herramientas de su área, cuatro conexiones MCP
+  y cinco tareas. La del envío lleva el review humano,
   dos tarjetas de Paperclip que frenan el margen y el mensaje.
 - **La oferta llegó a un celular real**, desde la Mac y desde Windows, y Meta
   avisó por webhook que se entregó y se leyó.

@@ -52,6 +52,11 @@ y un proyecto. El ciclo es `backlog → todo → in_progress → in_review → d
 más `blocked` y `cancelled`. El paso a `in_progress` exige tomar la tarea de
 forma atómica. Si dos agentes la reclaman a la vez, uno recibe un 409 y no debe reintentar.
 
+**Un bloqueo no es una regla que el agente puede ignorar.** Cuando una política
+le bloquea una herramienta a un agente, Paperclip se la saca de la lista. Lo
+probé pidiéndole a un agente que publicara fuera de su área, y la respuesta fue
+que la herramienta no existía para él.
+
 **La revisión.** Es lo que más me interesó. Con una *execution policy* que
 define una etapa de revisión, marcar una tarea como hecha no la cierra. Según la
 documentación, el runtime **intercepta la transición**, la deja en `in_review` y

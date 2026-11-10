@@ -243,6 +243,23 @@ La publicación real quedó preparada y sin probar contra LinkedIn, porque
 requiere conectar una cuenta. El paso a paso está en
 [`docs/LINKEDIN.md`](docs/LINKEDIN.md).
 
+**El tercer rol y los permisos por área (OPF-9 y OPF-10, Windows).** Sumé a
+GrowthScout para LinkedIn y Grok, y probé la matriz entera con el endpoint de
+prueba de políticas.
+
+| Herramienta | StockScout | GrowthScout | MarginReviewer |
+| --- | --- | --- | --- |
+| `inventory_commit_offer` | `require_approval` | `deny` | `deny` |
+| `whatsapp_send_message` | `require_approval` | `deny` | `deny` |
+| `social_publish_post` | `deny` | `require_approval` | `deny` |
+| Borradores y búsqueda en Grokbot | `allow` | `allow` | `allow` |
+
+Después lo probé en vivo. En OPF-9, GrowthScout armó un posteo, pidió
+aprobación, lo aprobé y devolvió el dry-run. En OPF-10 le pedí a StockScout que
+publicara. Armó el borrador, que le está permitido, y al intentar publicar
+Paperclip respondió que la herramienta no existe para él. El bloqueo no depende
+de que el agente obedezca, porque la herramienta directamente no le aparece.
+
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
 handshake de suscripción, la lectura de cada estado y que una respuesta del
@@ -296,7 +313,7 @@ siete variables sin saltos de línea.
       que no orientaba. Ahora lo chequea antes y dice qué falta.
     - El token de administración ya no hace falta en la instalación local, y el
       README tiene un paso menos.
-  - **Resultado.** La compañía con sus dos agentes, las cuatro conexiones MCP,
+  - **Resultado.** La compañía con sus agentes, las cuatro conexiones MCP,
     las seis políticas de aprobación y las cinco tareas.
 - **Un segundo clon limpio** al cierre, con todo lo agregado después, instala,
   compila sin errores, pasa los tests y genera el build con las rutas del

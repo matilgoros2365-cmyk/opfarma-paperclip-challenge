@@ -96,6 +96,13 @@ Después, **Redeploy** desde *Deployments*. Sin redeploy no toman el cambio.
   confirma que el identificador que devuelve el inicio de sesión sea siempre el
   mismo que pide el autor de un posteo. Lo confirma el primer posteo real.
 
+## Otra opción, sin código propio
+
+El catálogo de conexiones de Paperclip ofrece LinkedIn a través de Composio y de
+Arcade. Lo vio un agente al buscar conexiones; no lo probé. Sirve si se prefiere
+que la publicación la haga un conector de terceros y no el servidor MCP propio,
+aunque se pierde el `draft_id` que garantiza que sale exactamente lo aprobado.
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué hacer |
