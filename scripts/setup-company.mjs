@@ -216,6 +216,31 @@ if (scout) {
   log.ok("StockScout (general) — reporta a MarginReviewer");
 }
 
+// Growth: sale a buscar compradores nuevos para el lote que ninguna cuenta
+// absorbe. Separado de StockScout a propósito. El comercial le vende a quien ya
+// compra y el de growth publica. Cada uno sólo puede usar las herramientas de su
+// área, y eso lo imponen las políticas de más abajo, no las instrucciones.
+let growth = byName("GrowthScout");
+if (growth) {
+  log.reuse("GrowthScout");
+} else {
+  growth = await api("POST", `/companies/${CID}/agents`, {
+    name: "GrowthScout",
+    role: "cmo",
+    title: "Growth y redes",
+    reportsTo: reviewer.id,
+    capabilities:
+      "Ofrece a clinicas que todavia no son clientes los lotes que ninguna cuenta actual absorbe a " +
+      "tiempo. Arma el posteo para LinkedIn con el precio del motor y deja listo el traspaso a Grok Bot. " +
+      "No publica sin aprobacion humana, no manda mensajes de WhatsApp y no toca margenes.",
+    adapterType: "claude_local",
+    ...(RUNNER ? { runner: RUNNER } : {}),
+    adapterConfig: adapterConfig(30),
+    budgetMonthlyCents: 600,
+  });
+  log.ok("GrowthScout (cmo) — reporta a MarginReviewer");
+}
+
 /* -------------------------------------------------------------------------- */
 
 log.step("Conexiones MCP");
@@ -367,80 +392,58 @@ async function ensurePolicy(name, policyType, connection, entry, agentId, descri
   log.ok(name);
 }
 
-const sendEntry = await catalogEntry(whatsapp, "whatsapp_send_message");
-if (!sendEntry) {
-  log.warn("whatsapp_send_message no está en el catálogo: no se pudo configurar el permiso del envío.");
-} else {
-  await ensurePolicy(
-    "ask-first:whatsapp_send_message:StockScout",
-    "require_approval",
-    whatsapp,
-    sendEntry,
-    scout.id,
-    "Aprobacion humana antes de que StockScout envie un mensaje por WhatsApp.",
-  );
-  await ensurePolicy(
-    "block:whatsapp_send_message:MarginReviewer",
-    "block",
-    whatsapp,
-    sendEntry,
-    reviewer.id,
-    "El revisor valida ofertas, nunca envia mensajes al cliente.",
-  );
-}
-
-const publishEntry = await catalogEntry(social, "social_publish_post");
-if (!publishEntry) {
-  log.warn("social_publish_post no está en el catálogo: el servidor MCP es anterior al canal de redes.");
-} else {
-  await ensurePolicy(
-    "ask-first:social_publish_post:StockScout",
-    "require_approval",
-    social,
-    publishEntry,
-    scout.id,
-    "Aprobacion humana antes de publicar un posteo en redes.",
-  );
-  await ensurePolicy(
-    "block:social_publish_post:MarginReviewer",
-    "block",
-    social,
-    publishEntry,
-    reviewer.id,
-    "El revisor nunca publica.",
-  );
-}
-
 /*
- * La aprobación del margen también es una herramienta con require_approval, y
- * no una etapa "approval" de la política de ejecución: en Paperclip
- * v2026.1106.0 esa etapa exige un comentario en el mismo pedido que el cambio
- * de estado, y ningún control de la interfaz lo manda, así que sólo se podía
- * aprobar por la API. La tarjeta de una herramienta sí tiene botón.
+ * La matriz de permisos. Tres herramientas deciden algo que sale de la empresa
+ * o compromete plata, y cada agente sólo puede usar las de su área.
+ *
+ *                        StockScout       GrowthScout      MarginReviewer
+ *   inventory_commit     aprueba persona  bloqueado        bloqueado
+ *   whatsapp_send        aprueba persona  bloqueado        bloqueado
+ *   social_publish       bloqueado        aprueba persona  bloqueado
+ *
+ * La aprobación del margen es una herramienta con require_approval, y no una
+ * etapa "approval" de la política de ejecución. En Paperclip v2026.1106.0 esa
+ * etapa exige un comentario en el mismo pedido que el cambio de estado, y
+ * ningún control de la interfaz lo manda. La tarjeta de una herramienta sí
+ * tiene botón.
  */
-const commitEntry = await catalogEntry(inventory, "inventory_commit_offer");
-if (!commitEntry) {
-  log.warn(
-    "inventory_commit_offer no está en el catálogo: el servidor MCP es anterior a la aprobación del margen. " +
-      "Actualizalo y volvé a correr el script.",
-  );
-} else {
-  await ensurePolicy(
-    "ask-first:inventory_commit_offer:StockScout",
-    "require_approval",
-    inventory,
-    commitEntry,
-    scout.id,
-    "Aprobacion humana del precio y el margen antes de armar el mensaje al cliente.",
-  );
-  await ensurePolicy(
-    "block:inventory_commit_offer:MarginReviewer",
-    "block",
-    inventory,
-    commitEntry,
-    reviewer.id,
-    "El revisor valida la oferta; el margen lo aprueba una persona.",
-  );
+const TOOLS = [
+  { connection: inventory, tool: "inventory_commit_offer", owner: scout, ownerName: "StockScout", what: "fijar el precio y el margen" },
+  { connection: whatsapp, tool: "whatsapp_send_message", owner: scout, ownerName: "StockScout", what: "mandar un mensaje por WhatsApp" },
+  { connection: social, tool: "social_publish_post", owner: growth, ownerName: "GrowthScout", what: "publicar en redes" },
+];
+const AGENTS = [
+  { agent: scout, name: "StockScout" },
+  { agent: growth, name: "GrowthScout" },
+  { agent: reviewer, name: "MarginReviewer" },
+];
+
+for (const { connection, tool, owner, ownerName, what } of TOOLS) {
+  const entry = await catalogEntry(connection, tool);
+  if (!entry) {
+    log.warn(`${tool} no está en el catálogo: el servidor MCP es anterior. Actualizalo y volvé a correr el script.`);
+    continue;
+  }
+  for (const { agent, name } of AGENTS) {
+    const allowed = agent.id === owner.id;
+    const policyName = `${allowed ? "ask-first" : "block"}:${tool}:${name}`;
+    // Si este agente tenía la política contraria de una versión anterior, se borra.
+    const stale = policies.find((pol) => pol.name === `${allowed ? "block" : "ask-first"}:${tool}:${name}`);
+    if (stale) {
+      await api("DELETE", `/companies/${CID}/tools/policies/${stale.id}`);
+      log.ok(`${stale.name} reemplazada`);
+    }
+    await ensurePolicy(
+      policyName,
+      allowed ? "require_approval" : "block",
+      connection,
+      entry,
+      agent.id,
+      allowed
+        ? `Aprobacion humana antes de que ${name} pueda ${what}.`
+        : `${name} no puede ${what}: es tarea de ${ownerName}.`,
+    );
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -535,7 +538,7 @@ await ensureIssue(
     "5. Dejar en el hilo el resultado tal cual, publicado o dry-run.",
     "Si la aprobacion se rechaza, no reintentar: reportarlo y pasar a blocked.",
   ].join("\n"),
-  { priority: "medium" },
+  { priority: "medium", assigneeAgentId: growth.id },
 );
 
 await ensureIssue(
@@ -556,7 +559,7 @@ console.log(`
 ▸ Listo
 
   Compañía   OpFarma (${company.issuePrefix}) — ${API.replace("/api", "")}/${company.issuePrefix}/dashboard
-  Agentes    MarginReviewer (qa) ← StockScout (general)
+  Agentes    MarginReviewer (qa) ← StockScout (general) y GrowthScout (cmo)
   Tareas     5: el escaneo, la oferta con su revisor, el envío con dos aprobaciones humanas,
              el posteo en LinkedIn con aprobación humana y el traspaso a Grok Bot
   Conexiones Inventario, WhatsApp, Redes y Grokbot; el margen, el envío y el posteo piden aprobación humana

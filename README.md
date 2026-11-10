@@ -185,15 +185,16 @@ En la instalación local, Paperclip no pide token. Si lo instalaste con login
 --name setup --json` y pasalo como `PAPERCLIP_BOARD_TOKEN`. Si el script dice
 que los servidores MCP no responden, es que falta el `npm run dev` del paso 3.
 
-El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
+El script crea la compañía con su presupuesto y su objetivo, los tres agentes con
 su línea de reporte, las cuatro conexiones MCP con el catálogo verificado
 (inventario, WhatsApp, redes y Grokbot), las políticas de aprobación del margen,
 del envío y del posteo, la carpeta de trabajo de los agentes y cinco tareas. Son
 el escaneo, la oferta con su revisor, el envío con las dos aprobaciones humanas,
 el posteo en LinkedIn y el traspaso a Grok Bot. El envío y el traspaso nacen
-sin asignar, y se los asignás a StockScout cuando la oferta pasó la revisión y
-el posteo fue aprobado. Para armar otra oferta en una
-compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. El script es idempotente.
+sin asignar. El envío se lo asignás a StockScout cuando la oferta pasó la
+revisión, y el traspaso a GrowthScout cuando el posteo fue aprobado. Para armar
+otra oferta en una compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. El
+script es idempotente.
 Si algo ya existe, lo reutiliza y lo informa.
 
 Para usar el canal real en lugar del local, agregá
