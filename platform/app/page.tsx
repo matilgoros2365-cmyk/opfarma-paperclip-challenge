@@ -554,7 +554,7 @@ export default function Page() {
           </li>
           <li className="human">
             <h3>Aprueba el margen</h3>
-            <p>La tarea no se puede cerrar sin esta firma. Colocar mal un lote no borra la pérdida: se la pasa a una clínica.</p>
+            <p>Paperclip frena la oferta y pide aprobación en la tarea, con el precio y el margen que calculó el código. Colocar mal un lote no borra la pérdida: se la pasa a una clínica.</p>
             <span className="who">Una persona</span>
           </li>
           <li className="human">

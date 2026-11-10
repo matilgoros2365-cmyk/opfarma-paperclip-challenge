@@ -47,30 +47,33 @@ normas, estudios y entrevistas que respaldan el problema están en
    ┌───────────────────────────┐            ┌──────────────────────────────┐
    │ OpFarma                   │            │  /api/mcp/inventory          │
    │                           │   MCP      │    escanear, colocar, ofertar│
-   │  MarginReviewer  (qa)     │◀──────────▶│    sólo lectura              │
+   │  MarginReviewer  (qa)     │◀──────────▶│    margen: aprobación humana │
    │        ▲                  │            │                              │
    │        │ reporta          │            │  /api/mcp/whatsapp           │
    │  StockScout     (general) │            │    estado y borrador: libre  │
    │                           │            │    envío: aprobación humana  │
    │  OPF-1  detectar          │            │                              │
-   │  OPF-2  validar  ◀── gate │            │  /  la plataforma            │
-   │  OPF-3  enviar            │            └──────────────────────────────┘
+   │  OPF-2  ofertar  ◀── rev. │            │  /  la plataforma            │
+   │  OPF-3  aprobar y enviar  │            └──────────────────────────────┘
    └───────────────────────────┘                        │
             │                                           ▼
             └──── una persona aprueba ─────▶  WhatsApp Cloud API
 ```
 
-Separé las dos "manos" a propósito. El servidor de inventario sólo lee el negocio
-y no puede contactar a nadie; el de WhatsApp es el único que sale hacia afuera.
+Separé las dos "manos" a propósito. El servidor de inventario no puede contactar
+a nadie; el de WhatsApp es el único que sale hacia afuera.
 Son riesgos distintos, así que tienen conexiones y políticas distintas.
 
 El resultado son tres controles en capas diferentes: el agente revisor valida los
 números, una persona aprueba el margen y cada envío requiere otra aprobación. Si
-uno falla, los otros dos siguen en pie. El tercero no venía configurado:
-Paperclip marca el envío como `risk=write`, pero esa marca sola no frena nada. La
-aprobación existe sólo si hay una política `require_approval` para esa
-herramienta y ese agente, y el script de setup la crea. El hallazgo está contado
-en [`DECISIONS.md`](DECISIONS.md).
+uno falla, los otros dos siguen en pie. Las dos aprobaciones humanas son
+tarjetas de Paperclip sobre una herramienta, con una política `require_approval`
+que crea el script de setup. Esa política no venía configurada: Paperclip marca
+el envío como `risk=write`, pero esa marca sola no frena nada. Y el margen se
+aprueba con una herramienta, `inventory_commit_offer`, porque la etapa de
+aprobación humana de una tarea no tiene botón en la interfaz de esta versión. El
+servidor recalcula la oferta y rechaza cualquier número distinto del motor. Los
+hallazgos están contados en [`DECISIONS.md`](DECISIONS.md).
 
 ## Cómo levantarlo en unos 10 minutos
 
@@ -154,8 +157,11 @@ PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma
 
 El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
 su línea de reporte, las dos conexiones MCP con el catálogo verificado, las
-políticas de aprobación del envío, la carpeta de trabajo de los agentes y las
-tres tareas, con la revisión humana en la del medio. Es idempotente: si algo ya
+políticas de aprobación del margen y del envío, la carpeta de trabajo de los
+agentes y las tres tareas: el escaneo, la oferta con su revisor y el envío con
+las dos aprobaciones humanas. La del envío nace sin asignar: se la asignás a
+StockScout cuando la oferta pasó la revisión. Para armar otra oferta en una
+compañía que ya mandó una, agregá `OFFER_LOT=L-8890`. Es idempotente: si algo ya
 existe, lo reutiliza y lo informa.
 
 Para usar el canal real en lugar del local, agregá
@@ -260,7 +266,7 @@ y el chequeo de los agentes pasa.
 cd platform && npm test
 ```
 
-Son 186 tests. Además de las pruebas por módulo, incluyen una verificación
+Son 193 tests. Además de las pruebas por módulo, incluyen una verificación
 independiente que rehace todas las cuentas del motor desde la especificación,
 sin usar su código, para cada combinación de lote y cuenta. El detalle de todo lo
 que verifiqué, y cómo, está en [`VERIFICATION.md`](VERIFICATION.md).

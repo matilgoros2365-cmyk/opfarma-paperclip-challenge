@@ -48,7 +48,7 @@ cierre de la tarea, no cada acción. El resto lo encontré usándolo:
 - **La aprobación humana de una tarea no se puede dar desde la interfaz.** El
   servidor exige la decisión con un comentario en el mismo pedido, y ningún
   control de la interfaz lo manda: el menú de estado da error y el cuadro de
-  mensajes reabre la tarea. Hoy se aprueba por la API.
+  mensajes reabre la tarea. La salida es una herramienta con aprobación.
 - **No hay conector de WhatsApp, Instagram ni X.** Hace falta un servidor MCP
   propio o un agregador como Zapier.
 - **Las conexiones se crean por API, pero el alta con credencial se termina en la

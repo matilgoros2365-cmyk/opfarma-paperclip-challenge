@@ -140,7 +140,9 @@ servidor exige que la decisión llegue con un comentario en el mismo pedido
 estado manda sólo el cambio a `done` y recibe un 422, y el cuadro de mensajes
 manda sólo el comentario: con la tarea en la etapa de aprobación, la reabre en
 lugar de aprobarla. "Approval pending with You" es una etiqueta, sin botón. En
-esta versión, esa etapa se aprueba por la API.
+esta versión, esa etapa se aprueba por la API. Lo resolví convirtiendo la
+decisión en una herramienta con política `require_approval`, que sí tiene
+tarjeta con botón.
 
 **El workspace aislado se traba.** Cuando una tarea pasa a ese modo, cada
 respuesta a una tarjeta dispara una continuación que pide un repositorio de git

@@ -35,12 +35,22 @@ const TOKEN = process.env.PAPERCLIP_BOARD_TOKEN;
 const MCP_BASE = (process.env.MCP_BASE_URL ?? "http://127.0.0.1:3200").replace(/\/+$/, "");
 const MCP_KEY = process.env.MCP_API_KEY;
 
-if (!TOKEN) fatal("Falta PAPERCLIP_BOARD_TOKEN. Sacalo con: npx paperclipai token board create --name setup --json");
 if (!MCP_KEY) fatal("Falta MCP_API_KEY: la misma key que tiene el .env.local de platform/.");
 
 function fatal(message) {
   console.error(`\n  ✗ ${message}\n`);
   process.exit(1);
+}
+
+// En modo local_trusted (la instalación por defecto, atada a 127.0.0.1) la API no
+// pide token. En cualquier otro modo, sí.
+if (!TOKEN) {
+  const health = await fetch(`${API}/health`)
+    .then((r) => r.json())
+    .catch(() => null);
+  if (health?.deploymentMode !== "local_trusted") {
+    fatal("Falta PAPERCLIP_BOARD_TOKEN. Sacalo con: npx paperclipai token board create --name setup --json");
+  }
 }
 
 const log = {
@@ -54,7 +64,7 @@ async function api(method, path, body) {
   const response = await fetch(`${API}${path}`, {
     method,
     headers: {
-      Authorization: `Bearer ${TOKEN}`,
+      ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}),
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
     ...(body ? { body: JSON.stringify(body) } : {}),

@@ -11,15 +11,14 @@ que se aprobó.
 **Qué funcionó.**
 
 - Un script idempotente crea la compañía: dos agentes, conexiones MCP, políticas
-  de aprobación y tres tareas, una con revisión de agente y aprobación humana.
+  de aprobación y tres tareas, con un revisor agente y dos aprobaciones humanas.
 - **La oferta llegó a un celular real**, desde la Mac y desde Windows: salió con
   mi aprobación, y Meta avisó por webhook que se entregó y se leyó.
-- **Corre en macOS y en Windows.** En Windows los agentes no arrancaban: el
-  runner nativo de Paperclip no soporta Windows. Lo resolví con Paperclip dentro
-  de WSL2, con los mismos resultados que en la Mac.
+- **Corre en macOS y en Windows**, en Windows dentro de WSL2, porque el runner
+  nativo de Paperclip no lo soporta.
 - El canal quedó listo para producción en la cuenta de la empresa
   ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
-- 186 tests, con una verificación independiente del motor
+- 193 tests, con una verificación independiente del motor
   ([`VERIFICATION.md`](VERIFICATION.md)).
 
 **Qué no funcionó, y cómo lo resolví.**
@@ -27,6 +26,9 @@ que se aprobó.
 - **El envío no pedía aprobación.** Paperclip lo marcaba como riesgoso pero lo
   dejaba pasar. Lo detectó el agente; lo resolví con una política, que el setup
   ya crea.
+- **La aprobación del margen no tenía botón.** La etapa humana de una tarea
+  sólo se aprueba por la API. La pasé a una herramienta con aprobación, que sí
+  tiene tarjeta, y el servidor rechaza números distintos de los del motor.
 - **Cada respuesta a una tarjeta exigía Retry.** Con workspace aislado, Paperclip
   pide que la carpeta de trabajo sea un repositorio de git. El setup ahora la crea
   así, y en Windows el agente siguió solo después de mi aprobación.
