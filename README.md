@@ -16,9 +16,11 @@ tarea.
 ## La entrega
 
 - **Video del flujo** (Loom, menos de 2 minutos), en
-  <https://www.loom.com/share/19870b3b2b5b469c8e9faae649a780d9>. Va de la tarea
-  en Paperclip a las dos aprobaciones con tarjeta, el WhatsApp que llega y el
-  aviso de Meta en la plataforma.
+  <https://www.loom.com/share/1bd98da03eb24adc9ae1734368438296>. Va de la
+  aprobación del margen al posteo de LinkedIn en dry-run, el traspaso a Grok Bot,
+  la aprobación del WhatsApp, el mensaje que llega y el aviso de Meta en la
+  plataforma. Es otra corrida del mismo circuito, en una Mac, así que las tareas
+  tienen otros números que en la página de evidencia.
 - **Plataforma deployada en Vercel**, en <https://opfarma-paperclip-challenge.vercel.app>.
   Tiene un explorador que corre el mismo motor que usan los agentes. Se elige un
   lote y se ve qué cuenta lo consume a tiempo, por qué las demás quedan afuera,

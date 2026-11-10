@@ -216,7 +216,8 @@ export default function PaperclipPage() {
           <a href="https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge#cómo-levantarlo-en-unos-10-minutos">
             README
           </a>
-          .
+          . El <a href="https://www.loom.com/share/1bd98da03eb24adc9ae1734368438296">video del flujo</a> muestra otra
+          corrida del mismo circuito, en una Mac, así que ahí las tareas tienen otros números.
         </p>
       </section>
 
