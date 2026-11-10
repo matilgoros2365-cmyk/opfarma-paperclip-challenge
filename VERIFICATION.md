@@ -11,7 +11,7 @@ los comandos que indico.
 | --- | --- | --- |
 | Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 183 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
-| Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 de 5 coinciden con el motor |
+| Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 ofertas y un rechazo, los 6 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
 | Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
@@ -21,6 +21,57 @@ los comandos que indico.
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
 | Seguridad | Credenciales en el historial de git y valores por defecto | Ninguna credencial publicada; envío apagado por defecto |
 | Documentación | Cada documento contra el enunciado, y los números entre sí | Inconsistencias encontradas y corregidas |
+
+## En números
+
+Todo lo que sigue está detallado más abajo; acá lo junto para que se vea la
+escala.
+
+| Qué | Cuántas veces |
+| --- | --- |
+| Tests automáticos, en 8 archivos | 183, todos en verde |
+| Combinaciones de lote y cuenta recalculadas por una verificación independiente | 48 de 48 |
+| Días recorridos uno por uno para probar los bordes de los tramos | 401, del 0 al 400 |
+| Errores introducidos a propósito en el motor para ver si los tests los detectan | 8, detectados los 8 |
+| Ofertas recalculadas a mano antes de aprobarlas | 6 de 6 coinciden |
+| Fuentes de Paperclip cruzadas para auditar el envío | 4 |
+| Decisiones de política probadas sin ejecutar nada | 3 por instalación, en 2 instalaciones, idénticas |
+| Chequeos de la prueba de humo | 16, en local y en producción: 32 de 32 |
+| Pedidos al webhook con firmas válidas, alteradas o ausentes | 5, cada uno con la respuesta esperada |
+| Pedidos de control contra producción | 5 en el deploy y otros 5 en la revisión final |
+| Entornos donde corrió el setup | 3: Windows, macOS y Ubuntu en WSL2 |
+| Corridas del setup sobre una compañía existente, sin duplicar nada | 3 |
+| Clones limpios del repo público, instalados y compilados desde cero | 2 |
+| Mensajes reales entregados y leídos en un celular | 2, uno desde la Mac y otro desde Windows |
+| Veces que el agente se negó a enviar con una configuración incorrecta, en vez de improvisar | 2 |
+| Inconsistencias de documentación encontradas y corregidas | 6 |
+| Informes y estudios del problema leídos en su texto original | 9: 7 completos y 2 hasta sus conclusiones |
+
+## Los tipos de prueba
+
+Ninguna prueba sola alcanza: cada una ve un tipo de error y es ciega a otros. Por
+eso combiné estas, cada una desde un ángulo distinto.
+
+| Tipo | Qué pregunta responde | Dónde |
+| --- | --- | --- |
+| Tests unitarios | ¿Cada pieza hace lo que dice? | Sección 1 |
+| Verificación independiente (un segundo cálculo, escrito aparte) | ¿El motor da lo mismo que alguien que hace las cuentas desde la especificación, sin mirar su código? | Sección 1 |
+| Barrido de bordes | ¿Qué pasa justo en el límite de cada tramo, día por día? | Sección 1 |
+| Pruebas de mutación | ¿Los tests detectan un error si lo hay, o pasan siempre? | Sección 1 |
+| Cálculo a mano | ¿Una persona llega a los mismos números antes de aprobar? | Sección 2 |
+| Segunda revisión de cada decisión | ¿Mi respuesta al agente tiene un error que yo no vi? | Sección 2 |
+| Auditoría cruzada | ¿Lo que dice el hilo coincide con los registros de Paperclip? | Sección 3 |
+| Pruebas de política sin ejecutar | ¿Cada agente puede hacer exactamente lo que debe, y nada más? | Sección 3 |
+| Pruebas negativas y de manipulación | ¿Se rechaza lo que tiene que rechazarse: sin clave, firma alterada, mensaje cambiado después de aprobar? | Secciones 3 y 4 |
+| Punta a punta con Meta real | ¿El mensaje llega de verdad a un celular, y el aviso vuelve? | Sección 3 |
+| Prueba de humo | ¿Las siete herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
+| Reproducibilidad | ¿Funciona en una carpeta vacía, a partir del repo público? | Sección 4 |
+| Multiplataforma | ¿Funciona en Windows, macOS y Linux? | Sección 4 |
+| Idempotencia | ¿Correr el setup de nuevo rompe o duplica algo? | Sección 4 |
+| Auditoría de dependencias | ¿Hay vulnerabilidades conocidas? | Sección 4 |
+| Producción | ¿Lo deployado se comporta como lo local? | Sección 5 |
+| Búsqueda de secretos | ¿Quedó alguna credencial o dato personal en el repo? | Secciones 6 y 8 |
+| Coherencia de documentos | ¿Los documentos dicen la verdad y coinciden entre sí? | Secciones 7 y 8 |
 
 ## 1. Corrección del motor
 
@@ -251,7 +302,22 @@ corregí lo siguiente:
   está comprobado, lo documentado y lo estimado, y marqué qué constantes del
   motor salen de una fuente y cuáles son supuestos míos.
 
-## 8. Lo que no pude verificar
+## 8. La revisión final
+
+Al cierre, con todo terminado, volví a pasar por todo una vez más:
+
+- Los 183 tests y el chequeo de tipos, en verde.
+- El repo público, archivo por archivo: ningún número de teléfono real, ningún
+  token, clave ni archivo de entorno. Los únicos números son los ficticios de
+  las cuentas del dataset.
+- Cada link interno de los documentos apunta a un archivo que existe.
+- Producción: la página responde, los dos MCP rechazan sin clave, el webhook
+  rechaza una suscripción falsa y el canal informa el envío habilitado con el
+  número de prueba en calidad verde.
+- Los documentos, contra lo que cambió en los últimos días: el canal real pasó
+  a vivir en Vercel y lo comparten la Mac y Windows, y así quedó escrito.
+
+## 9. Lo que no pude verificar
 
 - **Las plantillas aprobadas.** Las dos plantillas de la oferta seguían en
   revisión de Meta al cierre, así que la oferta viajó como texto; el envío con
@@ -265,7 +331,8 @@ corregí lo siguiente:
 - **Las fuentes del problema, una por una.** La normativa la verifiqué contra el
   Boletín Oficial y los sitios de ANMAT. Leí completos los dos informes de la
   AGN, el informe sectorial de CADIEM, los de Hacienda y CEPAL, el artículo de
-  Vázquez, y los estudios de Belo Horizonte, Riad y Uganda. Las auditorías de Ontario,
+  Vázquez y el estudio de Belo Horizonte; los de Riad y Uganda, hasta sus
+  conclusiones. Las auditorías de Ontario,
   Paraguay y Chile y los casos argentinos recientes los cito a partir de la
   prensa, y los estudios de quirófano, a partir de sus resúmenes. El detalle
   está en [`research/EXPIRY.md`](research/EXPIRY.md).

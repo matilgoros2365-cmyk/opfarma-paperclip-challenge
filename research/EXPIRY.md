@@ -374,8 +374,8 @@ haría falta:
 
 *Cómo leí las fuentes:* las normas, contra el Boletín Oficial, InfoLEG y los
 comunicados oficiales. Los informes de la AGN, el de CADIEM, los de Hacienda y
-CEPAL, el artículo de Vázquez y los estudios de Belo Horizonte, Riad y Uganda,
-completos. Las auditorías de Ontario, Paraguay y Chile, las cifras de vacunas
+CEPAL, el artículo de Vázquez y el estudio de Belo Horizonte, completos; los de
+Riad y Uganda, hasta sus conclusiones. Las auditorías de Ontario, Paraguay y Chile, las cifras de vacunas
 posteriores a 2019 y los casos de San Juan y Castelli, a partir de la prensa. Los
 estudios de quirófano, a partir de sus resúmenes. Antes de usar cualquiera de
 estos datos en una decisión real conviene leer el texto completo de cada fuente.
