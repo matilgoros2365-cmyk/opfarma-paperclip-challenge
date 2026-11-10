@@ -228,3 +228,21 @@ export async function describeChannel(
     constraints,
   };
 }
+
+/**
+ * Lo que muestra la página cuando Meta no responde. El caso esperable es el
+ * token de prueba vencido (dura 24 horas): se explica en criollo en lugar de
+ * mostrar el mensaje crudo de la Graph API.
+ */
+export function explainUnreachable(reason: string): string {
+  if (/session has expired|access token|oauth|\b190\b/i.test(reason)) {
+    return (
+      "El token de Meta venció o dejó de ser válido: el de prueba dura 24 horas. " +
+      "Mientras no se renueve no sale ningún mensaje; los avisos de abajo son de los envíos que ya se hicieron."
+    );
+  }
+  if (/fetch failed|enotfound|econnreset|etimedout|network/i.test(reason)) {
+    return "No se pudo llegar a Meta en este momento. Los avisos de abajo son de los envíos que ya se hicieron.";
+  }
+  return `No se pudo consultar a Meta: ${reason}`;
+}

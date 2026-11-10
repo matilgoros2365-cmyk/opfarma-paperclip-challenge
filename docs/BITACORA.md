@@ -65,7 +65,7 @@ explica por qué ese paso no se automatiza.
 
 ## Qué funcionó
 
-El proyecto quedó cubierto por **183 tests**: los tramos de vencimiento, el
+El proyecto quedó cubierto por **186 tests**: los tramos de vencimiento, el
 consumo calculado a partir del historial de compras, el piso de precio, los
 errores de la Graph API simulados y una verificación independiente del motor,
 descripta en [`VERIFICATION.md`](../VERIFICATION.md). Me ocupé de que el dataset

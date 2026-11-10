@@ -12,31 +12,35 @@ que se aprobó.
 
 - Un script idempotente crea la compañía: dos agentes, conexiones MCP, políticas
   de aprobación y tres tareas, una con revisión de agente y aprobación humana.
-- **La oferta llegó a un celular real.** Con mi aprobación en Paperclip, salió
-  por la Cloud API; Meta avisó por webhook que se entregó y que se leyó, y el
-  agente lo registró en la tarea.
-- **Corre en macOS y en Windows.** En Windows los agentes de Paperclip no
-  arrancan; encontré la causa en su código (el runner nativo sólo soporta Linux
-  y macOS) y lo resolví corriendo Paperclip en Ubuntu dentro de WSL2, con los
-  mismos resultados que en la Mac. Las dos mandan por el mismo canal, en Vercel.
+- **La oferta llegó a un celular real**, desde la Mac y desde Windows: salió con
+  mi aprobación, y Meta avisó por webhook que se entregó y se leyó.
+- **Corre en macOS y en Windows.** En Windows los agentes no arrancaban: el
+  runner nativo de Paperclip no soporta Windows. Lo resolví con Paperclip dentro
+  de WSL2, con los mismos resultados que en la Mac.
 - El canal quedó listo para producción en la cuenta de la empresa
   ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
-- 183 tests, con una verificación independiente del motor
+- 186 tests, con una verificación independiente del motor
   ([`VERIFICATION.md`](VERIFICATION.md)).
 
-**Qué no funcionó.**
+**Qué no funcionó, y cómo lo resolví.**
 
-- El control del envío no venía configurado: Paperclip lo marcaba como riesgoso
-  pero lo dejaba pasar. Lo detectó el agente; lo resolví con una política.
-- Con workspace aislado, cada respuesta a una tarjeta requiere Retry.
-- La imagen de Paperclip supera el límite de Fly; el control plane quedó local.
-- La primera cuenta de WhatsApp de prueba quedó bloqueada por Meta, y las
-  plantillas siguen en revisión: la oferta viajó como texto, dentro de la
-  ventana de 24 horas.
+- **El envío no pedía aprobación.** Paperclip lo marcaba como riesgoso pero lo
+  dejaba pasar. Lo detectó el agente; lo resolví con una política, que el setup
+  ya crea.
+- **Cada respuesta a una tarjeta exigía Retry.** Con workspace aislado, Paperclip
+  pide que la carpeta de trabajo sea un repositorio de git. El setup ahora la crea
+  así, y en Windows el agente siguió solo después de mi aprobación.
+- **Paperclip no entra en Fly.** Publiqué en Vercel lo que tiene que estar en
+  internet: la página, los MCP, el webhook y las credenciales de Meta. Paperclip
+  corre en cada máquina, como está pensado, y todas mandan por ese canal.
+- **Meta bloqueó la primera cuenta de prueba.** Abrí una sólo de OpFarma, y desde
+  ahí llegaron dos ofertas reales. Las plantillas siguen en revisión de Meta:
+  mientras tanto la oferta viaja como texto dentro de la ventana de 24 horas, y
+  pasar a plantilla es cambiar una variable.
 
 El detalle está en [`docs/BITACORA.md`](docs/BITACORA.md).
 
 **Qué haría la semana siguiente.** Activar el canal en la cuenta de Meta de la
-empresa; repartir la demanda entre lotes del mismo producto; darle a la compañía
-un workspace de git para eliminar el Retry; sacar la clave del MCP de la URL, y
-conectar el sistema de gestión real.
+empresa; alojar Paperclip en un servidor para que el equipo entre sin instalar
+nada; repartir la demanda entre lotes del mismo producto; sacar la clave del MCP
+de la URL, y conectar el sistema de gestión real.

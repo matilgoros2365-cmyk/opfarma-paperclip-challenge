@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   assertRecipientAllowed,
   describeChannel,
+  explainUnreachable,
   endpointFor,
   loadChannelConfig,
   readDraftConfig,
@@ -180,5 +181,25 @@ describe("endpointFor", () => {
 
   it("deja un marcador visible cuando falta, en vez de imprimir null", () => {
     expect(endpointFor({ graphVersion: "v27.0", phoneNumberId: null })).toContain("{META_PHONE_NUMBER_ID}");
+  });
+});
+
+describe("explainUnreachable", () => {
+  it("explains an expired Meta token in plain words", () => {
+    const text = explainUnreachable(
+      "Error validating access token: Session has expired on Monday, 09-Nov-26 14:00:00 PST.",
+    );
+    expect(text).toMatch(/token de Meta venció/);
+    expect(text).not.toMatch(/Session has expired/);
+  });
+
+  it("explains a network failure", () => {
+    expect(explainUnreachable("TypeError: fetch failed")).toMatch(/No se pudo llegar a Meta/);
+  });
+
+  it("keeps any other reason visible", () => {
+    expect(explainUnreachable("Unsupported get request.")).toBe(
+      "No se pudo consultar a Meta: Unsupported get request.",
+    );
   });
 });

@@ -7,7 +7,7 @@
  * agentes; lo que vive en Paperclip, que corre local, se muestra en vivo sólo
  * si la función lo alcanza, y si no, se dice por qué.
  */
-import { describeChannel, loadChannelConfig, readDraftConfig } from "@/lib/channel";
+import { describeChannel, explainUnreachable, loadChannelConfig, readDraftConfig } from "@/lib/channel";
 import { readStoreConfig, recentEvents } from "@/lib/events-store";
 import { asOfDate, dataset } from "@/lib/expiry/dataset";
 import { scanInventory, type Placement, type Tier } from "@/lib/expiry/engine";
@@ -415,7 +415,7 @@ async function Channel() {
           {observed.qualityRating ? `, con calidad ${observed.qualityRating}` : ""}.
         </p>
       ) : (
-        <p className="notice">No se pudo consultar a Meta: {observed.reason}</p>
+        <p className="notice">{explainUnreachable(observed.reason)}</p>
       )}
       <DeliveryLog />
     </section>

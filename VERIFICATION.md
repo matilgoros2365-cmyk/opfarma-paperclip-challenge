@@ -9,7 +9,7 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 183 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 186 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 ofertas y un rechazo, los 6 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
@@ -29,7 +29,7 @@ escala.
 
 | Qué | Cuántas veces |
 | --- | --- |
-| Tests automáticos, en 8 archivos | 183, todos en verde |
+| Tests automáticos, en 8 archivos | 186, todos en verde |
 | Combinaciones de lote y cuenta recalculadas por una verificación independiente | 48 de 48 |
 | Días recorridos uno por uno para probar los bordes de los tramos | 401, del 0 al 400 |
 | Errores introducidos a propósito en el motor para ver si los tests los detectan | 8, detectados los 8 |
@@ -306,7 +306,7 @@ corregí lo siguiente:
 
 Al cierre, con todo terminado, volví a pasar por todo una vez más:
 
-- Los 183 tests y el chequeo de tipos, en verde.
+- Los 186 tests y el chequeo de tipos, en verde.
 - El repo público, archivo por archivo: ningún número de teléfono real, ningún
   token, clave ni archivo de entorno. Los únicos números son los ficticios de
   las cuentas del dataset.
@@ -316,6 +316,16 @@ Al cierre, con todo terminado, volví a pasar por todo una vez más:
   número de prueba en calidad verde.
 - Los documentos, contra lo que cambió en los últimos días: el canal real pasó
   a vivir en Vercel y lo comparten la Mac y Windows, y así quedó escrito.
+
+Y me adelanté a dos fallas que todavía no habían pasado:
+
+- **El token de prueba de Meta vence a las 24 horas.** Cuando pasa, la página
+  mostraba el error crudo de la Graph API, en inglés. Ahora explica qué pasó y
+  aclara que los avisos de abajo son de envíos ya hechos. Lo cubren tres tests
+  nuevos.
+- **Paperclip publica versiones casi todos los días.** La dependencia admitía
+  versiones nuevas, y una instalación futura podía traer una que rompiera el
+  setup. Quedó fijada en la versión con la que se probó todo, v2026.1106.0.
 
 ## 9. Lo que no pude verificar
 
