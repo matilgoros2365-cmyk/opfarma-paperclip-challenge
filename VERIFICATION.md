@@ -9,13 +9,13 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 193 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 209 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 ofertas y un rechazo, los 6 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
-| Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación para el margen y el envío; MarginReviewer bloqueado en los dos |
+| Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación para el margen, el envío y el posteo; MarginReviewer bloqueado en los tres |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
-| Prueba de humo | Las ocho herramientas, como las usaría un agente, incluidos los rechazos | 18 de 18 en producción |
+| Prueba de humo | Las herramientas de los tres servidores, como las usaría un agente, incluidos los rechazos | 23 de 23 en producción |
 | Windows con WSL2 | Instalación desde cero siguiendo el README, una corrida real de un agente y un envío real | Agentes funcionando y oferta entregada y leída; tres fallas del setup encontradas y corregidas |
 | Dependencias y configuración | Vulnerabilidades conocidas y variables de entorno contra la documentación | 0 vulnerabilidades; una variable sin documentar, corregida |
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
@@ -29,14 +29,14 @@ escala.
 
 | Qué | Cuántas veces |
 | --- | --- |
-| Tests automáticos, en 9 archivos | 193, todos en verde |
+| Tests automáticos, en 10 archivos | 209, todos en verde |
 | Combinaciones de lote y cuenta recalculadas por una verificación independiente | 48 de 48 |
 | Días recorridos uno por uno para probar los bordes de los tramos | 401, del 0 al 400 |
 | Errores introducidos a propósito en el motor para ver si los tests los detectan | 8, detectados los 8 |
 | Ofertas recalculadas a mano antes de aprobarlas | 6 de 6 coinciden |
 | Fuentes de Paperclip cruzadas para auditar el envío | 4 |
 | Decisiones de política probadas sin ejecutar nada | 3 por instalación, en 2 instalaciones, idénticas |
-| Chequeos de la prueba de humo | 16 de 16 en local y en producción; 18 de 18 con la herramienta del margen |
+| Chequeos de la prueba de humo | 16 de 16 al principio; 23 de 23 con el margen y las redes |
 | Pedidos al webhook con firmas válidas, alteradas o ausentes | 5, cada uno con la respuesta esperada |
 | Pedidos de control contra producción | 5 en el deploy y otros 5 en la revisión final |
 | Entornos donde corrió el setup | 3 (Windows, macOS y Ubuntu en WSL2) |
@@ -64,7 +64,7 @@ otros. Por eso combiné estas, cada una desde un ángulo distinto.
 | Pruebas de política sin ejecutar | ¿Cada agente puede hacer exactamente lo que debe, y nada más? | Sección 3 |
 | Pruebas negativas y de manipulación | ¿Se rechaza lo que tiene que rechazarse, como un pedido sin clave, una firma alterada o un mensaje cambiado después de aprobar? | Secciones 3 y 4 |
 | Punta a punta con Meta real | ¿El mensaje llega de verdad a un celular, y el aviso vuelve? | Sección 3 |
-| Prueba de humo | ¿Las ocho herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
+| Prueba de humo | ¿Las herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
 | Reproducibilidad | ¿Funciona en una carpeta vacía, a partir del repo público? | Sección 4 |
 | Multiplataforma | ¿Funciona en Windows, macOS y Linux? | Sección 4 |
 | Idempotencia | ¿Correr el setup de nuevo rompe o duplica algo? | Sección 4 |
@@ -175,6 +175,10 @@ Windows con las dos herramientas que deciden.
 | StockScout → `inventory_draft_offer` | `allow` (armar la oferta no se ve afectado) |
 | StockScout → `whatsapp_send_message` | `require_approval` |
 | MarginReviewer → `whatsapp_send_message` | `deny` |
+| StockScout → `social_publish_post` | `require_approval` |
+| MarginReviewer → `social_publish_post` | `deny` |
+| StockScout → `social_draft_post` | `allow` (armar el posteo no se ve afectado) |
+| StockScout → `search_directory` de Grokbot | `allow` (es de sólo lectura) |
 
 **El hash del borrador.** Contra el servidor en ejecución, un envío con el
 `draft_id` correcto devuelve el dry-run, y el mismo envío con una palabra
@@ -224,6 +228,21 @@ punta a punta con el lote L-8890.
 
 Ninguna corrida necesitó Retry, y no hizo falta abrir una terminal.
 
+**El posteo en LinkedIn y el traspaso a Grok Bot (OPF-7 y OPF-8, Windows).**
+Las vías B3 y B1, con el lote L-6612, que ninguna cuenta absorbe entero.
+
+| Paso | Qué pasó |
+| --- | --- |
+| OPF-7 | StockScout mostró por qué ninguna cuenta alcanza y armó el posteo con el pedido exacto a LinkedIn |
+| OPF-7 | Cambié el texto del posteo en el servidor con la tarjeta pendiente. La rechacé, y StockScout lo registró sin publicar nada |
+| OPF-7 | Armó el borrador de nuevo, con otro `draft_id`, y lo aprobé. La respuesta fue el dry-run con el pedido que habría recibido LinkedIn |
+| OPF-8 | StockScout buscó en el directorio de Grokbot por su MCP, eligió el caso de uso que publica en LinkedIn con confirmación humana y explicó por qué |
+| OPF-8 | Transcribió el prompt de la ficha marcado como contenido de referencia, sin seguir sus instrucciones, y adjuntó el paquete para pegar en Grok |
+
+La publicación real quedó preparada y sin probar contra LinkedIn, porque
+requiere conectar una cuenta. El paso a paso está en
+[`docs/LINKEDIN.md`](docs/LINKEDIN.md).
+
 **El webhook de estado.** Los tests cubren la firma (válida, con otro secreto,
 con el cuerpo modificado después de firmar, ausente o mal formada), el
 handshake de suscripción, la lectura de cada estado y que una respuesta del
@@ -265,7 +284,7 @@ siete variables sin saltos de línea.
   compila sin errores, pasa los tests y genera el build con las rutas del
   webhook incluidas.
 
-**La prueba de humo.** `platform/scripts/smoke.mjs` usa las ocho herramientas
+**La prueba de humo.** `platform/scripts/smoke.mjs` usa las herramientas
 como las usaría un agente, contra cualquier instancia, y verifica también lo que
 tiene que fallar. Prueba pedidos sin clave y con una clave incorrecta (401), un
 lote a punto de vencer, una cuenta bloqueada, un mensaje cambiado después de
@@ -274,7 +293,9 @@ real, porque los únicos envíos que prueba son los que el servidor debe rechaza
 antes de llegar a Meta. Pasó 16 de 16 contra el servidor local y contra
 producción, en Vercel. Con la herramienta del margen sumó dos verificaciones
 (que el margen se fija con los números del motor y que uno inflado se rechaza)
-y pasó 18 de 18 en producción.
+y pasó 18 de 18 en producción. Con el canal de redes sumó cinco más (el borrador
+del posteo, el rechazo de otro `draft_id`, un lote de menos de un mes y un
+traspaso que no viene de grokbot.dev) y pasó 23 de 23. Nunca llama a publicar.
 
 ```bash
 cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts/smoke.mjs
@@ -339,7 +360,7 @@ encontré y corregí.
 
 Al cierre, con todo terminado, volví a pasar por todo una vez más.
 
-- Los tests, que hoy son 193, y el chequeo de tipos, en verde.
+- Los tests, que hoy son 209, y el chequeo de tipos, en verde.
 - El repo público, archivo por archivo. No hay ningún número de teléfono real,
   ningún token, clave ni archivo de entorno. Los únicos números son los
   ficticios de las cuentas del dataset.
@@ -361,6 +382,10 @@ Y me adelanté a dos fallas que todavía no habían pasado.
   setup. Quedó fijada en la versión con la que se probó todo, v2026.1106.0.
 
 ## 9. Lo que no pude verificar
+
+- **La publicación real en LinkedIn.** El código, el formato de texto y el
+  script de conexión están listos y probados con tests, pero el posteo real
+  necesita conectar una cuenta. Hasta entonces el canal responde con el dry-run.
 
 - **Las plantillas aprobadas.** Las dos plantillas de la oferta seguían en
   revisión de Meta al cierre, así que la oferta viajó como texto; el envío con
