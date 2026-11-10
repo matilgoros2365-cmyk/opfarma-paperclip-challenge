@@ -158,6 +158,12 @@ políticas de aprobación del envío, la carpeta de trabajo de los agentes y las
 tres tareas, con la revisión humana en la del medio. Es idempotente: si algo ya
 existe, lo reutiliza y lo informa.
 
+Para usar el canal real en lugar del local, agregá
+`MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app` y la
+`MCP_API_KEY` del proyecto en Vercel. Las credenciales de Meta viven sólo ahí,
+así que cualquier instalación de Paperclip manda por el mismo canal. Si la
+compañía ya existía, el script sólo actualiza la dirección de las conexiones.
+
 `PAPERCLIP_RUNNER=legacy` es necesario: en macOS, el runner nativo falló con un
 error de acceso a la terminal, y el Legacy es el que funcionó de punta a punta.
 

@@ -16,7 +16,7 @@ los comandos que indico.
 | Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
 | Prueba de humo | Las siete herramientas, como las usaría un agente, incluidos los rechazos | 16 de 16, en local y en producción |
-| Windows con WSL2 | Instalación desde cero siguiendo el README, y una corrida real de un agente | Agentes funcionando; tres fallas del setup encontradas y corregidas |
+| Windows con WSL2 | Instalación desde cero siguiendo el README, una corrida real de un agente y un envío real | Agentes funcionando y oferta entregada y leída; tres fallas del setup encontradas y corregidas |
 | Dependencias y configuración | Vulnerabilidades conocidas y variables de entorno contra la documentación | 0 vulnerabilidades; una variable sin documentar, corregida |
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
 | Seguridad | Credenciales en el historial de git y valores por defecto | Ninguna credencial publicada; envío apagado por defecto |

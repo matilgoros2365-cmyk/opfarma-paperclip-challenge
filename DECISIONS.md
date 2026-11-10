@@ -18,7 +18,7 @@ que se aprobó.
 - **Corre en macOS y en Windows.** En Windows los agentes de Paperclip no
   arrancan; encontré la causa en su código (el runner nativo sólo soporta Linux
   y macOS) y lo resolví corriendo Paperclip en Ubuntu dentro de WSL2, con los
-  mismos resultados que en la Mac.
+  mismos resultados que en la Mac. Las dos mandan por el mismo canal, en Vercel.
 - El canal quedó listo para producción en la cuenta de la empresa
   ([`docs/PRODUCCION.md`](docs/PRODUCCION.md)).
 - 183 tests, con una verificación independiente del motor
