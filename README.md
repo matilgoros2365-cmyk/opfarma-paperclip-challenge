@@ -223,6 +223,10 @@ Los agentes se crean pausados, así que nada corre ni consume hasta que los
 reanudes. En <http://localhost:3100>, reanudá **StockScout** y
 **MarginReviewer** y abrí la tarea **OPF-1**.
 
+Si un agente queda alternando entre *verifying* y *paused*, el log sólo dice
+`exitCode 1`. La causa real está en el agente, en *Harness / Runtime → Run test →
+Test details*.
+
 Si una corrida falla en un segundo con un error de workspace, usá **Retry** en
 la tarea. El setup crea la carpeta de trabajo como repositorio git para evitarlo,
 pero si la borrás o la movés, vuelve a pasar.

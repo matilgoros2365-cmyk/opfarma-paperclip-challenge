@@ -114,6 +114,26 @@ compañía completa y se puede ejecutar más de una vez sin duplicar nada.
 
 ## Qué no funcionó
 
+Todo lo que sigue tuvo solución, salvo dos cosas que dependen de terceros, y en
+esos casos busqué un camino alternativo.
+
+| Obstáculo | Estado | Cómo |
+| --- | --- | --- |
+| Los agentes no arrancaban en Windows | Resuelto | Paperclip dentro de WSL2 |
+| La imagen de Paperclip no entra en Fly | Resuelto en parte | Lo público quedó en Vercel; Paperclip corre en cada máquina |
+| El workspace aislado exige git | Resuelto | El setup crea la carpeta como repositorio |
+| Las conexiones no se completan por API | Evitado | La clave del MCP va en la URL, y el setup es automático |
+| El diagnóstico útil está escondido | Documentado | Dónde mirarlo, en el README y en la investigación |
+| El borrador fallaba sin credenciales (error mío) | Resuelto | El borrador ya no exige credenciales |
+| El envío no pedía aprobación | Resuelto | Una política `require_approval`, que crea el setup |
+| Cada tarjeta exigía Retry | Resuelto | La misma solución del workspace |
+| Meta bloqueó la primera cuenta | Resuelto | Una cuenta nueva, sólo de OpFarma |
+| Las plantillas siguen en revisión | Depende de Meta | La oferta viaja como texto en la ventana de 24 horas |
+| La aprobación del margen no tenía botón | Resuelto | Una herramienta con tarjeta de aprobación |
+| El canal estaba repartido entre la Mac y Vercel | Resuelto | Credenciales sólo en Vercel, con token permanente |
+| Publicar como empresa en LinkedIn | Depende de LinkedIn | Simulación creíble, y el camino real listo |
+| Lo que trababa la instalación de cero | Resuelto | README y setup corregidos |
+
 **Directamente sobre Windows, no logré que un agente arrancara.** Al final lo
 resolví corriendo Paperclip en Ubuntu dentro de WSL2 (ver "Windows, resuelto con
 WSL2", más abajo); esta es la historia de cómo llegué a la causa. Los dos
@@ -224,6 +244,12 @@ el disco raíz con `--rootfs-size`, que es la única opción disponible para eso
 el error fue idéntico, porque el límite no depende del disco solicitado, sino de
 Fly. Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto.
 
+**Cómo lo resolví.** Separé lo que tiene que estar en internet de lo que no. La
+página, los servidores MCP, el webhook de Meta y las credenciales quedaron en
+Vercel, que es lo que pide el enunciado. Paperclip corre en cada máquina, que es
+como está pensado, y todas las instalaciones mandan por el mismo canal. Alojar
+Paperclip en un servidor queda para la semana siguiente.
+
 Hubo otros tres obstáculos que vale la pena registrar.
 
 **El workspace aislado exige un repositorio de git, y no lo avisa.** Después de
@@ -233,21 +259,26 @@ la etapa de revisión empezó a fallar pidiendo un `git_worktree` sobre una carp
 que no era un repositorio. El campo no se puede editar desde la interfaz, y un
 `PATCH` a la tarea devuelve 200 pero no lo aplica. Se resuelve con `git init` en
 la carpeta de trabajo del agente, pero nada lo anticipa. El modo se activa solo y
-el requisito aparece recién cuando algo ya falló.
+el requisito aparece recién cuando algo ya falló. La solución de fondo está más
+abajo, en "Cada respuesta a una tarjeta fallaba por el workspace".
 
 **Las conexiones a herramientas se crean por API, pero no se completan por
 API.** La ruta que las activa es `/api/tool-connections/{id}`, no está en la
 documentación y la encontré leyendo el log del servidor. El último paso del
 alta, cuando la conexión usa una credencial propia, sólo se completa desde la
-interfaz. Por eso el setup no puede ser 100% automatizable, y lo dejé indicado en
-el README en lugar de disimularlo.
+interfaz. Lo evité creando las conexiones sin credencial y con la clave del MCP
+en la URL, que es el patrón que Paperclip ya admite para Zapier. Así el setup
+queda automático de punta a punta. El costo es que la clave queda en la URL, y
+sacarla de ahí es lo primero de la lista para la semana siguiente.
 
 **El diagnóstico útil existe, pero está oculto.** El log del servidor sólo
 registra `exitCode 1`. El detalle real (qué chequeo falló, si hay credenciales
 del entorno que pisan el login y el comando exacto para reproducirlo) está en
 *Agente → Harness / Runtime → Run test → Test details*, a cuatro clics, y ningún
 mensaje de error lo menciona. Si hubiera abierto esa pantalla al principio, me
-habría ahorrado la mitad de las hipótesis.
+habría ahorrado la mitad de las hipótesis. Esto no lo puedo cambiar yo, así que
+lo dejé escrito donde lo va a buscar quien instale el proyecto, en el README, y
+como limitación en la investigación de Paperclip.
 
 ### Un error propio, detectado al probar el flujo real
 
