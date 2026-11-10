@@ -9,13 +9,13 @@ los comandos que indico.
 
 | Ángulo | Qué verifiqué | Resultado |
 | --- | --- | --- |
-| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 186 tests en verde; 8 de 8 roturas detectadas |
+| Corrección del motor | Tests por módulo, una verificación independiente y pruebas de mutación | 193 tests en verde; 8 de 8 roturas detectadas |
 | Webhook de WhatsApp | Firma, suscripción y lectura de avisos, en tests y contra el servidor | Sólo acepta avisos firmados por Meta |
 | Cálculo a mano | Cada oferta, recalculada antes de aprobarla | 5 ofertas y un rechazo, los 6 coinciden con el motor |
 | Integración con Paperclip | Revisión, aprobación y envío, contra la auditoría de Paperclip | Circuito completo con evidencia en el historial |
-| Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación; MarginReviewer bloqueado |
+| Políticas de aprobación | Cada agente contra el endpoint de prueba de políticas | StockScout requiere aprobación para el margen y el envío; MarginReviewer bloqueado en los dos |
 | Reproducibilidad | Clon limpio del repo público, instalación, build y setup repetido | Todo pasa; el setup no duplica nada |
-| Prueba de humo | Las siete herramientas, como las usaría un agente, incluidos los rechazos | 16 de 16, en local y en producción |
+| Prueba de humo | Las ocho herramientas, como las usaría un agente, incluidos los rechazos | 18 de 18 en producción |
 | Windows con WSL2 | Instalación desde cero siguiendo el README, una corrida real de un agente y un envío real | Agentes funcionando y oferta entregada y leída; tres fallas del setup encontradas y corregidas |
 | Dependencias y configuración | Vulnerabilidades conocidas y variables de entorno contra la documentación | 0 vulnerabilidades; una variable sin documentar, corregida |
 | Deploy | La plataforma y los MCP en producción | Página en línea; MCP rechazan sin clave y responden con ella |
@@ -29,14 +29,14 @@ escala.
 
 | Qué | Cuántas veces |
 | --- | --- |
-| Tests automáticos, en 8 archivos | 186, todos en verde |
+| Tests automáticos, en 9 archivos | 193, todos en verde |
 | Combinaciones de lote y cuenta recalculadas por una verificación independiente | 48 de 48 |
 | Días recorridos uno por uno para probar los bordes de los tramos | 401, del 0 al 400 |
 | Errores introducidos a propósito en el motor para ver si los tests los detectan | 8, detectados los 8 |
 | Ofertas recalculadas a mano antes de aprobarlas | 6 de 6 coinciden |
 | Fuentes de Paperclip cruzadas para auditar el envío | 4 |
 | Decisiones de política probadas sin ejecutar nada | 3 por instalación, en 2 instalaciones, idénticas |
-| Chequeos de la prueba de humo | 16, en local y en producción: 32 de 32 |
+| Chequeos de la prueba de humo | 16 de 16 en local y en producción; 18 de 18 con la herramienta del margen |
 | Pedidos al webhook con firmas válidas, alteradas o ausentes | 5, cada uno con la respuesta esperada |
 | Pedidos de control contra producción | 5 en el deploy y otros 5 en la revisión final |
 | Entornos donde corrió el setup | 3: Windows, macOS y Ubuntu en WSL2 |
@@ -64,7 +64,7 @@ eso combiné estas, cada una desde un ángulo distinto.
 | Pruebas de política sin ejecutar | ¿Cada agente puede hacer exactamente lo que debe, y nada más? | Sección 3 |
 | Pruebas negativas y de manipulación | ¿Se rechaza lo que tiene que rechazarse: sin clave, firma alterada, mensaje cambiado después de aprobar? | Secciones 3 y 4 |
 | Punta a punta con Meta real | ¿El mensaje llega de verdad a un celular, y el aviso vuelve? | Sección 3 |
-| Prueba de humo | ¿Las siete herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
+| Prueba de humo | ¿Las ocho herramientas responden bien, usadas como las usaría un agente? | Sección 4 |
 | Reproducibilidad | ¿Funciona en una carpeta vacía, a partir del repo público? | Sección 4 |
 | Multiplataforma | ¿Funciona en Windows, macOS y Linux? | Sección 4 |
 | Idempotencia | ¿Correr el setup de nuevo rompe o duplica algo? | Sección 4 |
@@ -163,6 +163,17 @@ políticas de Paperclip, que decide sin ejecutar nada:
 | MarginReviewer → `whatsapp_send_message` | `allow` | `deny` |
 | StockScout → `whatsapp_draft_message` | `allow` | `allow` (el borrador no se ve afectado) |
 
+Con la aprobación del margen convertida en herramienta, repetí la prueba en
+Windows con las dos herramientas que deciden:
+
+| Agente y herramienta | Decisión |
+| --- | --- |
+| StockScout → `inventory_commit_offer` | `require_approval` |
+| MarginReviewer → `inventory_commit_offer` | `deny` |
+| StockScout → `inventory_draft_offer` | `allow` (armar la oferta no se ve afectado) |
+| StockScout → `whatsapp_send_message` | `require_approval` |
+| MarginReviewer → `whatsapp_send_message` | `deny` |
+
 **El hash del borrador.** Contra el servidor en ejecución: un envío con el
 `draft_id` correcto devuelve el dry-run; el mismo envío con una palabra cambiada
 se rechaza.
@@ -235,13 +246,15 @@ siete variables sin saltos de línea.
   compila sin errores, pasa los tests y genera el build con las rutas del
   webhook incluidas.
 
-**La prueba de humo.** `platform/scripts/smoke.mjs` usa las siete herramientas
+**La prueba de humo.** `platform/scripts/smoke.mjs` usa las ocho herramientas
 como las usaría un agente, contra cualquier instancia, y verifica también lo que
 tiene que fallar: sin clave y con una clave incorrecta (401), un lote a punto de
 vencer, una cuenta bloqueada, un mensaje cambiado después de aprobar y un envío
 sin confirmar. Está hecha para no poder mandar un mensaje real: los únicos
 envíos que prueba son los que el servidor debe rechazar antes de llegar a Meta.
-Pasó 16 de 16 contra el servidor local y 16 de 16 contra producción, en Vercel.
+Pasó 16 de 16 contra el servidor local y contra producción, en Vercel. Con la
+herramienta del margen sumó dos verificaciones (que el margen se fija con los
+números del motor y que uno inflado se rechaza) y pasó 18 de 18 en producción.
 
 ```bash
 cd platform && SMOKE_BASE_URL=http://127.0.0.1:3200 MCP_API_KEY=... node scripts/smoke.mjs
@@ -263,7 +276,7 @@ Contra <https://opfarma-paperclip-challenge.vercel.app>:
 | `/api/mcp/inventory` sin clave | 401 | 401 |
 | `/api/mcp/whatsapp` sin clave | 401 | 401 |
 | Con una clave incorrecta | 401 | 401 |
-| Con la clave correcta | 200 y tres herramientas por servidor | 200 y tres herramientas por servidor |
+| Con la clave correcta | 200 y cuatro herramientas por servidor | 200 y cuatro herramientas por servidor |
 
 Los números de la página coinciden con los del motor, porque los calcula el mismo
 código, y los fija el test de la sección 1. La revisé en escritorio y en ancho de
@@ -306,7 +319,7 @@ corregí lo siguiente:
 
 Al cierre, con todo terminado, volví a pasar por todo una vez más:
 
-- Los 186 tests y el chequeo de tipos, en verde.
+- Los tests y el chequeo de tipos, en verde: hoy son 193.
 - El repo público, archivo por archivo: ningún número de teléfono real, ningún
   token, clave ni archivo de entorno. Los únicos números son los ficticios de
   las cuentas del dataset.
