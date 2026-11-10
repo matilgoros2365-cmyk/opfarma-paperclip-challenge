@@ -41,7 +41,7 @@ escala.
 | Pedidos de control contra producción | 5 en el deploy y otros 5 en la revisión final |
 | Entornos donde corrió el setup | 3 (Windows, macOS y Ubuntu en WSL2) |
 | Corridas del setup sobre una compañía existente, sin duplicar nada | 3 |
-| Clones limpios del repo público, instalados y compilados desde cero | 2 |
+| Clones limpios del repo público, instalados y compilados desde cero | 3, uno de ellos con reloj siguiendo el README |
 | Mensajes reales entregados en un celular | 5, tres desde la Mac y dos desde Windows |
 | Veces que el agente se negó a enviar con una configuración incorrecta, en vez de improvisar | 2 |
 | Inconsistencias de documentación encontradas y corregidas | 6 |
@@ -280,6 +280,24 @@ siete variables sin saltos de línea.
   el chequeo de los agentes pasó, las decisiones de política coincidieron una
   por una con las de la Mac, una segunda corrida del setup no duplicó nada, y
   StockScout completó OPF-1 con las herramientas de Vercel y los mismos números.
+- **La prueba de los 10 minutos, con reloj.** Creé un usuario nuevo en Ubuntu,
+  sin nada instalado en su carpeta, y seguí el README al pie de la letra.
+  - **Tiempos.** `git clone` en 1 segundo, `npm install` en 3 minutos y 50
+    segundos, Paperclip configurado y andando en menos de un minuto, los
+    servidores MCP en 42 segundos y el setup en 4 segundos. Con la lectura de los
+    pasos, entra en 10 minutos.
+  - **Lo que trababa, ya corregido.**
+    - `npm install -g` de Claude Code falla en Linux sin permisos de
+      administrador. Ahora el README usa el instalador oficial.
+    - `npx paperclipai run` no arranca una instalación nueva si la terminal no
+      es interactiva. Ahora el README usa `npx paperclipai onboard --yes`, que
+      configura y deja el servidor andando en un paso.
+    - Si los servidores MCP no estaban levantados, el setup fallaba con un error
+      que no orientaba. Ahora lo chequea antes y dice qué falta.
+    - El token de administración ya no hace falta en la instalación local, y el
+      README tiene un paso menos.
+  - **Resultado.** La compañía con sus dos agentes, las cuatro conexiones MCP,
+    las seis políticas de aprobación y las cinco tareas.
 - **Un segundo clon limpio** al cierre, con todo lo agregado después, instala,
   compila sin errores, pasa los tests y genera el build con las rutas del
   webhook incluidas.
@@ -394,8 +412,8 @@ Y me adelanté a dos fallas que todavía no habían pasado.
   de intentar cerrar la tarea, así que nunca vi al runtime frenarlo.
 - **Linux fuera de WSL2.** Los agentes corrieron en macOS y en Ubuntu dentro de
   WSL2; no lo probé en un servidor Linux.
-- **Los 10 minutos con otra persona.** Las instrucciones las validé en mi propio
-  recorrido, no con alguien que las siga desde cero.
+- **Los 10 minutos con otra persona.** Lo probé con un usuario nuevo de Linux,
+  sin nada instalado, pero no con una persona que no conozca el proyecto.
 - **Las fuentes del problema, una por una.** La normativa la verifiqué contra el
   Boletín Oficial y los sitios de ANMAT. Leí completos los dos informes de la
   AGN, el informe sectorial de CADIEM, los de Hacienda y CEPAL, el artículo de

@@ -220,6 +220,18 @@ if (scout) {
 
 log.step("Conexiones MCP");
 
+// Antes de crear las conexiones, que los servidores MCP respondan. Si no,
+// Paperclip se queda esperando el catálogo y el error que llega no orienta.
+try {
+  const probe = await fetch(`${MCP_BASE}/api/mcp/inventory`, { signal: AbortSignal.timeout(15000) });
+  if (probe.status >= 500) throw new Error(`HTTP ${probe.status}`);
+} catch (error) {
+  fatal(
+    `Los servidores MCP no responden en ${MCP_BASE} (${error.message}). ` +
+      "Levantalos en otra terminal con cd platform && npm run dev, o usá MCP_BASE_URL con la dirección de Vercel, y volvé a correr el script.",
+  );
+}
+
 const connectionsResponse = await api("GET", `/companies/${CID}/tools/connections`);
 const connections = connectionsResponse?.connections ?? [];
 

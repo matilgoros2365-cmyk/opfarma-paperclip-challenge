@@ -103,7 +103,9 @@ no sólo el cierre.
 ## Cómo levantarlo en unos 10 minutos
 
 Necesitás macOS o Linux, Node.js 24.11 o más nuevo, git, y Claude Code con una
-suscripción activa.
+suscripción activa. Lo probé con reloj en un usuario nuevo de Linux, sin nada
+instalado. Lo que más tarda es el `npm install` del repo, unos 4 minutos; el
+resto suma 2 o 3 más.
 
 > **En Windows, usá WSL2.** Directamente sobre Windows los agentes no arrancan,
 > porque el runner de Paperclip para Windows falla. La causa, con el código que
@@ -114,8 +116,12 @@ suscripción activa.
 ### 1. Claude Code
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | bash
 ```
+
+Es el instalador oficial y no pide permisos de administrador. Si preferís npm,
+en Linux `npm install -g` suele fallar por permisos; los comandos para
+instalarlo en tu usuario están en [Windows con WSL2](#windows-con-wsl2), paso 3.
 
 ```bash
 claude auth login
@@ -136,16 +142,16 @@ git clone https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge.git
 cd opfarma-paperclip-challenge && npm install
 ```
 
-Si npm avisa que hay scripts de instalación pendientes de aprobación (pasa con
-npm 11 y el PostgreSQL embebido), aprobalos con `npm approve-scripts` y repetí
-`npm install`.
+El repo ya aprueba el script de instalación del PostgreSQL embebido. Si npm
+avisa de otro script sin aprobar (`ssh2`), no hace falta hacer nada.
 
 ```bash
-npx paperclipai run
+npx paperclipai onboard --yes
 ```
 
-Queda en <http://localhost:3100>. La primera vez tarda un poco más porque
-inicializa la base. Dejá esa terminal abierta.
+La primera vez configura Paperclip con las opciones por defecto y lo deja
+andando en <http://localhost:3100>, en menos de un minuto. Dejá esa terminal
+abierta. Las veces siguientes alcanza con `npx paperclipai run`.
 
 ### 3. Los servidores MCP
 
@@ -167,18 +173,17 @@ Queda en <http://localhost:3200>. Dejá también esa terminal abierta.
 
 ### 4. La compañía
 
-En una tercera terminal, desde la raíz del repo, generá un token de
-administración.
+En una tercera terminal, desde la raíz del repo, con la misma clave que pusiste
+en `.env.local`.
 
 ```bash
-npx paperclipai token board create --name setup --json
+PAPERCLIP_RUNNER=legacy MCP_API_KEY=la-misma-clave node scripts/setup-company.mjs
 ```
 
-Después, con ese token, corré el setup.
-
-```bash
-PAPERCLIP_RUNNER=legacy PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-misma-clave node scripts/setup-company.mjs
-```
+En la instalación local, Paperclip no pide token. Si lo instalaste con login
+(modo `authenticated`), generá uno con `npx paperclipai token board create
+--name setup --json` y pasalo como `PAPERCLIP_BOARD_TOKEN`. Si el script dice
+que los servidores MCP no responden, es que falta el `npm run dev` del paso 3.
 
 El script crea la compañía con su presupuesto y su objetivo, los dos agentes con
 su línea de reporte, las cuatro conexiones MCP con el catálogo verificado
@@ -207,9 +212,9 @@ Los agentes se crean pausados, así que nada corre ni consume hasta que los
 reanudes. En <http://localhost:3100>, reanudá **StockScout** y
 **MarginReviewer** y abrí la tarea **OPF-1**.
 
-Si después de responder una tarjeta la corrida falla en un segundo con un error
-de workspace, usá **Retry** en la tarea. Es una limitación conocida de Paperclip
-con los workspaces aislados, y está documentada en la bitácora.
+Si una corrida falla en un segundo con un error de workspace, usá **Retry** en
+la tarea. El setup crea la carpeta de trabajo como repositorio git para evitarlo,
+pero si la borrás o la movés, vuelve a pasar.
 
 ### Windows con WSL2
 
@@ -274,19 +279,16 @@ instalalo como servicio y respondé **No** a seguir corriendo después de cerrar
 sesión. El servicio queda en el puerto 3100; si la terminal muestra otro
 servidor en el 3101, cerralo con Ctrl+C.
 
-**5. La compañía**, con los MCP de Vercel y la `MCP_API_KEY` del proyecto en
-Vercel.
+**5. Los servidores MCP y la compañía.** Seguí los pasos 3 y 4 de arriba,
+dentro de Ubuntu. En WSL2 no hace falta `PAPERCLIP_RUNNER=legacy`, porque
+Paperclip elige el runner solo y el chequeo de los agentes pasa.
+
+Si tenés la `MCP_API_KEY` del proyecto en Vercel, podés saltear el paso 3 y
+usar los servidores de producción, con el canal de WhatsApp real.
 
 ```bash
-npx paperclipai token board create --name setup --json
+MCP_API_KEY=la-de-vercel MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
 ```
-
-```bash
-PAPERCLIP_BOARD_TOKEN=pcp_board_... MCP_API_KEY=la-de-vercel MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
-```
-
-En WSL2 no hace falta `PAPERCLIP_RUNNER=legacy`. Paperclip elige el runner solo,
-y el chequeo de los agentes pasa.
 
 ## Cómo verificarlo sin esperar a los agentes
 
