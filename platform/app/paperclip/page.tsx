@@ -12,6 +12,10 @@ import { Marked } from "marked";
 
 import evidence from "@/data/paperclip-evidence.json";
 
+import { Masthead } from "../masthead";
+import { Replay, type ReplayEvent } from "./replay";
+import { Documentos } from "../docs";
+
 export const metadata: Metadata = {
   title: "OpFarma en Paperclip",
   description: "El historial real de la compañía de agentes de OpFarma en Paperclip: tareas, agentes y aprobaciones humanas.",
@@ -167,49 +171,26 @@ const PERMISOS: { herramienta: string; StockScout: string; GrowthScout: string; 
 
 /* -------------------------------------------------------------------------- */
 
-function Aprobacion({ e }: { e: Approval }) {
-  const ok = e.status === "accepted";
-  return (
-    <li className={`ev-approval ${ok ? "ok" : "no"}`}>
-      <div className="ev-approval-head">
-        <span className="ev-badge">{ok ? "Aprobada por una persona" : "Rechazada por una persona"}</span>
-        <span className="ev-time">
-          pedida {hora(e.at)}
-          {e.resolvedAt ? `, resuelta ${hora(e.resolvedAt)}` : ""}
-        </span>
-      </div>
-      <p className="ev-approval-tool">
-        <strong>{HERRAMIENTA[e.tool] ?? e.tool}</strong>, en {e.app}, a pedido de {e.requestedBy ?? "un agente"}
-      </p>
-      {e.args ? (
-        <dl className="ev-args">
-          {Object.entries(e.args).map(([k, v]) => (
-            <div key={k}>
-              <dt>
-                <code>{k}</code>
-              </dt>
-              <dd>{typeof v === "string" ? v : JSON.stringify(v)}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-    </li>
-  );
-}
-
-function Comentario({ e, abierto }: { e: Comment; abierto: boolean }) {
-  return (
-    <li className="ev-comment">
-      <details open={abierto}>
-        <summary>
-          <span className="ev-author">{e.author === "Persona" ? "La operadora" : e.author}</span>
-          <span className="ev-time">{hora(e.at)}</span>
-          <span className="ev-title">{titular(e.body)}</span>
-        </summary>
-        <div className="ev-body" dangerouslySetInnerHTML={{ __html: render(e.body) }} />
-      </details>
-    </li>
-  );
+function aReplay(e: Event): ReplayEvent {
+  if (e.kind === "comment") {
+    return {
+      kind: "comment",
+      author: e.author === "Persona" ? "La operadora" : (e.author ?? "Alguien"),
+      time: hora(e.at),
+      title: titular(e.body),
+      html: render(e.body),
+    };
+  }
+  return {
+    kind: "approval",
+    ok: e.status === "accepted",
+    tool: HERRAMIENTA[e.tool] ?? e.tool,
+    app: e.app,
+    requestedBy: e.requestedBy ?? "un agente",
+    requestedAt: hora(e.at),
+    resolvedAt: hora(e.resolvedAt),
+    args: e.args ? Object.entries(e.args).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)]) : [],
+  };
 }
 
 export default function PaperclipPage() {
@@ -219,16 +200,11 @@ export default function PaperclipPage() {
   const rechazadas = aprobaciones.length - aprobadas;
 
   return (
-    <div className="page">
-      <header className="masthead">
-        <Link href="/" className="wordmark" style={{ textDecoration: "none", color: "inherit" }}>
-          Op<span>Farma</span>
-        </Link>
-        <span className="masthead-date">Exportado de Paperclip el {fechaLarga(data.exportedAt)}</span>
-      </header>
-
+    <>
+      <Masthead actual="paperclip" nota={`Exportado el ${fechaLarga(data.exportedAt)}`} />
+      <main className="page">
       <section className="hero">
-        <h1>La compañía en Paperclip, tal como trabajó.</h1>
+        <h1 className="hero-title">La compañía en Paperclip, tal como trabajó.</h1>
         <p>
           Paperclip corre en la computadora de cada persona, así que no se puede abrir desde acá. Esto es el historial
           real de siete tareas, exportado de Paperclip {data.paperclipVersion ?? ""} con los datos personales
@@ -236,7 +212,7 @@ export default function PaperclipPage() {
           {rechazadas === 1 ? "una rechazada" : `${rechazadas} rechazadas`}) y las tres vías del desafío.
         </p>
         <p className="fine">
-          Es una foto con fecha, no una vista en vivo. Cómo levantar la compañía en tu máquina está en el{" "}
+          Cada tarea se reproduce al llegar a ella, con el ritmo inventado y los datos reales. Cómo levantar la compañía en tu máquina está en el{" "}
           <a href="https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge#cómo-levantarlo-en-unos-10-minutos">
             README
           </a>
@@ -248,7 +224,7 @@ export default function PaperclipPage() {
         <h2 id="org">Los agentes y lo que puede hacer cada uno</h2>
         <p className="lede">
           Cada agente usa sólo las herramientas de su área, y lo que decide algo pide una persona. Lo impone Paperclip
-          con políticas, no las instrucciones.
+          con políticas, no las instrucciones. Las tareas de abajo se reproducen solas al llegar a cada una.
         </p>
         <ul className="ev-agents">
           {data.agents.map((a) => (
@@ -288,7 +264,7 @@ export default function PaperclipPage() {
         </div>
       </section>
 
-      <nav className="ev-toc" aria-label="Las tareas">
+      <nav className="ev-toc" id="tareas" aria-label="Las tareas">
         {CAPITULOS.map((c) => (
           <a key={c.id} href={`#${c.id}`}>
             <code>{c.id}</code> {c.titulo}
@@ -304,32 +280,36 @@ export default function PaperclipPage() {
             <p className="ev-kicker">
               <code>{issue.identifier}</code>
               {c.via ? <span className="ev-via">{c.via}</span> : null}
-              <span>
-                {issue.assignee ?? "sin asignar"}, {ESTADO[issue.status] ?? issue.status}
-              </span>
+              <span>{issue.assignee ?? "sin asignar"}</span>
             </p>
             <h2 id={`${c.id}-t`}>{c.titulo}</h2>
             <p className="lede">{c.texto}</p>
             <p className="ev-task">
               La tarea en Paperclip, <em>{issue.title}</em>
             </p>
-            <ol className="ev-timeline">
-              {issue.events.map((e, idx) =>
-                e.kind === "approval" ? (
-                  <Aprobacion key={idx} e={e} />
-                ) : (
-                  <Comentario key={idx} e={e} abierto={false} />
-                ),
-              )}
-            </ol>
+            <Replay
+              events={issue.events.map(aReplay)}
+              status={issue.status}
+              statusLabel={`Tarea ${ESTADO[issue.status] ?? issue.status}`}
+            />
           </section>
         );
       })}
+
+      <Documentos
+        items={[
+          { path: "VERIFICATION.md", titulo: "Cómo lo verifiqué", detalle: "Cada prueba, con su resultado" },
+          { path: "docs/BITACORA.md", titulo: "Bitácora técnica", detalle: "Los obstáculos de cada tarea y cómo se resolvieron" },
+          { path: "research/PAPERCLIP.md", titulo: "Paperclip, en versión extendida", detalle: "Políticas, aprobaciones y lo que encontré usándolo" },
+          { path: "scripts/setup-company.mjs", titulo: "El script que arma la compañía", detalle: "Agentes, permisos y tareas, en un comando" },
+        ]}
+      />
 
       <footer className="colophon">
         Exportado con <code>scripts/export-evidence.mjs</code>, que enmascara teléfonos, identificadores de mensajes,
         rutas y claves, y se niega a escribir si queda alguno. <Link href="/">Volver a la plataforma</Link>.
       </footer>
-    </div>
+      </main>
+    </>
   );
 }

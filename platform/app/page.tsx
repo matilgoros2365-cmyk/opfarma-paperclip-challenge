@@ -16,11 +16,12 @@ import { listAgents, listIssues, loadPaperclipConfig, STATUS_ORDER } from "@/lib
 import Link from "next/link";
 
 import { Explorer } from "./explorer";
+import { DOC, Documentos, REPO } from "./docs";
+import { Cover, Masthead } from "./masthead";
+import { Steps } from "./steps";
 
 export const dynamic = "force-dynamic";
 
-const REPO = "https://github.com/matilgoros2365-cmyk/opfarma-paperclip-challenge";
-const DOC = (path: string) => `${REPO}/blob/main/${path}`;
 
 /* -------------------------------------------------------------------------- */
 /* formato                                                                    */
@@ -169,13 +170,13 @@ async function Company() {
       <section className="section" aria-labelledby="compania">
         <h2 id="compania">La compañía en Paperclip</h2>
         <p>
-          Dos agentes. StockScout escanea el inventario, coloca cada lote y redacta las ofertas. MarginReviewer revisa sus
-          números y no puede enviar mensajes.
+          Tres agentes. StockScout escanea el inventario, coloca cada lote y redacta las ofertas. MarginReviewer revisa sus
+          números y no puede enviar nada. GrowthScout ofrece en LinkedIn los lotes que ninguna cuenta absorbe.
         </p>
         <p>
           Cinco tareas. Detectar los lotes en riesgo, armar y revisar la oferta, aprobar el margen y el mensaje antes de
-          mandarla por WhatsApp, publicar en LinkedIn el lote que ninguna cuenta absorbe, y dejar ese posteo listo para
-          Grok Bot.
+          mandarla por WhatsApp, preparar el posteo en LinkedIn del lote que ninguna cuenta absorbe, y dejar ese posteo listo
+          para Grok Bot.
         </p>
         <p>
           Paperclip corre en la computadora de cada persona, así que desde acá no se ve en vivo. El historial real de las
@@ -231,70 +232,63 @@ export default function Page() {
   const sinDestino = placements.filter((p) => destinoDe(p) === "nadie");
 
   return (
-    <div className="page">
-      <header className="masthead">
-        <span className="wordmark">
-          Op<span>Farma</span>
-        </span>
-        <span className="masthead-date">
-          Inventario al {fechaLarga(asOf)} · <Link href="/paperclip">La compañía en Paperclip</Link>
-        </span>
-      </header>
-
-      <section className="hero">
-        <h1>
+    <>
+      <Cover />
+      <Masthead actual="plataforma" nota={`Inventario al ${fechaLarga(asOf)}`} />
+      <main className="page">
+      <section className="hero" id="problema" aria-labelledby="problema-t">
+        <h2 id="problema-t" className="hero-title">
           {placements.length} lotes de insumos médicos se vencen en el depósito si nadie los mueve.
-        </h1>
+        </h2>
         <p>
           Valen {pesos.format(enRiesgo)} al costo. Saber qué se vence es fácil; lo difícil es encontrar a quién vendérselo a
           tiempo. {colocables.length} de estos lotes tienen una cuenta que los consume antes de la fecha, por{" "}
           {pesos.format(colocableValor)}. {sinDestino.length === 1 ? "Uno es demasiado grande" : `${sinDestino.length} son demasiado grandes`} para
           cualquier cuenta, y {bajas.length === 1 ? "otro ya no tiene arreglo" : `${bajas.length} ya no tienen arreglo`}.
         </p>
+        <Documentos
+          items={[
+            { path: "research/EXPIRY.md", titulo: "El problema", detalle: "Por qué los lotes se vencen y de dónde salen los tramos" },
+            { path: "README.md", titulo: "README", detalle: "Qué se entrega y cómo levantarlo en 10 minutos" },
+          ]}
+        />
       </section>
 
       <Explorer asOf={asOf} />
 
       <section className="section" aria-labelledby="quien">
-        <h2 id="quien">Quién hace qué</h2>
+        <h2 id="quien">Quién firma cada paso</h2>
         <p className="lede">
           Los agentes hacen lo que a mano no da el tiempo. Las personas firman donde un error lo paga otro.
         </p>
-        <ol className="steps">
-          <li>
-            <h3>Encuentra a quién colocar cada lote</h3>
-            <p>Escanea el inventario y cruza cada lote con la rotación de cada cuenta. Con cientos de cuentas, a mano no se hace.</p>
-            <span className="who">StockScout, agente</span>
-          </li>
-          <li>
-            <h3>Pone el precio</h3>
-            <p>Lo calcula el motor según el tramo de vencimiento. El agente no lo puede cambiar ni ofrecer por debajo del piso.</p>
-            <span className="who">Código, con tests</span>
-          </li>
-          <li>
-            <h3>Revisa la colocación</h3>
-            <p>Valida que la cuenta lo consuma a tiempo, que el precio respete el piso y que no tenga deuda ni bloqueo.</p>
-            <span className="who">MarginReviewer, agente</span>
-          </li>
-          <li className="human">
-            <h3>Aprueba el margen</h3>
-            <p>Paperclip frena la oferta y pide aprobación en la tarea, con el precio y el margen que calculó el código. Colocar mal un lote no borra la pérdida, se la pasa a una clínica.</p>
-            <span className="who">Una persona</span>
-          </li>
-          <li className="human">
-            <h3>Aprueba cada mensaje</h3>
-            <p>Paperclip frena el envío y pide aprobación en la tarea. Sale sólo el texto exacto que se aprobó.</p>
-            <span className="who">Una persona, otra vez</span>
-          </li>
-        </ol>
+        <Steps />
+        <p className="steps-aside">
+          Si ninguna cuenta absorbe el lote entero, GrowthScout arma un posteo para LinkedIn y deja listo el traspaso a Grok
+          Bot. Tampoco publica sin que una persona lo apruebe, y no puede tocar márgenes ni mandar WhatsApp.
+        </p>
+        <Documentos
+          items={[
+            { path: "DECISIONS.md", titulo: "Decisiones", detalle: "Qué elegí y por qué, en media página" },
+            { path: "docs/REGISTRO-DE-DECISIONES.md", titulo: "Registro de decisiones", detalle: "Cada decisión con sus opciones" },
+            { path: "docs/BITACORA.md", titulo: "Bitácora técnica", detalle: "Cada obstáculo y cómo se resolvió" },
+          ]}
+        />
       </section>
 
-      <div className="split">
+      <div className="split" id="canal">
         <Channel />
         <Company />
       </div>
+      <Documentos
+        items={[
+          { path: "research/CANALES.md", titulo: "Por qué tres canales", detalle: "WhatsApp, LinkedIn y Grok Bot, con fuentes" },
+          { path: "docs/PRODUCCION.md", titulo: "WhatsApp en producción", detalle: "Qué falta para pasar del número de prueba" },
+          { path: "VERIFICATION.md", titulo: "Cómo lo verifiqué", detalle: "Las pruebas, los envíos reales y la matriz de permisos" },
+          { path: "research/RESEARCH.md", titulo: "Paperclip, en una página", detalle: "Qué es y cómo lo usé" },
+        ]}
+      />
 
-      <aside className="note" aria-labelledby="nota">
+      <aside className="note" id="por-que" aria-labelledby="nota">
         <h2 id="nota">Por qué está armado así</h2>
         <p>
           Armé OpFarma para el desafío técnico de Paperclip. Elegí este problema porque en insumos médicos un lote vencido es
@@ -302,16 +296,19 @@ export default function Page() {
           cientos de cuentas.
         </p>
         <p>
-          Dejé el precio en código y no en el modelo, y puse a una persona en los dos lugares donde un error le cuesta a un
-          tercero, el margen y el mensaje al cliente. El segundo control no venía configurado en Paperclip; lo detectó el
-          propio agente cuando el envío pasó sin pedir permiso.
+          Dejé el precio en código y no en el modelo, y puse a una persona en los lugares donde un error le cuesta a un
+          tercero, el margen, el mensaje al cliente y el posteo. El control del mensaje no venía configurado en Paperclip; lo
+          detectó el propio agente cuando el envío pasó sin pedir permiso.
         </p>
         <ul>
           <li>
             <a href={DOC("DECISIONS.md")}>Qué decidí y con qué me choqué</a>
           </li>
           <li>
-            <a href={DOC("research/RESEARCH.md")}>Qué es Paperclip, en una página</a>
+            <a href={DOC("research/PAPERCLIP.md")}>Paperclip, en versión extendida</a>
+          </li>
+          <li>
+            <a href={DOC("deploy/README.md")}>Por qué Paperclip corre local</a>
           </li>
           <li>
             <a href={REPO}>El código</a>
@@ -320,10 +317,11 @@ export default function Page() {
       </aside>
 
       <footer className="colophon">
-        Los agentes usan dos servidores MCP de esta misma aplicación, <code>/api/mcp/inventory</code> para escanear, colocar
-        y armar ofertas, y <code>/api/mcp/whatsapp</code> para el estado del canal, los borradores y el envío. Los dos piden
-        clave.
+        Los agentes usan tres servidores MCP de esta misma aplicación. <code>/api/mcp/inventory</code> escanea, coloca y fija
+        las ofertas, <code>/api/mcp/whatsapp</code> maneja el canal, los borradores y el envío, y <code>/api/mcp/social</code>{" "}
+        arma el posteo de LinkedIn y el traspaso a Grok Bot. Los tres piden clave.
       </footer>
-    </div>
+      </main>
+    </>
   );
 }
