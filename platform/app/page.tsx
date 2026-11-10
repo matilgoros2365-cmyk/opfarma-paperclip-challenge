@@ -95,8 +95,9 @@ async function DeliveryLog() {
     <>
       <p style={{ marginTop: 14 }}>Lo último que informó Meta sobre los envíos reales.</p>
       <ul className="issues">
-        {events.map((event) => (
-          <li key={`${event.wamid}-${event.status}`}>
+        {/* La clave es la posición: el wamid lleva el número del celular codificado y no puede llegar al navegador. */}
+        {events.map((event, i) => (
+          <li key={`${i}-${event.status}`}>
             <span className="state">{ESTADO_ENVIO[event.status] ?? event.status}</span>
             <span>
               al número {event.recipient}, {hora(event.at)}
