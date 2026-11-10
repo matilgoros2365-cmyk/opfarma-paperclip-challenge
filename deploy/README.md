@@ -1,69 +1,57 @@
-# Hostear Paperclip: qué intenté y dónde se frenó
+# Alojar Paperclip en la nube: qué evalué y por qué no lo hice
 
-El control plane de Paperclip no puede ir en Vercel. Es un servidor con estado
-(PostgreSQL, archivos, una cola de heartbeats y tareas programadas), y el único
-despliegue en la nube que documentan es Docker sobre contenedores persistentes.
-En Vercel corre la otra mitad, que sí es HTTP sin estado: los dos servidores MCP,
-el webhook de WhatsApp y la plataforma.
+Paperclip corre en la máquina de cada persona, que es como está pensado. En
+Vercel está todo lo que tiene que estar en internet: la página, los dos
+servidores MCP, el webhook de Meta y las credenciales. Así, cualquier
+instalación de Paperclip, en macOS, en Linux o en Windows con WSL2, manda por el
+mismo canal.
 
-Dejo registrado el intento, porque lo que no funcionó también dice algo sobre
-cómo se despliega este producto.
+Evalué publicar también Paperclip, para que quien evalúa pudiera abrirlo sin
+instalar nada, y decidí no hacerlo.
 
-## Lo que aprendí antes de intentarlo
+## Por qué no lo hice
 
-**No hace falta construir una imagen.** Paperclip publica
-`ghcr.io/paperclipai/paperclip:latest`, para `linux/amd64` y `arm64`, y trae
-incluidos el servidor, el PostgreSQL embebido y los CLI de los adapters locales
-(`claude`, `codex`, `opencode` y `gemini`). Eso último era justamente lo que me
-interesaba, porque en Windows el adapter de Claude nunca pasó su chequeo.
+- **El enunciado no lo pide.** Pide la plataforma en Vercel y que otra persona
+  levante la compañía en 10 minutos con el README. Las dos cosas están, y la
+  segunda la probé con reloj.
+- **Aclara que no hace falta que quede *production-ready*.** Un Paperclip
+  público, con login, usuarios y un servidor pago, es ir hacia producción.
+- **Habría sumado costo y puntos de falla a horas de la entrega**, sin agregar
+  evidencia nueva. El historial real de las tareas ya se ve en el Loom y en la
+  página de evidencia de la plataforma.
 
-**Hace falta un volumen persistente.** Todo el estado vive en `PAPERCLIP_HOME`:
-la base, los archivos y la clave maestra de secretos. Sin volumen, cada deploy
-arranca de cero y lo cifrado queda ilegible.
+## Las opciones que comparé
 
-**No puede suspenderse entre visitas.** Tiene una base de datos y una cola de
-heartbeats corriendo; si la máquina se suspende, corta las ejecuciones a la
-mitad.
+| Opción | Costo por mes | Esfuerzo | Lo que pesó en contra |
+| --- | --- | --- | --- |
+| Railway, plan Hobby, con la plantilla de Paperclip | US$5 de base, unos US$10 con uso | Bajo, ya viene público y con login | La plantilla es de la comunidad, y había que resolver el login de los agentes en el servidor |
+| Un servidor propio (DigitalOcean o AWS Lightsail) con Docker | US$24 | Medio, con certificado, dominio y mantenimiento | Costo y mantenimiento para una demo |
+| Tailscale Funnel desde mi computadora | Gratis | Bajo | La computadora tiene que estar prendida toda la evaluación, y queda expuesta |
+| Cloudflare Tunnel rápido | Gratis | Mínimo | El link cambia en cada reinicio, sin garantía de que la interfaz en vivo funcione |
+| Render | US$85 o más | Medio | Caro para lo que aporta |
 
-## Fly.io: hasta dónde llegué
+De todas, Railway era la mejor. Si hiciera falta, es la primera que usaría.
 
-Creé la app y un volumen cifrado de 3 GB en São Paulo (no hay región en Buenos
-Aires: `eze` no figura en el catálogo), y dejé la configuración en
-[`fly.toml`](fly.toml) con las variables que indica la documentación.
+## Lo que haría falta para publicarlo
 
-El despliegue se frenó con este error:
+1. Desplegar Paperclip en modo `authenticated` y `public`, con la dirección
+   pública en `PAPERCLIP_PUBLIC_URL`.
+2. Reclamar la instancia con el link de un solo uso que aparece en el log
+   (`/board-claim/...`), que deja a quien lo abre como dueña.
+3. Resolver cómo se autentican los agentes en el servidor, con una API key de
+   Anthropic o iniciando sesión en Claude Code ahí.
+4. Crear la compañía con el mismo script, apuntando a la dirección pública y a
+   los servidores MCP de Vercel.
 
-```
-Not enough space to unpack image, ghcr.io/paperclipai/paperclip:latest,
-possibly exceeds maximum of 8GiB uncompressed
-```
+   ```bash
+   PAPERCLIP_API_URL=https://.../api PAPERCLIP_BOARD_TOKEN=... MCP_API_KEY=... MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
+   ```
 
-La imagen pesa **5,3 GB comprimida** y, al descomprimirse, supera el límite de
-**8 GiB** de la plataforma. Probé ampliar el disco raíz con `--rootfs-size 20`,
-que es la única opción disponible para eso (y que `fly deploy` ni siquiera
-expone: hay que usar `fly machine run`), y el error fue idéntico. Es decir, el
-límite no depende del disco solicitado, sino de Fly.
+5. Invitar a quien evalúa con el rol **Viewer**, que es de sólo lectura. Puede
+   ver las tareas y los hilos, pero no aprobar tarjetas ni hacer correr a los
+   agentes. Hay que elegirlo a mano, porque la invitación viene con *Operator*
+   por defecto.
 
-Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto, y no
-se resuelve con configuración.
-
-En el camino aparecieron dos detalles menores que vale la pena registrar: la
-sintaxis de puertos de `fly machine run` exige el protocolo
-(`443:3100/tcp:http:tls`, no `443:3100/tls:http`), y la prueba gratuita pide una
-tarjeta antes de crear el primer release.
-
-## Qué haría con más tiempo
-
-Un servidor virtual con Docker, sin límite de tamaño de imagen, que es el
-escenario que asume la documentación de Paperclip. Railway sería otra opción,
-pero habría que verificar si impone un límite parecido.
-
-Con el servidor en línea, crear la compañía completa es un solo comando:
-
-```bash
-PAPERCLIP_API_URL=https://.../api PAPERCLIP_BOARD_TOKEN=... MCP_API_KEY=... MCP_BASE_URL=https://opfarma-paperclip-challenge.vercel.app node scripts/setup-company.mjs
-```
-
-Un detalle importante sobre `MCP_BASE_URL`: si apunta a `127.0.0.1:3200`, las
-conexiones funcionan sólo en local. Un Paperclip hosteado necesita la URL pública
-de Vercel para poder llamar a las herramientas.
+Un detalle sobre `MCP_BASE_URL`. Si apunta a `127.0.0.1:3200`, las conexiones
+funcionan sólo en local. Un Paperclip en la nube necesita la dirección de
+Vercel para llamar a las herramientas.

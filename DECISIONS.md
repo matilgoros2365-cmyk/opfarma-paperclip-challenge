@@ -39,8 +39,10 @@ cada elección están en [`research/CANALES.md`](research/CANALES.md).
   servidor rechaza cualquier número distinto del motor.
 - **Cada respuesta a una tarjeta exigía Retry**, porque Paperclip pide que la
   carpeta de trabajo sea un repositorio git. El setup ahora la crea así.
-- **Paperclip no entra en Fly.** Publiqué en Vercel lo que tiene que estar en
-  internet; Paperclip corre en cada máquina y todas usan ese canal.
+- **Paperclip no está publicado, a propósito.** Evalué alojarlo en Railway, en un
+  servidor propio o con un túnel, y no hacía falta. El enunciado pide la
+  plataforma en Vercel y que otra persona lo levante en 10 minutos, y publicarlo
+  sumaba costo y riesgos ([`deploy/README.md`](deploy/README.md)).
 - **Meta bloqueó la primera cuenta de prueba.** Abrí una sólo de OpFarma y
   llegaron cinco ofertas reales. Las plantillas siguen en revisión, así que la
   oferta viaja como texto dentro de la ventana de 24 horas.

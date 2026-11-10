@@ -82,10 +82,14 @@ técnico, están en la [bitácora](BITACORA.md).
   la URL.
 
 **10. Dónde corre Paperclip.**
-- *Opciones.* En un servidor en la nube, o en cada máquina.
+- *Opciones.* Publicado en la nube (Railway, un servidor propio o un túnel), o en
+  cada máquina.
 - *Elegí* cada máquina, y en Windows dentro de WSL2.
-- *Por qué.* La imagen de Paperclip no entra en Fly, y Paperclip está pensado
-  para correr local. En Windows nativo los agentes no arrancan, porque el runner
+- *Por qué.* El enunciado pide la plataforma en Vercel y que otra persona lo
+  levante en 10 minutos, no que Paperclip esté público, y aclara que no hace
+  falta que quede *production-ready*. Publicarlo sumaba costo y riesgos sin
+  agregar evidencia. La comparación está en
+  [`deploy/README.md`](../deploy/README.md). En Windows nativo los agentes no arrancan, porque el runner
   sólo soporta Linux y macOS. Todo lo que tiene que estar en internet quedó en
   Vercel.
 

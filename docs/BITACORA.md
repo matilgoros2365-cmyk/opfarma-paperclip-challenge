@@ -120,7 +120,7 @@ esos casos busqué un camino alternativo.
 | Obstáculo | Estado | Cómo |
 | --- | --- | --- |
 | Los agentes no arrancaban en Windows | Resuelto | Paperclip dentro de WSL2 |
-| La imagen de Paperclip no entra en Fly | Resuelto en parte | Lo público quedó en Vercel; Paperclip corre en cada máquina |
+| Paperclip no está publicado en internet | Decisión | Lo evalué y no hacía falta; lo público está en Vercel |
 | El workspace aislado exige git | Resuelto | El setup crea la carpeta como repositorio |
 | Las conexiones no se completan por API | Evitado | La clave del MCP va en la URL, y el setup es automático |
 | El diagnóstico útil está escondido | Documentado | Dónde mirarlo, en el README y en la investigación |
@@ -235,20 +235,15 @@ los servidores con `env -i` y un PATH mínimo. Si los hubiera lanzado desde una
 sesión cualquiera, variables como `ANTHROPIC_BASE_URL` se habrían filtrado sin
 que nadie lo advirtiera.
 
-Mientras Windows seguía bloqueado, intenté mover todo a Linux, lo que de paso
-resolvía el link público a la plataforma. Monté la aplicación en Fly con la
-imagen que publica Paperclip, el volumen y las variables, y ahí apareció otro
-límite. **La imagen de Paperclip no entra en Fly**. Pesa 5,3 GB comprimida y, al
-descomprimirse, supera el máximo de 8 GiB que admite la plataforma. Probé ampliar
-el disco raíz con `--rootfs-size`, que es la única opción disponible para eso, y
-el error fue idéntico, porque el límite no depende del disco solicitado, sino de
-Fly. Para una imagen que incluye cuatro CLI de agentes, ese techo resulta corto.
-
-**Cómo lo resolví.** Separé lo que tiene que estar en internet de lo que no. La
-página, los servidores MCP, el webhook de Meta y las credenciales quedaron en
-Vercel, que es lo que pide el enunciado. Paperclip corre en cada máquina, que es
-como está pensado, y todas las instalaciones mandan por el mismo canal. Alojar
-Paperclip en un servidor queda para la semana siguiente.
+**Paperclip corre local, y lo decidí así.** Evalué publicarlo para que quien
+evalúa pudiera abrirlo sin instalar nada, comparando Railway, un servidor propio,
+un túnel desde mi computadora y Render. Railway era la mejor opción, pero no lo
+hice. El enunciado pide la plataforma en Vercel y que otra persona levante la
+compañía en 10 minutos, y aclara que no hace falta que quede *production-ready*.
+Publicarlo sumaba costo y puntos de falla sin agregar evidencia, porque el
+historial real de las tareas se ve en el Loom y en la página de evidencia. Lo
+público quedó en Vercel, y todas las instalaciones de Paperclip mandan por ese
+canal. La comparación completa está en [`deploy/README.md`](../deploy/README.md).
 
 Hubo otros tres obstáculos que vale la pena registrar.
 
